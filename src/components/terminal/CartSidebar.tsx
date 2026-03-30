@@ -1,17 +1,37 @@
 'use client'
 
+import { useState } from 'react'
 import { useCart } from '@/hooks/useCart'
+import CustomerBadge from './CustomerBadge'
+import CustomerSearchPanel from './CustomerSearchPanel'
+import QuickCustomerForm from './QuickCustomerForm'
+import CustomerProfileDrawer from './CustomerProfileDrawer'
 
 function formatMoney(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
 export default function CartSidebar() {
-  const { items, customerName, subtotal, taxTotal, total, removeItem, updateQuantity, clearCart } =
+  const { items, customerId, customerName, subtotal, taxTotal, total, removeItem, updateQuantity, clearCart } =
     useCart()
+  const [showSearch, setShowSearch] = useState(false)
+  const [showNewCustomer, setShowNewCustomer] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
 
   return (
     <aside className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0">
+      {/* Customer search/form modals */}
+      {showSearch && (
+        <CustomerSearchPanel
+          onClose={() => setShowSearch(false)}
+          onNewCustomer={() => { setShowSearch(false); setShowNewCustomer(true) }}
+        />
+      )}
+      {showNewCustomer && <QuickCustomerForm onClose={() => setShowNewCustomer(false)} />}
+      {showProfile && customerId && (
+        <CustomerProfileDrawer customerId={customerId} onClose={() => setShowProfile(false)} />
+      )}
+
       {/* Header */}
       <div className="h-12 border-b border-gray-700 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
@@ -34,10 +54,19 @@ export default function CartSidebar() {
 
       {/* Customer */}
       <div className="px-4 py-2 border-b border-gray-700 flex items-center justify-between">
-        <span className="text-sm text-gray-300">{customerName}</span>
-        <button className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-          + Customer
-        </button>
+        {customerId ? (
+          <CustomerBadge onViewProfile={() => setShowProfile(true)} />
+        ) : (
+          <>
+            <span className="text-sm text-gray-300">{customerName}</span>
+            <button
+              onClick={() => setShowSearch(true)}
+              className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              + Customer
+            </button>
+          </>
+        )}
       </div>
 
       {/* Items */}
