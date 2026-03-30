@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'Sales Report', href: '/reports/sales', icon: '◩' },
   { label: 'Inventory', href: '/inventory', icon: '▤' },
   { label: 'Products', href: '/products', icon: '◫' },
-  { label: 'Employees', href: '/employees', icon: '◉', disabled: true },
+  { label: 'Employees', href: '/employees', icon: '◉' },
   { label: 'Settings', href: '/settings', icon: '⚙', disabled: true },
 ]
 
