@@ -1,0 +1,74 @@
+import type { SessionPayload } from './session'
+import { AppError } from '@/lib/utils/errors'
+
+export const PERMISSIONS = {
+  // General - Login
+  LOGIN_POS: 'GENERAL_LOGIN_POS',
+  LOGIN_BACKEND: 'GENERAL_LOGIN_BACKEND',
+  LOGIN_STOREFRONT: 'GENERAL_LOGIN_STOREFRONT',
+  LOGIN_MOBILE_CHECKOUT: 'GENERAL_LOGIN_MOBILE_CHECKOUT',
+
+  // General - Administration
+  ADMINISTRATOR: 'GENERAL_ADMIN_ADMINISTRATOR',
+  ASSIGN_PERMISSIONS: 'GENERAL_ADMIN_ASSIGN_PERMISSIONS',
+  POS_MANAGER: 'GENERAL_ADMIN_POS_MANAGER',
+  OVERRIDE_DISCOUNTS: 'GENERAL_ADMIN_OVERRIDE_DISCOUNTS',
+  VIEW_PERMISSIONS: 'GENERAL_ADMIN_VIEW_PERMISSIONS',
+
+  // POS Backend
+  VIEW_POS: 'POS_BACKEND_VIEW_POS',
+  VIEW_POS_SUMMARY: 'POS_BACKEND_VIEW_POS_SUMMARY',
+  VIEW_REGISTER_TRANSACTIONS: 'POS_BACKEND_VIEW_REGISTER_TRANSACTIONS',
+  ADJUST_REGISTER: 'POS_BACKEND_ADJUST_REGISTER',
+  CLOSE_REGISTER: 'POS_BACKEND_CLOSE_REGISTER',
+  VIEW_CLOSING_REPORT: 'POS_BACKEND_VIEW_CLOSING_REPORT',
+  UNDO_REGISTER_CLOSE: 'POS_BACKEND_UNDO_REGISTER_CLOSE',
+
+  // POS Maintenance
+  EDIT_DISCOUNTS: 'POS_MAINT_EDIT_DISCOUNTS',
+  VIEW_DISCOUNTS: 'POS_MAINT_VIEW_DISCOUNTS',
+  EDIT_PRICING: 'POS_MAINT_EDIT_PRICING',
+  VIEW_PRICING: 'POS_MAINT_VIEW_PRICING',
+  EDIT_REGISTERS: 'POS_MAINT_EDIT_REGISTERS',
+  VIEW_REGISTERS: 'POS_MAINT_VIEW_REGISTERS',
+  EDIT_FEES_DONATIONS: 'POS_MAINT_EDIT_FEES_DONATIONS',
+
+  // Inventory
+  VIEW_INVENTORY_COSTS: 'INV_CORE_VIEW_COSTS',
+  ADJUST_INVENTORY: 'INV_CORE_ADJUST',
+  MOVE_INVENTORY: 'INV_CORE_MOVE',
+  PRINT_LABELS: 'INV_CORE_PRINT_LABELS',
+  CREATE_PACKAGES: 'INV_CORE_CREATE_PACKAGES',
+  DESTROY_INVENTORY: 'INV_CORE_DESTROY',
+
+  // Maintenance
+  CREATE_PRODUCT: 'MAINT_PRODUCTS_CREATE',
+  VIEW_PRODUCT_DETAIL: 'MAINT_PRODUCTS_VIEW_DETAIL',
+  VIEW_CUSTOMERS: 'MAINT_CUSTOMERS_VIEW',
+  EDIT_CUSTOMERS: 'MAINT_CUSTOMERS_EDIT',
+  VIEW_USERS: 'MAINT_USERS_VIEW',
+  EDIT_USERS: 'MAINT_USERS_EDIT',
+
+  // Reporting
+  VIEW_DASHBOARD: 'REPORTING_DASHBOARDS_VIEW',
+  VIEW_SALES_REPORTS: 'REPORTING_CAT_VIEW_SALES',
+  VIEW_INVENTORY_REPORTS: 'REPORTING_CAT_VIEW_INVENTORY',
+} as const
+
+export function hasPermission(session: SessionPayload, code: string): boolean {
+  return session.permissions.includes(code)
+}
+
+export function hasAnyPermission(session: SessionPayload, codes: string[]): boolean {
+  return codes.some((code) => session.permissions.includes(code))
+}
+
+export function hasAllPermissions(session: SessionPayload, codes: string[]): boolean {
+  return codes.every((code) => session.permissions.includes(code))
+}
+
+export function requirePermission(session: SessionPayload, code: string): void {
+  if (!hasPermission(session, code)) {
+    throw new AppError('FORBIDDEN', `Missing permission: ${code}`, undefined, 403)
+  }
+}
