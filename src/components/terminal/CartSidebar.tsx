@@ -7,6 +7,7 @@ import CustomerSearchPanel from './CustomerSearchPanel'
 import QuickCustomerForm from './QuickCustomerForm'
 import CustomerProfileDrawer from './CustomerProfileDrawer'
 import PurchaseLimitGauge from './PurchaseLimitGauge'
+import CheckoutPanel from './CheckoutPanel'
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -20,6 +21,7 @@ export default function CartSidebar() {
   const [showSearch, setShowSearch] = useState(false)
   const [showNewCustomer, setShowNewCustomer] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showCheckout, setShowCheckout] = useState(false)
 
   const canPay = items.length > 0 && (purchaseLimit?.allowed ?? true)
 
@@ -34,6 +36,9 @@ export default function CartSidebar() {
       {showNewCustomer && <QuickCustomerForm onClose={() => setShowNewCustomer(false)} />}
       {showProfile && customerId && (
         <CustomerProfileDrawer customerId={customerId} onClose={() => setShowProfile(false)} />
+      )}
+      {showCheckout && (
+        <CheckoutPanel onClose={() => setShowCheckout(false)} cashDrawerId="" />
       )}
 
       {/* Header */}
@@ -161,7 +166,11 @@ export default function CartSidebar() {
         <button disabled={items.length === 0} className="col-span-1 h-12 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
           Hold
         </button>
-        <button disabled={!canPay} className="col-span-1 h-12 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+        <button
+          disabled={!canPay}
+          onClick={() => setShowCheckout(true)}
+          className="col-span-1 h-12 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
           Pay
         </button>
       </div>
