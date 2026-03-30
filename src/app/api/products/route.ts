@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { ProductQuerySchema } from '@/lib/validators/products'
+import { ProductQuerySchema, ProductCreateSchema } from '@/lib/validators/products'
+import { createProduct } from '@/lib/services/productManagementService'
 import { logger } from '@/lib/utils/logger'
 
 const PRODUCT_SELECT = `
@@ -71,6 +72,57 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     logger.error('Product list error', { error: String(err) })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await requireSession()
+    const body = await request.json()
+    const parsed = ProductCreateSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
+    }
+
+    const product = await createProduct({
+      organization_id: session.organizationId,
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      sku: parsed.data.sku,
+      barcode: parsed.data.barcode ?? undefined,
+      description: parsed.data.description ?? undefined,
+      category_id: parsed.data.categoryId,
+      brand_id: parsed.data.brandId,
+      vendor_id: parsed.data.vendorId,
+      strain_id: parsed.data.strainId,
+      rec_price: parsed.data.recPrice,
+      med_price: parsed.data.medPrice,
+      cost_price: parsed.data.costPrice,
+      is_cannabis: parsed.data.isCannabis,
+      product_type: parsed.data.productType,
+      default_unit: parsed.data.defaultUnit,
+      weight_grams: parsed.data.weightGrams,
+      thc_percentage: parsed.data.thcPercentage,
+      cbd_percentage: parsed.data.cbdPercentage,
+      thc_content_mg: parsed.data.thcContentMg,
+      cbd_content_mg: parsed.data.cbdContentMg,
+      flower_equivalent: parsed.data.flowerEquivalent,
+      strain_type: parsed.data.strainType,
+      regulatory_category: parsed.data.regulatoryCategory,
+      online_title: parsed.data.onlineTitle,
+      online_description: parsed.data.onlineDescription,
+    })
+
+    return NextResponse.json({ product }, { status: 201 })
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const appErr = err as { code: string; message: string; statusCode?: number }
+      if (appErr.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json({ error: appErr.message, code: appErr.code }, { status: appErr.statusCode ?? 500 })
+    }
+    logger.error('Product create error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

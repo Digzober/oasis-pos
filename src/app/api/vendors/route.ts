@@ -1,30 +1,33 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listLookup, createLookup } from '@/lib/services/lookupService'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET() {
   try {
-    await requireSession()
-    const sb = await createSupabaseServerClient()
-
-    const { data: vendors, error } = await sb
-      .from('vendors')
-      .select('*')
-      .eq('is_active', true)
-      .order('name')
-
-    if (error) {
-      logger.error('Vendors query failed', { error: error.message })
-      return NextResponse.json({ error: 'Failed to fetch vendors' }, { status: 500 })
-    }
-
-    return NextResponse.json({ vendors: vendors ?? [] })
+    const session = await requireSession()
+    const vendors = await listLookup('vendors', session.organizationId)
+    return NextResponse.json({ vendors })
   } catch (err) {
-    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'UNAUTHORIZED') {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'UNAUTHORIZED')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
     logger.error('Vendors error', { error: String(err) })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await requireSession()
+    const body = await request.json()
+    const vendor = await createLookup('vendors', { ...body, organization_id: session.organizationId })
+    return NextResponse.json({ vendor }, { status: 201 })
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const a = err as { code: string; message: string; statusCode?: number }
+      return NextResponse.json({ error: a.message }, { status: a.statusCode ?? 500 })
+    }
+    logger.error('Vendor create error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

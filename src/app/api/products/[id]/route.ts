@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { updateProduct, deactivateProduct } from '@/lib/services/productManagementService'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(
@@ -77,6 +78,47 @@ export async function GET(
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     logger.error('Product detail error', { error: String(err) })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await requireSession()
+    const { id } = await params
+    const body = await request.json()
+    const product = await updateProduct(id, body, session.employeeId)
+    return NextResponse.json({ product })
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const appErr = err as { code: string; message: string; statusCode?: number }
+      if (appErr.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json({ error: appErr.message }, { status: appErr.statusCode ?? 500 })
+    }
+    logger.error('Product update error', { error: String(err) })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await requireSession()
+    const { id } = await params
+    await deactivateProduct(id, session.employeeId)
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const appErr = err as { code: string; message: string; statusCode?: number }
+      if (appErr.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return NextResponse.json({ error: appErr.message }, { status: appErr.statusCode ?? 500 })
+    }
+    logger.error('Product deactivate error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

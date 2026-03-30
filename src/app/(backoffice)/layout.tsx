@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { label: 'Transactions', href: '/reports/transactions', icon: '⊞' },
   { label: 'Sales Report', href: '/reports/sales', icon: '◩' },
   { label: 'Inventory', href: '/inventory', icon: '▤', disabled: true },
-  { label: 'Products', href: '/products', icon: '◫', disabled: true },
+  { label: 'Products', href: '/products', icon: '◫' },
   { label: 'Employees', href: '/employees', icon: '◉', disabled: true },
   { label: 'Settings', href: '/settings', icon: '⚙', disabled: true },
 ]
