@@ -7,3 +7,17 @@ export type {
   TaxCalculationResult,
   AppliedRate,
 } from './tax.types'
+
+export { evaluateDiscounts } from './discountEvaluator'
+export { loadActiveDiscounts, clearDiscountCache } from './discountLoader'
+export { itemMatchesFilter } from './discountMatcher'
+export type {
+  DiscountableItem,
+  DiscountWithRules,
+  DiscountEvaluationContext,
+  DiscountApplicationResult,
+  DiscountFilter,
+  DiscountConstraint,
+  DiscountReward,
+  AppliedDiscount,
+} from './discount.types'
