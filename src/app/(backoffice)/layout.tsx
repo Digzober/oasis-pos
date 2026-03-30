@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { label: 'Inventory', href: '/inventory', icon: '▤' },
   { label: 'Products', href: '/products', icon: '◫' },
   { label: 'Employees', href: '/employees', icon: '◉' },
-  { label: 'Settings', href: '/settings', icon: '⚙', disabled: true },
+  { label: 'Settings', href: '/settings', icon: '⚙' },
 ]
 
 export default function BackofficeLayout({ children }: { children: React.ReactNode }) {
@@ -60,19 +60,15 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
               return (
                 <Link
                   key={item.href}
-                  href={item.disabled ? '#' : item.href}
+                  href={item.href}
                   className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                    item.disabled
-                      ? 'text-gray-600 cursor-not-allowed'
-                      : active
-                        ? 'bg-gray-700 text-emerald-400 font-medium'
-                        : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-50'
+                    active
+                      ? 'bg-gray-700 text-emerald-400 font-medium'
+                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-50'
                   }`}
-                  onClick={(e) => item.disabled && e.preventDefault()}
                 >
                   <span className="text-base">{item.icon}</span>
                   {item.label}
-                  {item.disabled && <span className="text-[10px] text-gray-600 ml-auto">Soon</span>}
                 </Link>
               )
             })}
