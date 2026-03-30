@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     const uniquePermissions = [...new Set(permissions)]
 
-    // Create session cookie
+    // Create session cookie (keep JWT small — permissions fetched via /api/auth/me)
     await createSession({
       employeeId: employee.id,
       organizationId: employee.organization_id,
@@ -120,7 +120,7 @@ export async function POST(request: Request) {
       locationName: location?.name ?? '',
       employeeName: `${employee.first_name} ${employee.last_name}`,
       role: employee.role as 'budtender' | 'shift_lead' | 'manager' | 'admin' | 'owner',
-      permissions: uniquePermissions,
+      permissions: [],
     })
 
     logger.info('Employee logged in', {
