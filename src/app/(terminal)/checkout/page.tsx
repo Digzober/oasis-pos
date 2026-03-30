@@ -1,16 +1,62 @@
 'use client'
 
+import { useEffect, useCallback } from 'react'
 import TerminalLayout from '@/components/terminal/TerminalLayout'
 import ProductSearch from '@/components/terminal/ProductSearch'
 import CategoryGrid from '@/components/terminal/CategoryGrid'
-import { useCart } from '@/hooks/useCart'
+import { useCart, type CartItemInput } from '@/hooks/useCart'
 import { useBarcodeScanner } from '@/hooks/useBarcodeScanner'
 import { useSession } from '@/hooks/useSession'
-import { useCallback } from 'react'
+
+function makeCartInput(p: {
+  id: string; name: string; sku?: string | null; rec_price: number;
+  is_cannabis: boolean; weight_grams?: number | null; flower_equivalent?: number | null;
+  brand_name?: string | null; category_name?: string | null; strain_name?: string | null;
+}, invId: string | null = null, barcode: string | null = null): CartItemInput {
+  return {
+    productId: p.id,
+    inventoryItemId: invId,
+    productName: p.name,
+    categoryId: '',
+    categoryName: p.category_name ?? null,
+    brandId: null,
+    brandName: p.brand_name ?? null,
+    vendorId: null,
+    strainId: null,
+    strainName: p.strain_name ?? null,
+    sku: p.sku ?? null,
+    quantity: 1,
+    unitPrice: p.rec_price,
+    isCannabis: p.is_cannabis,
+    isMedical: false,
+    weightGrams: p.weight_grams ?? null,
+    flowerEquivalent: p.flower_equivalent ?? null,
+    thcMg: null,
+    biotrackBarcode: barcode,
+    purchaseLimitCategory: null,
+    productTagIds: [],
+    inventoryTagIds: [],
+    pricingTierId: null,
+    weightDescriptor: null,
+  }
+}
 
 export default function CheckoutPage() {
   const addItem = useCart((s) => s.addItem)
+  const initializeCart = useCart((s) => s.initializeCart)
+  const configLoaded = useCart((s) => s.configLoaded)
   const { session } = useSession()
+
+  useEffect(() => {
+    if (session && !configLoaded) {
+      initializeCart({
+        locationId: session.locationId,
+        organizationId: session.organizationId,
+        employeeId: session.employeeId,
+        registerId: '',
+      })
+    }
+  }, [session, configLoaded, initializeCart])
 
   const handleBarcodeScan = useCallback(
     async (barcode: string) => {
@@ -21,21 +67,7 @@ export default function CheckoutPage() {
         )
         if (res.ok) {
           const data = await res.json()
-          addItem({
-            productId: data.product.id,
-            inventoryItemId: data.inventory_item.id,
-            productName: data.product.name,
-            categoryName: data.product.category_name,
-            brandName: data.product.brand_name,
-            sku: data.product.sku,
-            quantity: 1,
-            unitPrice: data.product.rec_price,
-            isCannabis: data.product.is_cannabis,
-            isMedical: false,
-            weightGrams: data.product.weight_grams,
-            flowerEquivalent: data.product.flower_equivalent,
-            biotrackBarcode: data.inventory_item.biotrack_barcode,
-          })
+          addItem(makeCartInput(data.product, data.inventory_item.id, data.inventory_item.biotrack_barcode))
         }
       } catch {
         // handled by ProductSearch toast
@@ -44,57 +76,19 @@ export default function CheckoutPage() {
     [session, addItem],
   )
 
-  // Background barcode listener (when no input focused)
-  useBarcodeScanner({
-    onScan: handleBarcodeScan,
-    enabled: !!session,
-  })
+  useBarcodeScanner({ onScan: handleBarcodeScan, enabled: !!session })
 
   return (
     <TerminalLayout>
       <div className="flex flex-col gap-4 h-full">
         <ProductSearch
           locationId={session?.locationId}
-          onSelect={(product) => {
-            addItem({
-              productId: product.id,
-              inventoryItemId: null,
-              productName: product.name,
-              categoryName: product.category_name,
-              brandName: product.brand_name,
-              sku: product.sku,
-              quantity: 1,
-              unitPrice: product.rec_price,
-              isCannabis: product.is_cannabis,
-              isMedical: false,
-              weightGrams: product.weight_grams,
-              flowerEquivalent: null,
-              biotrackBarcode: null,
-            })
-          }}
-          onBarcodeScan={(result) => {
-            addItem({
-              productId: result.product.id,
-              inventoryItemId: result.inventory_item.id,
-              productName: result.product.name,
-              categoryName: result.product.category_name,
-              brandName: result.product.brand_name,
-              sku: result.product.sku,
-              quantity: 1,
-              unitPrice: result.product.rec_price,
-              isCannabis: result.product.is_cannabis,
-              isMedical: false,
-              weightGrams: result.product.weight_grams,
-              flowerEquivalent: result.product.flower_equivalent,
-              biotrackBarcode: result.inventory_item.biotrack_barcode,
-            })
-          }}
+          onSelect={(product) => addItem(makeCartInput(product))}
+          onBarcodeScan={(result) =>
+            addItem(makeCartInput(result.product, result.inventory_item.id, result.inventory_item.biotrack_barcode))
+          }
         />
-        <CategoryGrid
-          onSelect={(category) => {
-            console.log('Category selected:', category.name, category.id)
-          }}
-        />
+        <CategoryGrid onSelect={(category) => console.log('Category selected:', category.name)} />
       </div>
     </TerminalLayout>
   )

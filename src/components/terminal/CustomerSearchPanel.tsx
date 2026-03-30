@@ -55,12 +55,12 @@ export default function CustomerSearchPanel({ onClose, onNewCustomer }: Customer
 
   const selectCustomer = (c: SearchResult) => {
     if (c.status === 'banned') return
-    setCustomer(c.id, c.full_name, c.is_medical)
+    setCustomer({ id: c.id, name: c.full_name, type: c.is_medical ? 'medical' : 'recreational', groupIds: [], segmentIds: [], isFirstTime: false })
     onClose()
   }
 
   const skipCustomer = () => {
-    setCustomer(null, 'Walk-in Customer', false)
+    setCustomer(null)
     onClose()
   }
 

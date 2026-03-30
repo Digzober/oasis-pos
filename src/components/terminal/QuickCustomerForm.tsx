@@ -53,7 +53,7 @@ export default function QuickCustomerForm({ onClose }: QuickCustomerFormProps) {
       }
 
       const c = data.customer
-      setCustomer(c.id, `${c.first_name} ${c.last_name}`, c.is_medical)
+      setCustomer({ id: c.id, name: `${c.first_name} ${c.last_name}`, type: c.is_medical ? 'medical' : 'recreational', groupIds: [], segmentIds: [], isFirstTime: true })
       onClose()
     } catch {
       setError('Connection error')
