@@ -21,3 +21,11 @@ export type {
   DiscountReward,
   AppliedDiscount,
 } from './discount.types'
+
+export { checkPurchaseLimit } from './purchaseLimitCalculator'
+export { loadPurchaseLimits, clearPurchaseLimitCache } from './purchaseLimitLoader'
+export type {
+  PurchaseLimitConfig,
+  PurchaseLimitItem,
+  PurchaseLimitResult,
+} from './purchaseLimit.types'
