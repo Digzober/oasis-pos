@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import BioTrackStatus from './BioTrackStatus'
 
 export default function StatusBar() {
   const [online, setOnline] = useState(true)
@@ -46,8 +47,11 @@ export default function StatusBar() {
       {/* Center: Register */}
       <div className="flex-1 text-center">Register 1</div>
 
-      {/* Right: clock */}
-      <div className="tabular-nums">{time}</div>
+      {/* Right: BioTrack + clock */}
+      <div className="flex items-center gap-3">
+        <BioTrackStatus />
+        <span className="tabular-nums">{time}</span>
+      </div>
     </div>
   )
 }
