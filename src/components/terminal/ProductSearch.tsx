@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { isBarcodeInput } from '@/lib/utils/barcodeDetector'
 
 interface SearchResult {
   id: string
@@ -18,23 +19,102 @@ interface SearchResult {
   weight_grams: number | null
 }
 
-interface ProductSearchProps {
-  onSelect: (product: SearchResult) => void
+interface BarcodeScanResult {
+  product: {
+    id: string
+    name: string
+    sku: string | null
+    barcode: string | null
+    rec_price: number
+    med_price: number | null
+    is_cannabis: boolean
+    weight_grams: number | null
+    flower_equivalent: number | null
+    brand_name: string | null
+    category_name: string | null
+    strain_name: string | null
+  }
+  inventory_item: {
+    id: string
+    biotrack_barcode: string | null
+    quantity: number
+    quantity_reserved: number
+  }
+  match_type: string
 }
 
-export default function ProductSearch({ onSelect }: ProductSearchProps) {
+interface ProductSearchProps {
+  onSelect: (product: SearchResult) => void
+  onBarcodeScan?: (result: BarcodeScanResult) => void
+  locationId?: string
+}
+
+function playBeep() {
+  try {
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.frequency.value = 800
+    gain.gain.value = 0.15
+    osc.start()
+    osc.stop(ctx.currentTime + 0.15)
+    setTimeout(() => ctx.close(), 300)
+  } catch {
+    // Web Audio not available
+  }
+}
+
+export default function ProductSearch({ onSelect, onBarcodeScan, locationId }: ProductSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isScanning, setIsScanning] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
 
-  // Auto-focus on mount
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setToast(null), 2500)
+  }
+
+  const scanBarcode = useCallback(async (code: string) => {
+    setIsScanning(true)
+    setIsLoading(true)
+    try {
+      const locParam = locationId ? `?location_id=${locationId}` : ''
+      const res = await fetch(`/api/products/barcode/${encodeURIComponent(code)}${locParam}`)
+      if (res.ok) {
+        const data: BarcodeScanResult = await res.json()
+        playBeep()
+        if (onBarcodeScan) {
+          onBarcodeScan(data)
+        }
+        showToast(`Added: ${data.product.name}`, 'success')
+        setQuery('')
+        setResults([])
+        setIsOpen(false)
+      } else {
+        showToast(`Barcode ${code} not found`, 'error')
+      }
+    } catch {
+      showToast('Scan failed — connection error', 'error')
+    } finally {
+      setIsLoading(false)
+      setIsScanning(false)
+      inputRef.current?.focus()
+    }
+  }, [locationId, onBarcodeScan])
 
   const search = useCallback(async (q: string) => {
     if (q.length < 2) {
@@ -74,10 +154,22 @@ export default function ProductSearch({ onSelect }: ProductSearchProps) {
 
     if (e.key === 'Enter') {
       e.preventDefault()
+
+      // If dropdown result selected, use it
       if (selectedIndex >= 0 && results[selectedIndex]) {
         selectResult(results[selectedIndex])
-      } else if (query.length >= 2) {
-        // Immediate search (barcode scanner sends Enter)
+        return
+      }
+
+      // Check if input looks like a barcode
+      if (isBarcodeInput(query.trim())) {
+        if (timerRef.current) clearTimeout(timerRef.current)
+        scanBarcode(query.trim())
+        return
+      }
+
+      // Otherwise do text search
+      if (query.length >= 2) {
         if (timerRef.current) clearTimeout(timerRef.current)
         search(query)
       }
@@ -104,21 +196,40 @@ export default function ProductSearch({ onSelect }: ProductSearchProps) {
 
   return (
     <div className="relative">
-      <div className="relative">
-        {/* Search icon */}
-        <svg
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 shadow-lg transition-opacity ${
+            toast.type === 'success'
+              ? 'bg-emerald-600 text-white'
+              : 'bg-red-600 text-white'
+          }`}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+          {toast.message}
+        </div>
+      )}
+
+      <div className="relative">
+        {/* Icon: barcode or search */}
+        {isScanning ? (
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 4v16M12 4v16M16 4v16" />
+          </svg>
+        ) : (
+          <svg
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        )}
         <input
           ref={inputRef}
           type="text"
@@ -146,7 +257,7 @@ export default function ProductSearch({ onSelect }: ProductSearchProps) {
                 key={r.id}
                 onClick={() => selectResult(r)}
                 className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                  idx === selectedIndex ? 'bg-gray-700' : 'hover:bg-gray-750 hover:bg-gray-700/50'
+                  idx === selectedIndex ? 'bg-gray-700' : 'hover:bg-gray-700/50'
                 } ${idx > 0 ? 'border-t border-gray-700/50' : ''}`}
               >
                 <div className="flex-1 min-w-0">
@@ -160,9 +271,7 @@ export default function ProductSearch({ onSelect }: ProductSearchProps) {
                     ${r.rec_price.toFixed(2)}
                   </p>
                   {r.quantity_available > 0 ? (
-                    <p className="text-xs text-gray-400 tabular-nums">
-                      {r.quantity_available} avail
-                    </p>
+                    <p className="text-xs text-gray-400 tabular-nums">{r.quantity_available} avail</p>
                   ) : (
                     <p className="text-xs text-red-400">Out of Stock</p>
                   )}
