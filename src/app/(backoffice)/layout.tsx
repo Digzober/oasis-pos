@@ -1,24 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import Cookies from 'js-cookie'
 import { useSession } from '@/hooks/useSession'
-
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: '▦' },
-  { label: 'Transactions', href: '/reports/transactions', icon: '⊞' },
-  { label: 'Sales Report', href: '/reports/sales', icon: '◩' },
-  { label: 'Inventory', href: '/inventory', icon: '▤' },
-  { label: 'Products', href: '/products', icon: '◫' },
-  { label: 'Employees', href: '/employees', icon: '◉' },
-  { label: 'Settings', href: '/settings', icon: '⚙' },
-]
+import Sidebar from '@/components/backoffice/Sidebar'
+import BackofficeHeader from '@/components/backoffice/BackofficeHeader'
 
 export default function BackofficeLayout({ children }: { children: React.ReactNode }) {
-  const { session, isLoading, logout } = useSession()
-  const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const { session, isLoading } = useSession()
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    setCollapsed(Cookies.get('sidebar-collapsed') === 'true')
+  }, [])
+
+  const toggleSidebar = () => {
+    const next = !collapsed
+    setCollapsed(next)
+    Cookies.set('sidebar-collapsed', String(next), { expires: 365 })
+  }
 
   if (isLoading) {
     return (
@@ -28,54 +28,22 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
     )
   }
 
+  if (!session) {
+    return (
+      <div className="h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-400 mb-4">Please log in to access the backoffice</p>
+          <a href="/login" className="text-emerald-400 hover:text-emerald-300">Go to Login</a>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-screen bg-gray-900 flex flex-col overflow-hidden">
-      {/* Top bar */}
-      <header className="h-14 bg-gray-800 border-b border-gray-700 flex items-center px-4 shrink-0">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-gray-700 rounded-lg mr-3 lg:hidden"
-        >
-          ☰
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-sm">O</div>
-          <span className="text-gray-50 font-semibold text-sm">Oasis Backoffice</span>
-        </div>
-        <div className="flex-1" />
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-400">{session?.employeeName}</span>
-          <button onClick={logout} className="text-xs text-gray-400 hover:text-red-400 transition-colors">
-            Log Out
-          </button>
-        </div>
-      </header>
-
+      <BackofficeHeader onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        <aside className={`${sidebarOpen ? 'w-56' : 'w-0 overflow-hidden'} lg:w-56 bg-gray-800 border-r border-gray-700 flex flex-col shrink-0 transition-all`}>
-          <nav className="flex-1 py-2">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href || pathname?.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                    active
-                      ? 'bg-gray-700 text-emerald-400 font-medium'
-                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-50'
-                  }`}
-                >
-                  <span className="text-base">{item.icon}</span>
-                  {item.label}
-                </Link>
-              )
-            })}
-          </nav>
-        </aside>
-
-        {/* Main content */}
+        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
