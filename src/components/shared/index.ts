@@ -11,3 +11,4 @@ export { ErrorState } from './ErrorState'
 export { PageHeader } from './PageHeader'
 export { PermissionGate } from './PermissionGate'
 export { ManagerOverrideDialog } from './ManagerOverrideDialog'
+export { ErrorBoundary } from "./ErrorBoundary"
