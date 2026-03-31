@@ -44,6 +44,10 @@
     {
       "path": "/api/orders/expire",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/reports/schedules/execute",
+      "schedule": "0 7 * * *"
     }
   ]
 }
