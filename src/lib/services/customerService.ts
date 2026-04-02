@@ -79,6 +79,27 @@ export interface CreateCustomerInput {
   medical_card_number?: string | null
   medical_card_expiration?: string | null
   medical_provider?: string | null
+  middle_name?: string | null
+  prefix?: string | null
+  suffix?: string | null
+  address_line1?: string | null
+  address_line2?: string | null
+  city?: string | null
+  state?: string | null
+  zip?: string | null
+  notes?: string | null
+  external_code?: string | null
+  opted_into_marketing?: boolean
+  customer_type?: string
+  gender?: string | null
+  pronoun?: string | null
+  mobile_phone?: string | null
+  drivers_license?: string | null
+  drivers_license_expiration?: string | null
+  id_start_date?: string | null
+  opted_into_sms?: boolean
+  opted_into_loyalty?: boolean
+  caregiver_info?: Record<string, unknown> | null
 }
 
 export interface UpdateCustomerInput {
@@ -103,6 +124,11 @@ export interface UpdateCustomerInput {
   status?: string
   notes?: string | null
   opted_into_marketing?: boolean
+  middle_name?: string | null
+  prefix?: string | null
+  suffix?: string | null
+  external_code?: string | null
+  ban_reason?: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -342,6 +368,27 @@ export async function createCustomer(input: CreateCustomerInput) {
       medical_provider: input.medical_provider ?? null,
       is_medical: isMedical,
       status: 'active',
+      middle_name: input.middle_name ?? null,
+      prefix: input.prefix ?? null,
+      suffix: input.suffix ?? null,
+      address_line1: input.address_line1 ?? null,
+      address_line2: input.address_line2 ?? null,
+      city: input.city ?? null,
+      state: input.state ?? null,
+      zip: input.zip ?? null,
+      notes: input.notes ?? null,
+      external_code: input.external_code ?? null,
+      opted_into_marketing: input.opted_into_marketing ?? false,
+      customer_type: input.customer_type ?? (isMedical ? 'medical' : 'recreational'),
+      gender: input.gender ?? null,
+      pronoun: input.pronoun ?? null,
+      mobile_phone: input.mobile_phone ?? null,
+      drivers_license: input.drivers_license ?? null,
+      drivers_license_expiration: input.drivers_license_expiration ?? null,
+      id_start_date: input.id_start_date ?? null,
+      opted_into_sms: input.opted_into_sms ?? false,
+      opted_into_loyalty: input.opted_into_loyalty ?? false,
+      caregiver_info: input.caregiver_info ?? null,
     })
     .select()
     .single()

@@ -12,6 +12,16 @@ import type { PurchaseLimitConfig, PurchaseLimitResult, PurchaseLimitItem } from
 // Types
 // ---------------------------------------------------------------------------
 
+export interface HeldCart {
+  id: string
+  heldAt: string
+  heldBy: string
+  customerName: string | null
+  items: CartItem[]
+  itemCount: number
+  total: number
+}
+
 export interface CartItem {
   id: string
   productId: string
@@ -72,6 +82,7 @@ interface CartState {
   purchaseLimits: PurchaseLimitConfig[]
   configLoaded: boolean
   manualDiscountIds: string[]
+  heldCarts: HeldCart[]
 
   // Actions
   initializeCart: (ctx: { locationId: string; organizationId: string; employeeId: string; registerId: string }) => Promise<void>
@@ -82,6 +93,9 @@ interface CartState {
   applyManualDiscount: (discountId: string) => void
   removeManualDiscount: (discountId: string) => void
   clearCart: () => void
+  holdCart: (employeeName: string) => void
+  resumeCart: (heldCartId: string) => void
+  deleteHeldCart: (heldCartId: string) => void
   refreshConfig: () => Promise<void>
 }
 
@@ -239,6 +253,7 @@ export const useCart = create<CartState>((set, get) => ({
   purchaseLimits: [],
   configLoaded: false,
   manualDiscountIds: [],
+  heldCarts: [],
 
   initializeCart: async (ctx) => {
     set({
@@ -372,6 +387,46 @@ export const useCart = create<CartState>((set, get) => ({
       employeeId: state.employeeId,
       registerId: state.registerId,
     })
+  },
+
+  holdCart: (employeeName: string) => {
+    const state = get()
+    if (state.items.length === 0) return
+    if (state.heldCarts.length >= 10) return
+
+    const held: HeldCart = {
+      id: uuidv4(),
+      heldAt: new Date().toISOString(),
+      heldBy: employeeName,
+      customerName: state.customerName !== 'Walk-in Customer' ? state.customerName : null,
+      items: [...state.items],
+      itemCount: state.items.reduce((s, i) => s + i.quantity, 0),
+      total: state.total,
+    }
+
+    set((s) => ({ heldCarts: [...s.heldCarts, held] }))
+
+    // Clear current cart (keep config)
+    get().clearCart()
+  },
+
+  resumeCart: (heldCartId: string) => {
+    const state = get()
+    const held = state.heldCarts.find((h) => h.id === heldCartId)
+    if (!held) return
+
+    // Remove from held list
+    set((s) => ({
+      heldCarts: s.heldCarts.filter((h) => h.id !== heldCartId),
+      items: held.items,
+    }))
+
+    // Recalculate with restored items
+    set((s) => recalculate(s))
+  },
+
+  deleteHeldCart: (heldCartId: string) => {
+    set((s) => ({ heldCarts: s.heldCarts.filter((h) => h.id !== heldCartId) }))
   },
 
   refreshConfig: async () => {

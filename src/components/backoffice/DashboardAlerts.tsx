@@ -8,7 +8,7 @@ export function DashboardAlerts({ kpis }: { kpis: DashboardKPIs }) {
 
   if (kpis.low_stock_count > 0) alerts.push({ icon: '⚠', message: `${kpis.low_stock_count} low stock items`, href: '/reports/inventory', color: 'text-amber-400' })
   if (kpis.open_drawers > 0) alerts.push({ icon: '💰', message: `${kpis.open_drawers} drawer${kpis.open_drawers > 1 ? 's' : ''} still open`, href: '/settings/registers', color: 'text-amber-400' })
-  if (kpis.pending_online_orders > 0) alerts.push({ icon: '🛒', message: `${kpis.pending_online_orders} pending online order${kpis.pending_online_orders > 1 ? 's' : ''}`, href: '/orders', color: 'text-blue-400' })
+  if (kpis.pending_online_orders > 0) alerts.push({ icon: '🛒', message: `${kpis.pending_online_orders} pending online order${kpis.pending_online_orders > 1 ? 's' : ''}`, href: '/orders?status=pending', color: 'text-blue-400' })
   if (kpis.total_voids > 0) alerts.push({ icon: '❌', message: `${kpis.total_voids.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} in voided transactions`, href: '/reports/transactions', color: 'text-red-400' })
   if (kpis.total_returns > 0) alerts.push({ icon: '↩', message: `${kpis.total_returns.toLocaleString('en-US', { style: 'currency', currency: 'USD' })} in returns`, href: '/reports/transactions', color: 'text-amber-400' })
 

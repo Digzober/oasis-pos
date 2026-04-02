@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entry = any
 
 export default function TimeClockPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [entries, setEntries] = useState<Entry[]>([])
   const [total, setTotal] = useState(0)
   const [dateFrom, setDateFrom] = useState(new Date().toISOString().slice(0, 10))
@@ -15,12 +17,13 @@ export default function TimeClockPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo })
+    if (locationId) params.set('location_id', locationId)
     const res = await fetch(`/api/time-clock?${params}`)
     if (res.ok) { const d = await res.json(); setEntries(d.entries ?? []); setTotal(d.total ?? 0) }
     setLoading(false)
-  }, [dateFrom, dateTo])
+  }, [dateFrom, dateTo, locationId])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
 
   const totalHours = entries.reduce((s: number, e: Entry) => s + (e.total_hours ?? 0), 0)
 

@@ -1,13 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
-import { listLookup, createLookup } from '@/lib/services/lookupService'
+import { listLookupPaginated, createLookup } from '@/lib/services/lookupService'
 import { logger } from '@/lib/utils/logger'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireSession()
-    const brands = await listLookup('brands', session.organizationId)
-    return NextResponse.json({ brands })
+    const url = new URL(request.url)
+    const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10))
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') ?? '100', 10)))
+    const includeInactive = url.searchParams.get('includeInactive') === 'true'
+
+    const result = await listLookupPaginated('brands', session.organizationId, {
+      page,
+      limit,
+      includeInactive,
+    })
+
+    return NextResponse.json({
+      brands: result.data,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

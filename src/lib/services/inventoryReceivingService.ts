@@ -31,6 +31,18 @@ export async function receiveManifest(input: ReceiveManifestInput): Promise<Rece
         received_by: input.employee_id,
         testing_status: manifestItem?.lab_results ? 'passed' : 'pending',
         lab_test_results: manifestItem?.lab_results ?? null,
+        strain_id: item.strain_id,
+        lot_number: item.lot_number,
+        expiration_date: item.expiration_date,
+        packaging_date: item.packaging_date,
+        external_package_id: item.external_package_id,
+        package_ndc: item.package_ndc,
+        flower_equivalent_grams: item.flower_equivalent,
+        med_price: item.med_price,
+        rec_price: item.rec_price,
+        inventory_status: item.inventory_status,
+        thc_content: manifestItem?.thc_percentage ?? null,
+        cbd_content: manifestItem?.cbd_percentage ?? null,
       })
       .select('id')
       .single()
@@ -44,6 +56,26 @@ export async function receiveManifest(input: ReceiveManifestInput): Promise<Rece
     }
 
     inventoryIds.push(invItem.id)
+
+    // Insert tags into inventory_item_tags junction table
+    if (item.tags.length > 0) {
+      const tagRows = item.tags.map((tagId) => ({
+        inventory_item_id: invItem.id,
+        tag_id: tagId,
+      }))
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: tagError } = await (sb.from('inventory_item_tags') as any)
+        .insert(tagRows)
+
+      if (tagError) {
+        logger.error('Failed to insert inventory item tags', {
+          error: tagError.message,
+          inventory_item_id: invItem.id,
+          tag_count: item.tags.length,
+        })
+      }
+    }
 
     // Audit log
     await sb.from('audit_log').insert({
@@ -59,6 +91,10 @@ export async function receiveManifest(input: ReceiveManifestInput): Promise<Rece
         quantity: item.actual_quantity,
         discrepancy: hasDiscrepancy,
         discrepancy_reason: item.discrepancy_reason,
+        vendor_id: input.vendor_id,
+        producer_id: input.producer_id,
+        order_title: input.order_title,
+        notes: input.notes,
       },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any)
@@ -97,6 +133,11 @@ export async function manualReceive(input: ManualReceiveInput) {
       received_at: new Date().toISOString(),
       received_by: input.employee_id,
       testing_status: 'exempt',
+      strain_id: input.strain_id,
+      flower_equivalent_grams: input.flower_equivalent,
+      med_price: input.med_price,
+      rec_price: input.rec_price,
+      inventory_status: input.inventory_status,
     })
     .select()
     .single()
@@ -104,6 +145,26 @@ export async function manualReceive(input: ManualReceiveInput) {
   if (error) {
     logger.error('Manual receive failed', { error: error.message })
     throw new AppError('RECEIVE_FAILED', 'Failed to receive inventory', error, 500)
+  }
+
+  // Insert tags into inventory_item_tags junction table
+  if (input.tags.length > 0) {
+    const tagRows = input.tags.map((tagId) => ({
+      inventory_item_id: invItem.id,
+      tag_id: tagId,
+    }))
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: tagError } = await (sb.from('inventory_item_tags') as any)
+      .insert(tagRows)
+
+    if (tagError) {
+      logger.error('Failed to insert inventory item tags for manual receive', {
+        error: tagError.message,
+        inventory_item_id: invItem.id,
+        tag_count: input.tags.length,
+      })
+    }
   }
 
   await sb.from('audit_log').insert({

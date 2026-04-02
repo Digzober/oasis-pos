@@ -1,24 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Report = any
 const STATUS_COLORS: Record<string, string> = { matched: 'text-emerald-400', discrepancy: 'text-amber-400', local_only: 'text-red-400', biotrack_only: 'text-blue-400' }
 
+function exportCSV(headers: string[], rows: string[][], filename: string) {
+  const escape = (v: string) => v.includes(',') || v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => escape(String(c ?? ''))).join(','))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function ReconciliationPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [reports, setReports] = useState<Report[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<Report | null>(null)
   const [running, setRunning] = useState(false)
-  const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([])
-  const [locationId, setLocationId] = useState('')
 
-  useEffect(() => { fetch('/api/auth/locations').then(r => r.json()).then(d => setLocations(d.locations ?? [])) }, [])
-  useEffect(() => {
-    const params = locationId ? `?location_id=${locationId}` : ''
-    fetch(`/api/reconciliation${params}`).then(r => r.json()).then(d => setReports(d.reports ?? []))
+  const fetchReports = useCallback(() => {
+    fetch(`/api/reconciliation${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => setReports(d.reports ?? []))
   }, [locationId])
+  useEffect(() => { if (hydrated) fetchReports() }, [hydrated, fetchReports])
 
   useEffect(() => {
     if (!selectedId) { setDetail(null); return }
@@ -30,7 +41,7 @@ export default function ReconciliationPage() {
     setRunning(true)
     await fetch('/api/reconciliation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location_id: locationId }) })
     setRunning(false)
-    fetch(`/api/reconciliation?location_id=${locationId}`).then(r => r.json()).then(d => setReports(d.reports ?? []))
+    fetchReports()
   }
 
   return (
@@ -38,10 +49,22 @@ export default function ReconciliationPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-50">Inventory Reconciliation</h1>
         <div className="flex gap-2">
-          <select value={locationId} onChange={e => setLocationId(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50">
-            <option value="">All Locations</option>
-            {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
+          <button onClick={() => {
+            if (!detail) return
+            const date = new Date().toISOString().slice(0, 10)
+            exportCSV(
+              ['Barcode', 'Product Name', 'Local Quantity', 'BioTrack Quantity', 'Variance', 'Status'],
+              (detail.details ?? []).map((item: Report) => [
+                item.biotrack_barcode ?? '', item.product_name ?? '',
+                String(item.local_quantity ?? ''), String(item.biotrack_quantity ?? ''),
+                String(item.variance ?? ''), item.status ?? ''
+              ]),
+              `reconciliation-${date}.csv`
+            )
+          }} disabled={!detail} className="px-4 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2 disabled:opacity-50">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            Export CSV
+          </button>
           <button onClick={runNow} disabled={running || !locationId} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
             {running ? 'Running...' : 'Run Now'}
           </button>

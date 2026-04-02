@@ -7,13 +7,13 @@ type E = any
 export default function EventsPage() {
   const [events, setEvents] = useState<E[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', start_date: '', end_date: '' })
+  const [form, setForm] = useState({ name: '', description: '', start_date: '', end_date: '', image_url: '' })
 
   useEffect(() => { fetch('/api/events').then(r => r.json()).then(d => setEvents(d.events ?? [])) }, [])
 
   const save = async () => {
     await fetch('/api/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-    setShowForm(false); setForm({ name: '', description: '', start_date: '', end_date: '' })
+    setShowForm(false); setForm({ name: '', description: '', start_date: '', end_date: '', image_url: '' })
     fetch('/api/events').then(r => r.json()).then(d => setEvents(d.events ?? []))
   }
 
@@ -33,6 +33,7 @@ export default function EventsPage() {
             <input type="datetime-local" value={form.start_date} onChange={e => setForm(p => ({ ...p, start_date: e.target.value }))} className={inputCls} />
             <input type="datetime-local" value={form.end_date} onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))} className={inputCls} />
           </div>
+          <input value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} placeholder="Image/banner URL (optional)" className={inputCls} />
           <div className="flex gap-2"><button onClick={() => setShowForm(false)} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Cancel</button>
             <button onClick={save} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm">Save</button></div>
         </div>

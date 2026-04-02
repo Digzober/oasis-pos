@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyR = any
@@ -8,6 +9,7 @@ type AnyR = any
 function fmt(n: number) { return `$${n.toFixed(2)}` }
 
 export default function DeliverySettingsPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [zones, setZones] = useState<AnyR[]>([])
   const [vehicles, setVehicles] = useState<AnyR[]>([])
   const [drivers, setDrivers] = useState<AnyR[]>([])
@@ -16,15 +18,17 @@ export default function DeliverySettingsPage() {
   const [newZone, setNewZone] = useState({ name: '', delivery_fee: '', min_order: '', estimated_delivery_minutes: '' })
   const [showZoneForm, setShowZoneForm] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/delivery/zones').then(r => r.json()).then(d => setZones(d.zones ?? []))
-    fetch('/api/delivery/vehicles').then(r => r.json()).then(d => setVehicles(d.vehicles ?? []))
-    fetch('/api/delivery/drivers').then(r => r.json()).then(d => setDrivers(d.drivers ?? []))
-    fetch('/api/delivery/config').then(r => r.json()).then(d => {
+  const fetchAll = useCallback(() => {
+    const q = locationId ? `?location_id=${locationId}` : ''
+    fetch(`/api/delivery/zones${q}`).then(r => r.json()).then(d => setZones(d.zones ?? []))
+    fetch(`/api/delivery/vehicles${q}`).then(r => r.json()).then(d => setVehicles(d.vehicles ?? []))
+    fetch(`/api/delivery/drivers${q}`).then(r => r.json()).then(d => setDrivers(d.drivers ?? []))
+    fetch(`/api/delivery/config${q}`).then(r => r.json()).then(d => {
       setConfig(d.config)
       if (d.config) setConfigForm({ max_delivery_value: String(d.config.max_delivery_value ?? ''), max_delivery_weight: String(d.config.max_delivery_weight ?? '') })
     })
-  }, [])
+  }, [locationId])
+  useEffect(() => { if (hydrated) fetchAll() }, [hydrated, fetchAll])
 
   const saveConfig = async () => {
     await fetch('/api/delivery/config', { method: 'PUT', headers: { 'Content-Type': 'application/json' },
@@ -35,7 +39,7 @@ export default function DeliverySettingsPage() {
     await fetch('/api/delivery/zones', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newZone.name, delivery_fee: parseFloat(newZone.delivery_fee) || 0, min_order: parseFloat(newZone.min_order) || 0, estimated_delivery_minutes: parseInt(newZone.estimated_delivery_minutes) || 45 }) })
     setShowZoneForm(false); setNewZone({ name: '', delivery_fee: '', min_order: '', estimated_delivery_minutes: '' })
-    fetch('/api/delivery/zones').then(r => r.json()).then(d => setZones(d.zones ?? []))
+    fetch(`/api/delivery/zones${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => setZones(d.zones ?? []))
   }
 
   const inputCls = "h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm"

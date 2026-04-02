@@ -8,6 +8,7 @@ import { logger } from '@/lib/utils/logger'
 const pinLoginSchema = z.object({
   pin: z.string().regex(/^\d{4}$/, 'PIN must be exactly 4 digits'),
   locationId: z.uuid('Invalid location ID'),
+  registerId: z.uuid('Invalid register ID').optional(),
 })
 
 function hashPin(pin: string): string {
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const { pin, locationId } = parsed.data
+    const { pin, locationId, registerId } = parsed.data
     const pinHash = hashPin(pin)
 
     const sb = createClient(
@@ -112,6 +113,17 @@ export async function POST(request: Request) {
 
     const uniquePermissions = [...new Set(permissions)]
 
+    // Get register name if provided
+    let registerName = ''
+    if (registerId) {
+      const { data: register } = await sb
+        .from('registers')
+        .select('name')
+        .eq('id', registerId)
+        .single()
+      registerName = register?.name ?? ''
+    }
+
     // Create session cookie (keep JWT small — permissions fetched via /api/auth/me)
     await createSession({
       employeeId: employee.id,
@@ -121,6 +133,8 @@ export async function POST(request: Request) {
       employeeName: `${employee.first_name} ${employee.last_name}`,
       role: employee.role as 'budtender' | 'shift_lead' | 'manager' | 'admin' | 'owner',
       permissions: [],
+      registerId: registerId ?? '',
+      registerName,
     })
 
     logger.info('Employee logged in', {

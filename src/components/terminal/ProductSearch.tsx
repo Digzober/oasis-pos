@@ -47,6 +47,7 @@ interface ProductSearchProps {
   onSelect: (product: SearchResult) => void
   onBarcodeScan?: (result: BarcodeScanResult) => void
   locationId?: string
+  categoryId?: string
 }
 
 function playBeep() {
@@ -66,7 +67,7 @@ function playBeep() {
   }
 }
 
-export default function ProductSearch({ onSelect, onBarcodeScan, locationId }: ProductSearchProps) {
+export default function ProductSearch({ onSelect, onBarcodeScan, locationId, categoryId }: ProductSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -81,6 +82,17 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId }: P
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  // Auto-browse when category changes
+  useEffect(() => {
+    if (categoryId) {
+      search(query, categoryId)
+    } else if (query.length < 2) {
+      setResults([])
+      setIsOpen(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId])
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type })
@@ -116,22 +128,32 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId }: P
     }
   }, [locationId, onBarcodeScan])
 
-  const search = useCallback(async (q: string) => {
-    if (q.length < 2) {
+  const abortRef = useRef<AbortController | null>(null)
+
+  const search = useCallback(async (q: string, catId?: string) => {
+    if (q.length < 2 && !catId) {
       setResults([])
       setIsOpen(false)
       return
     }
+    // Cancel previous request
+    if (abortRef.current) abortRef.current.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/products/search?query=${encodeURIComponent(q)}`)
+      const params = new URLSearchParams()
+      if (q.length >= 2) params.set('query', q)
+      if (catId) params.set('category_id', catId)
+      const res = await fetch(`/api/products/search?${params}`, { signal: controller.signal })
       if (res.ok) {
         const data = await res.json()
         setResults(data.results ?? [])
         setIsOpen(true)
       }
-    } catch {
-      // silently fail
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
     } finally {
       setIsLoading(false)
     }
@@ -141,7 +163,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId }: P
     setQuery(value)
     setSelectedIndex(-1)
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => search(value), 300)
+    timerRef.current = setTimeout(() => search(value, categoryId), 300)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

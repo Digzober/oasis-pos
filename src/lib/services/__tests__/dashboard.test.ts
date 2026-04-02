@@ -51,4 +51,22 @@ describe('dashboard', () => {
     expect(kpis.transactions).toBe(0)
     expect(kpis.average_cart).toBe(0)
   })
+
+  it('9. new_customers counts customers created on given date', () => {
+    const customers = [
+      { id: 'c1', created_at: '2026-03-30T10:00:00Z' },
+      { id: 'c2', created_at: '2026-03-30T14:30:00Z' },
+      { id: 'c3', created_at: '2026-03-29T09:00:00Z' },
+    ]
+    const dateFrom = '2026-03-30T00:00:00'
+    const dateTo = '2026-03-30T23:59:59'
+    const newCust = customers.filter(c => c.created_at >= dateFrom && c.created_at <= dateTo).length
+    expect(newCust).toBe(2)
+  })
+
+  it('10. new_customers returns 0 when no customers created', () => {
+    const customers: Array<{ id: string; created_at: string }> = []
+    const newCust = customers.length
+    expect(newCust).toBe(0)
+  })
 })

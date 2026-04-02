@@ -61,11 +61,15 @@ export async function getDashboardKPIs(locationId: string | null, date: string):
   if (locationId) lowStockQuery = lowStockQuery.eq('location_id', locationId)
   const { count: lowStock } = await lowStockQuery
 
+  // New customers created today (org-wide — customers don't have location_id)
+  const { count: newCust } = await sb.from('customers').select('id', { count: 'exact', head: true })
+    .gte('created_at', dateFrom).lte('created_at', dateTo)
+
   return {
     transactions: saleCount, gross_sales: grossSales, net_sales: netSales,
     total_discounts: totalDisc, total_tax: totalTax, total_revenue: roundMoney(netSales + totalTax),
     customer_count: customers.size, average_cart: avgCart, products_sold: productsSold,
-    total_returns: totalReturns, total_voids: totalVoids, new_customers: 0,
+    total_returns: totalReturns, total_voids: totalVoids, new_customers: newCust ?? 0,
     pending_online_orders: pendingOnline ?? 0, pending_transfers: 0,
     open_drawers: openDrawers ?? 0, low_stock_count: lowStock ?? 0,
   }

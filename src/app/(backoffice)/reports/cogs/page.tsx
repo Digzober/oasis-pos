@@ -1,11 +1,13 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type R = any
 
 export default function COGSPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [data, setData] = useState<R>(null)
   const [dateFrom, setDateFrom] = useState(new Date().toISOString().slice(0, 10))
   const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10))
@@ -14,12 +16,12 @@ export default function COGSPage() {
 
   const fetch_ = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(`/api/reports/cogs?date_from=${dateFrom}&date_to=${dateTo}&group_by=${groupBy}`)
+    const res = await fetch(`/api/reports/cogs?date_from=${dateFrom}&date_to=${dateTo}&group_by=${groupBy}${locationId ? `&location_id=${locationId}` : ''}`)
     if (res.ok) setData(await res.json())
     setLoading(false)
-  }, [dateFrom, dateTo, groupBy])
+  }, [dateFrom, dateTo, groupBy, locationId])
 
-  useEffect(() => { fetch_() }, [fetch_])
+  useEffect(() => { if (hydrated) fetch_() }, [hydrated, fetch_])
 
   const exportCsv = () => {
     if (!data?.items) return

@@ -19,27 +19,33 @@ export class BioTrackClient {
 
   async authenticate(): Promise<void> {
     try {
-      const res = await fetch(`${this.config.v3Url}/auth/login`, {
+      // BioTrack Trace 2.0 v3 REST API uses /v1/login with PascalCase fields
+      // Response contains "Session" key used as Bearer token for subsequent requests
+      const res = await fetch(`${this.config.v3Url}/v1/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: this.config.username,
-          password: this.config.password,
-          license_number: this.config.licenseNumber,
+          Username: this.config.username,
+          Password: this.config.password,
+          UBI: this.config.licenseNumber,
         }),
       })
 
       const body = await res.json()
 
-      if (!res.ok || !body.success) {
+      if (!res.ok || body.Error) {
         throw new BioTrackError(
-          `Authentication failed: ${body.error ?? res.statusText}`,
+          `Authentication failed: ${body.Error ?? body.error ?? res.statusText}`,
           res.status,
-          body.error,
+          body.Error ?? body.error,
         )
       }
 
-      this.sessionToken = body.data?.token ?? body.token
+      // v3 returns session token in "Session" or "sessionid" field
+      this.sessionToken = body.Session ?? body.sessionid ?? body.data?.token ?? body.token
+      if (!this.sessionToken) {
+        throw new BioTrackError('Authentication succeeded but no session token in response', 500)
+      }
       this.tokenExpiry = new Date(Date.now() + TOKEN_REFRESH_MS)
       logger.info('BioTrack authenticated', { licenseNumber: this.config.licenseNumber })
     } catch (err) {
@@ -172,6 +178,10 @@ export class BioTrackClient {
 
 let clientInstance: BioTrackClient | null = null
 
+/**
+ * Gets a shared BioTrack v3 REST client using environment variables.
+ * @deprecated Use getBioTrackClientForLocation() for per-location DB-driven config.
+ */
 export function getBioTrackClient(): BioTrackClient {
   if (!clientInstance) {
     clientInstance = new BioTrackClient({
@@ -183,4 +193,32 @@ export function getBioTrackClient(): BioTrackClient {
     })
   }
   return clientInstance
+}
+
+// Per-location client cache: locationId -> { client, expiresAt }
+const locationClients = new Map<string, { client: BioTrackClient; expiresAt: number }>()
+const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+/**
+ * Gets a BioTrack v3 REST client configured for a specific location.
+ * Loads credentials from the biotrack_config table.
+ * Caches client instances to reuse auth tokens across requests.
+ */
+export async function getBioTrackClientForLocation(locationId: string): Promise<BioTrackClient | null> {
+  const cached = locationClients.get(locationId)
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.client
+  }
+
+  // Dynamic import to avoid circular dependency
+  const { loadBioTrackConfig } = await import('./configLoader')
+  const config = await loadBioTrackConfig(locationId)
+
+  if (!config) {
+    return null
+  }
+
+  const client = new BioTrackClient(config)
+  locationClients.set(locationId, { client, expiresAt: Date.now() + CLIENT_CACHE_TTL_MS })
+  return client
 }

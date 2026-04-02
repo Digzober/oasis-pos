@@ -16,6 +16,12 @@ const ManualReceiveSchema = z.object({
   expiration_date: z.string().nullable().optional(),
   vendor_id: z.uuid().nullable().optional(),
   notes: z.string().nullable().optional(),
+  strain_id: z.uuid().nullable().optional(),
+  flower_equivalent: z.number().nullable().optional(),
+  med_price: z.number().nullable().optional(),
+  rec_price: z.number().nullable().optional(),
+  inventory_status: z.string().nullable().optional(),
+  tags: z.array(z.uuid()).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -41,6 +47,12 @@ export async function POST(request: NextRequest) {
       expiration_date: parsed.data.expiration_date ?? null,
       vendor_id: parsed.data.vendor_id ?? null,
       notes: parsed.data.notes ?? null,
+      strain_id: parsed.data.strain_id ?? null,
+      flower_equivalent: parsed.data.flower_equivalent ?? null,
+      med_price: parsed.data.med_price ?? null,
+      rec_price: parsed.data.rec_price ?? null,
+      inventory_status: parsed.data.inventory_status ?? null,
+      tags: parsed.data.tags ?? [],
     })
 
     return NextResponse.json({ inventory_item: item }, { status: 201 })

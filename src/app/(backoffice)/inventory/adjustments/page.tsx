@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
-const TYPES = [
+const FALLBACK_TYPES = [
   { value: 'count_correction', label: 'Count Correction' },
   { value: 'damage', label: 'Damage' },
   { value: 'theft', label: 'Theft' },
@@ -11,7 +12,13 @@ const TYPES = [
   { value: 'other', label: 'Other' },
 ]
 
+interface AdjustmentType {
+  value: string
+  label: string
+}
+
 export default function AdjustmentsPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [barcode, setBarcode] = useState('')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [item, setItem] = useState<any>(null)
@@ -22,11 +29,43 @@ export default function AdjustmentsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [types, setTypes] = useState<AdjustmentType[]>(FALLBACK_TYPES)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadReasons() {
+      try {
+        const res = await fetch('/api/settings/adjustment-reasons')
+        if (!res.ok) return
+        const data = await res.json()
+        const reasons = data.reasons ?? []
+        if (!cancelled && reasons.length > 0) {
+          const mapped: AdjustmentType[] = reasons
+            .filter((r: { is_active?: boolean }) => r.is_active !== false)
+            .map((r: { id: string; name: string; slug?: string }) => ({
+              value: r.slug ?? r.id,
+              label: r.name,
+            }))
+          if (mapped.length > 0) {
+            setTypes(mapped)
+            const first = mapped[0]
+            if (first) setAdjType(first.value)
+          }
+        }
+      } catch {
+        // Keep fallback types on error
+      }
+    }
+    loadReasons()
+    return () => { cancelled = true }
+  }, [])
 
   const search = async () => {
     if (!barcode.trim()) return
     setSearching(true); setItem(null); setError('')
-    const res = await fetch(`/api/inventory?search=${encodeURIComponent(barcode)}&per_page=1`)
+    const params = new URLSearchParams({ search: barcode, per_page: '1' })
+    if (locationId) params.set('location_id', locationId)
+    const res = await fetch(`/api/inventory?${params}`)
     if (res.ok) {
       const data = await res.json()
       if (data.items?.length > 0) {
@@ -91,7 +130,7 @@ export default function AdjustmentsPage() {
             <label className="block">
               <span className="text-xs text-gray-400">Type</span>
               <select value={adjType} onChange={e => setAdjType(e.target.value)} className={inputCls}>
-                {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </label>
           </div>

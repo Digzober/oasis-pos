@@ -9,14 +9,34 @@ interface LookupItem {
   [key: string]: unknown
 }
 
+interface FilterOption {
+  value: string
+  label: string
+}
+
+interface FilterConfig {
+  key: string
+  label: string
+  options: FilterOption[]
+}
+
 interface LookupCrudPageProps {
   title: string
   apiPath: string
   entityKey: string
   extraFields?: Array<{ key: string; label: string; type?: string }>
+  filters?: FilterConfig[]
 }
 
-export default function LookupCrudPage({ title, apiPath, entityKey, extraFields = [] }: LookupCrudPageProps) {
+const PAGE_SIZE_OPTIONS = [25, 50, 100]
+
+export default function LookupCrudPage({
+  title,
+  apiPath,
+  entityKey,
+  extraFields = [],
+  filters = [],
+}: LookupCrudPageProps) {
   const [items, setItems] = useState<LookupItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -25,17 +45,43 @@ export default function LookupCrudPage({ title, apiPath, entityKey, extraFields 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  const [includeInactive, setIncludeInactive] = useState(false)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(25)
+  const [total, setTotal] = useState(0)
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    filters.forEach(f => { initial[f.key] = '' })
+    return initial
+  })
+
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+
   const fetchItems = useCallback(async () => {
     setLoading(true)
-    const res = await fetch(apiPath)
+    const params = new URLSearchParams()
+    params.set('page', String(page))
+    params.set('limit', String(limit))
+    if (includeInactive) {
+      params.set('includeInactive', 'true')
+    }
+    for (const [key, val] of Object.entries(filterValues)) {
+      if (val) {
+        params.set(key, val)
+      }
+    }
+    const res = await fetch(`${apiPath}?${params.toString()}`)
     if (res.ok) {
       const data = await res.json()
       setItems(data[entityKey] ?? [])
+      setTotal(data.total ?? 0)
     }
     setLoading(false)
-  }, [apiPath, entityKey])
+  }, [apiPath, entityKey, page, limit, includeInactive, filterValues])
 
   useEffect(() => { fetchItems() }, [fetchItems])
+
+  useEffect(() => { setPage(1) }, [includeInactive, limit, filterValues])
 
   const openNew = () => {
     setEditId(null)
@@ -71,13 +117,59 @@ export default function LookupCrudPage({ title, apiPath, entityKey, extraFields 
     fetchItems()
   }
 
+  const handleReactivate = async (id: string) => {
+    await fetch(`${apiPath}/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: true }),
+    })
+    fetchItems()
+  }
+
   const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const selectCls = "h-8 px-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-50">{title}</h1>
         <button onClick={openNew} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New</button>
+      </div>
+
+      {/* Controls bar */}
+      <div className="flex flex-wrap items-center gap-4 mb-4">
+        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={e => setIncludeInactive(e.target.checked)}
+            className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+          />
+          Show inactive
+        </label>
+        {filters.map(f => (
+          <label key={f.key} className="flex items-center gap-2 text-sm text-gray-400">
+            <span>{f.label}:</span>
+            <select
+              value={filterValues[f.key] ?? ''}
+              onChange={e => setFilterValues(prev => ({ ...prev, [f.key]: e.target.value }))}
+              className={selectCls}
+            >
+              <option value="">All</option>
+              {f.options.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+        <div className="ml-auto flex items-center gap-2 text-sm text-gray-400">
+          <span>Per page:</span>
+          <select value={limit} onChange={e => setLimit(Number(e.target.value))} className={selectCls}>
+            {PAGE_SIZE_OPTIONS.map(n => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Form modal */}
@@ -92,7 +184,34 @@ export default function LookupCrudPage({ title, apiPath, entityKey, extraFields 
             {extraFields.map(f => (
               <label key={f.key} className="block">
                 <span className="text-xs text-gray-400">{f.label}</span>
-                <input type={f.type ?? 'text'} value={formData[f.key] ?? ''} onChange={e => setFormData(p => ({ ...p, [f.key]: e.target.value }))} className={inputCls} />
+                {f.type === 'select' ? (
+                  <select
+                    value={formData[f.key] ?? ''}
+                    onChange={e => setFormData(p => ({ ...p, [f.key]: e.target.value }))}
+                    className={inputCls}
+                  >
+                    <option value="">-- Select --</option>
+                    {filters
+                      .find(fl => fl.key === f.key)
+                      ?.options.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                  </select>
+                ) : f.type === 'textarea' ? (
+                  <textarea
+                    value={formData[f.key] ?? ''}
+                    onChange={e => setFormData(p => ({ ...p, [f.key]: e.target.value }))}
+                    rows={3}
+                    className={`${inputCls} h-auto py-2`}
+                  />
+                ) : (
+                  <input
+                    type={f.type ?? 'text'}
+                    value={formData[f.key] ?? ''}
+                    onChange={e => setFormData(p => ({ ...p, [f.key]: e.target.value }))}
+                    className={inputCls}
+                  />
+                )}
               </label>
             ))}
             {error && <p className="text-red-400 text-sm">{error}</p>}
@@ -111,26 +230,64 @@ export default function LookupCrudPage({ title, apiPath, entityKey, extraFields 
             <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>
               {extraFields.map(f => <th key={f.key} className="text-left px-4 py-3">{f.label}</th>)}
+              {includeInactive && <th className="text-left px-4 py-3">Status</th>}
               <th className="text-right px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={2 + extraFields.length} className="text-center py-8 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-gray-500">Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={2 + extraFields.length} className="text-center py-8 text-gray-500">None found</td></tr>
+              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-gray-500">None found</td></tr>
             ) : items.map(item => (
-              <tr key={item.id} className="border-b border-gray-700/50">
+              <tr key={item.id} className={`border-b border-gray-700/50 ${!item.is_active ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-2.5 text-gray-50">{item.name}</td>
-                {extraFields.map(f => <td key={f.key} className="px-4 py-2.5 text-gray-400">{String(item[f.key] ?? '—')}</td>)}
+                {extraFields.map(f => <td key={f.key} className="px-4 py-2.5 text-gray-400">{String(item[f.key] ?? '')}</td>)}
+                {includeInactive && (
+                  <td className="px-4 py-2.5">
+                    {item.is_active ? (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400">Active</span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-400">Inactive</span>
+                    )}
+                  </td>
+                )}
                 <td className="px-4 py-2.5 text-right">
                   <button onClick={() => openEdit(item)} className="text-xs text-gray-400 hover:text-emerald-400 mr-3">Edit</button>
-                  <button onClick={() => handleDeactivate(item.id)} className="text-xs text-gray-400 hover:text-red-400">Remove</button>
+                  {item.is_active ? (
+                    <button onClick={() => handleDeactivate(item.id)} className="text-xs text-gray-400 hover:text-red-400">Remove</button>
+                  ) : (
+                    <button onClick={() => handleReactivate(item.id)} className="text-xs text-gray-400 hover:text-emerald-400">Reactivate</button>
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4 text-sm text-gray-400">
+        <span>
+          {total} {total === 1 ? 'item' : 'items'} total
+          {totalPages > 1 && ` \u2014 Page ${page} of ${totalPages}`}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600 disabled:hover:bg-gray-700"
+          >
+            Prev
+          </button>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600 disabled:hover:bg-gray-700"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   )

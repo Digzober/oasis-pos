@@ -10,6 +10,8 @@ export interface SessionPayload {
   employeeName: string
   role: 'budtender' | 'shift_lead' | 'manager' | 'admin' | 'owner'
   permissions: string[]
+  registerId: string
+  registerName: string
   exp: number
 }
 
@@ -71,6 +73,19 @@ export async function requireSession(): Promise<SessionPayload> {
   if (!session) {
     throw new AppError('UNAUTHORIZED', 'Authentication required', undefined, 401)
   }
+
+  // Check for location override from the backoffice location switcher
+  const cookieStore = await cookies()
+  const locationOverride = cookieStore.get('oasis-location-id')?.value
+  if (locationOverride && locationOverride !== session.locationId) {
+    const locationName = cookieStore.get('oasis-location-name')?.value
+    return {
+      ...session,
+      locationId: locationOverride,
+      locationName: locationName ?? session.locationName,
+    }
+  }
+
   return session
 }
 

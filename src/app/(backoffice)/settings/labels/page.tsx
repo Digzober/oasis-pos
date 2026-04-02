@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Template = any
@@ -24,13 +25,14 @@ const DEFAULT_FIELDS = [
 ]
 
 export default function LabelsPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', label_type: 'product', width_mm: '50', height_mm: '25' })
   const [saving, setSaving] = useState(false)
 
-  const fetch_ = () => { fetch('/api/labels/templates').then(r => r.json()).then(d => setTemplates(d.templates ?? [])) }
-  useEffect(() => { fetch_() }, [])
+  const fetch_ = useCallback(() => { fetch(`/api/labels/templates${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => setTemplates(d.templates ?? [])) }, [locationId])
+  useEffect(() => { if (hydrated) fetch_() }, [hydrated, fetch_])
 
   const save = async () => {
     setSaving(true)

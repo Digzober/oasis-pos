@@ -15,4 +15,4 @@ CREATE TABLE IF NOT EXISTS reconciliation_reports (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_reconciliation_reports_location ON reconciliation_reports(location_id, run_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reconciliation_reports_location ON reconciliation_reports(location_id, run_at DESC);

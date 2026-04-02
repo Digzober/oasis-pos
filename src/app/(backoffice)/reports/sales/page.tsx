@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 import type { SalesSummary } from '@/lib/services/reportingService'
 
 const SalesByHourChart = dynamic(() => import('@/components/backoffice/charts/SalesByHourChart'), { ssr: false })
@@ -9,6 +10,18 @@ const SalesByCategoryChart = dynamic(() => import('@/components/backoffice/chart
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+}
+
+function exportCSV(headers: string[], rows: string[][], filename: string) {
+  const escape = (v: string) => v.includes(',') || v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v
+  const csv = [headers.join(','), ...rows.map(r => r.map(c => escape(String(c ?? ''))).join(','))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 const PRESETS: Array<{ label: string; getDates: () => [string, string] }> = [
@@ -23,6 +36,7 @@ function dayOffset(n: number): string { const d = new Date(); d.setDate(d.getDat
 function isoDate(d: Date): string { return d.toISOString().slice(0, 10) }
 
 export default function SalesDashboardPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [dateFrom, setDateFrom] = useState(todayStr())
   const [dateTo, setDateTo] = useState(todayStr())
   const [summary, setSummary] = useState<SalesSummary | null>(null)
@@ -31,19 +45,44 @@ export default function SalesDashboardPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/reports/sales-summary?date_from=${dateFrom}&date_to=${dateTo}`)
+      const res = await fetch(`/api/reports/sales-summary?date_from=${dateFrom}&date_to=${dateTo}${locationId ? `&location_id=${locationId}` : ''}`)
       if (res.ok) setSummary(await res.json())
     } catch { /* ignore */ }
     setLoading(false)
-  }, [dateFrom, dateTo])
+  }, [dateFrom, dateTo, locationId])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-gray-50">Sales Dashboard</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          {summary && (
+            <button onClick={() => {
+              const date = new Date().toISOString().slice(0, 10)
+              const metricRows: string[][] = [
+                ['Total Sales', String(summary.total_sales)],
+                ['Transaction Count', String(summary.total_transactions)],
+                ['Average Sale', String(summary.average_transaction)],
+                ['Total Tax', String(summary.total_tax_collected)],
+                ['Total Discounts', String(summary.total_discounts_given)],
+              ]
+              const hourRows: string[][] = summary.sales_by_hour.map((h) => [
+                String(h.hour), String(h.count), String(h.total),
+              ])
+              const allRows = [
+                ...metricRows,
+                ['', ''],
+                ['Hour', 'Transactions', 'Revenue'],
+                ...hourRows,
+              ]
+              exportCSV(['Metric', 'Value'], allRows, `sales-dashboard-${date}.csv`)
+            }} className="px-4 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              Export CSV
+            </button>
+          )}
           {PRESETS.map((p) => (
             <button
               key={p.label}

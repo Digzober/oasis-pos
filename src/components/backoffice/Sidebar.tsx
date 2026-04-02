@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Cookies from 'js-cookie'
-import { LayoutDashboard, Package, Warehouse, Users, Monitor, Megaphone, Truck, BarChart3, Settings, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Package, Users, Megaphone, Truck, BarChart3, Settings, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 interface NavChild { label: string; href: string }
@@ -13,33 +13,65 @@ interface NavItem { label: string; href?: string; icon: React.ElementType; child
 const navigation: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Products', icon: Package, children: [
-    { label: 'Catalog', href: '/products' }, { label: 'Categories', href: '/products/categories' },
-    { label: 'Brands', href: '/products/brands' }, { label: 'Vendors', href: '/products/vendors' },
+    { label: 'Inventory', href: '/inventory' },
+    { label: 'Catalog', href: '/products' },
+    { label: 'Manifests', href: '/inventory/manifests' },
+    { label: 'Purchase Orders', href: '/inventory/purchase-orders' },
+    { label: 'Audits', href: '/inventory/audits' },
+    { label: 'Journal', href: '/inventory/journal' },
+    { label: 'Vendors', href: '/products/vendors' },
+    { label: 'Brands', href: '/products/brands' },
     { label: 'Strains', href: '/products/strains' },
-  ]},
-  { label: 'Inventory', icon: Warehouse, children: [
-    { label: 'Current Stock', href: '/inventory' }, { label: 'Receive', href: '/inventory/receive' },
-    { label: 'Adjustments', href: '/inventory/adjustments' }, { label: 'Transfers', href: '/inventory/transfers' },
+    { label: 'Tags', href: '/products/tags' },
+    { label: 'Configure', href: '/products/configure' },
   ]},
   { label: 'Customers', icon: Users, children: [
-    { label: 'All Customers', href: '/customers' }, { label: 'Segments', href: '/customers/segments' },
+    { label: 'All Customers', href: '/customers' },
+    { label: 'Groups', href: '/customers/groups' },
+    { label: 'Segments', href: '/customers/segments' },
     { label: 'Referrals', href: '/customers/referrals' },
+    { label: 'Configure', href: '/customers/configure' },
   ]},
   { label: 'Employees', href: '/employees', icon: Users },
   { label: 'Marketing', icon: Megaphone, children: [
-    { label: 'Campaigns', href: '/marketing/campaigns' }, { label: 'Events', href: '/marketing/events' },
+    { label: 'Discounts', href: '/marketing/discounts' },
+    { label: 'Loyalty', href: '/marketing/loyalty' },
+    { label: 'Campaigns', href: '/marketing/campaigns' },
+    { label: 'Workflows', href: '/marketing/workflows' },
+    { label: 'Events', href: '/marketing/events' },
+    { label: 'Templates', href: '/marketing/templates' },
+    { label: 'Configure', href: '/marketing/configure' },
+  ]},
+  { label: 'Registers', icon: Settings, children: [
+    { label: 'All Registers', href: '/settings/registers' },
+    { label: 'Guestlist', href: '/registers/configure/guestlist' },
+    { label: 'Order Workflow', href: '/registers/configure/workflow' },
+    { label: 'Returns', href: '/registers/configure/returns' },
+    { label: 'Cancellations', href: '/registers/configure/cancellations' },
+    { label: 'Voids', href: '/registers/configure/voids' },
+    { label: 'Settings', href: '/registers/configure/settings' },
   ]},
   { label: 'Delivery', href: '/delivery', icon: Truck },
   { label: 'Reports', icon: BarChart3, children: [
-    { label: 'Transactions', href: '/reports/transactions' }, { label: 'Sales', href: '/reports/sales' },
-    { label: 'COGS', href: '/reports/cogs' }, { label: 'Inventory', href: '/reports/inventory' },
-    { label: 'Reconciliation', href: '/reports/reconciliation' }, { label: 'Schedules', href: '/reports/schedules' },
+    { label: 'Transactions', href: '/reports/transactions' },
+    { label: 'Sales', href: '/reports/sales' },
+    { label: 'COGS', href: '/reports/cogs' },
+    { label: 'Inventory', href: '/reports/inventory' },
+    { label: 'Reconciliation', href: '/reports/reconciliation' },
+    { label: 'Schedules', href: '/reports/schedules' },
   ]},
   { label: 'Settings', icon: Settings, children: [
-    { label: 'Locations', href: '/settings/locations' }, { label: 'Registers', href: '/settings/registers' },
-    { label: 'Rooms', href: '/settings/rooms' }, { label: 'Taxes', href: '/settings/taxes' },
-    { label: 'Limits', href: '/settings/limits' }, { label: 'Fees', href: '/settings/fees' },
-    { label: 'Receipts', href: '/settings/receipts' }, { label: 'Labels', href: '/settings/labels' },
+    { label: 'Location Settings', href: '/settings/location-settings' },
+    { label: 'Locations', href: '/settings/locations' },
+    { label: 'Rooms', href: '/settings/rooms' },
+    { label: 'Printers', href: '/settings/printers' },
+    { label: 'BioTrack', href: '/settings/biotrack' },
+    { label: 'Dutchie', href: '/settings/dutchie' },
+    { label: 'Taxes', href: '/settings/taxes' },
+    { label: 'Limits', href: '/settings/limits' },
+    { label: 'Fees', href: '/settings/fees' },
+    { label: 'Receipts', href: '/settings/receipts' },
+    { label: 'Labels', href: '/settings/labels' },
     { label: 'Delivery', href: '/settings/delivery' },
   ]},
 ]

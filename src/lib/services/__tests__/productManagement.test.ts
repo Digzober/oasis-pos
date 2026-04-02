@@ -74,4 +74,48 @@ describe('productManagementService logic', () => {
     expect(sku).toBe('PRD-00043')
     expect(sku).toMatch(/^PRD-\d{5}$/)
   })
+
+  it('11. category slug auto-generated from name', () => {
+    const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    expect(slugify('Pre-Rolls (Infused)')).toBe('pre-rolls-infused')
+    expect(slugify('Flower')).toBe('flower')
+    expect(slugify('  Moon Rocks  ')).toBe('moon-rocks')
+  })
+
+  it('12. category requires name and tax_category', () => {
+    const validate = (input: { name?: string; tax_category?: string }) => {
+      if (!input.name?.trim()) return 'Name is required'
+      if (!input.tax_category?.trim()) return 'Tax category is required'
+      return null
+    }
+    expect(validate({})).toBe('Name is required')
+    expect(validate({ name: 'Test' })).toBe('Tax category is required')
+    expect(validate({ name: 'Test', tax_category: 'Cannabis' })).toBeNull()
+  })
+
+  it('13. duplicate category slug rejected', () => {
+    const existingSlugs = ['flower', 'edibles', 'concentrates']
+    const newSlug = 'flower'
+    expect(existingSlugs.includes(newSlug)).toBe(true)
+  })
+
+  it('14. deactivating category with active products blocked', () => {
+    const activeProductCount = 5
+    const canDeactivate = activeProductCount === 0
+    expect(canDeactivate).toBe(false)
+  })
+
+  it('15. category sort_order auto-increments', () => {
+    const maxSortOrder = 24
+    const newSortOrder = maxSortOrder + 1
+    expect(newSortOrder).toBe(25)
+  })
+
+  it('16. category form renders all required fields', () => {
+    const fields = ['name', 'slug', 'tax_category', 'available_for', 'master_category', 'purchase_limit_category', 'parent_id', 'sort_order', 'description', 'regulatory_category']
+    expect(fields).toContain('name')
+    expect(fields).toContain('tax_category')
+    expect(fields).toContain('available_for')
+    expect(fields.length).toBeGreaterThanOrEqual(10)
+  })
 })

@@ -31,6 +31,8 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
   const [endDate, setEndDate] = useState('')
   const [recurring, setRecurring] = useState(false)
   const [recDays, setRecDays] = useState<number[]>([])
+  const [recStartTime, setRecStartTime] = useState('')
+  const [recEndTime, setRecEndTime] = useState('')
 
   // Constraint
   const [constraintType, setConstraintType] = useState('min_quantity')
@@ -60,6 +62,8 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
       setStartDate(disc.start_date?.slice(0, 16) ?? ''); setEndDate(disc.end_date?.slice(0, 16) ?? '')
       setRecurring((disc.weekly_recurrence ?? []).length > 0)
       setRecDays(disc.weekly_recurrence ?? [])
+      setRecStartTime(disc.recurrence_start_time ?? '')
+      setRecEndTime(disc.recurrence_end_time ?? '')
       setCustomerTypes(disc.customer_types ?? ['all'])
       setLocationIds(disc.location_ids ?? [])
       setFirstTimeOnly(disc.first_time_customer_only ?? false)
@@ -79,6 +83,8 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
         application_method: appMethod, discount_stacking: isStackable,
         start_date: startDate || null, end_date: endDate || null,
         weekly_recurrence: recurring ? recDays : null,
+        recurrence_start_time: recurring && recStartTime ? recStartTime : null,
+        recurrence_end_time: recurring && recEndTime ? recEndTime : null,
         customer_types: customerTypes, location_ids: locationIds,
         first_time_customer_only: firstTimeOnly,
         requires_manager_approval: requiresApproval, status,
@@ -152,9 +158,15 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
           </div>
           <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} className="rounded" /> Weekly recurrence</label>
           {recurring && (
-            <div className="flex gap-2">{DAYS.map((d, i) => (
-              <button key={i} onClick={() => toggleDay(i)} className={`w-10 h-10 rounded-lg text-xs font-medium ${recDays.includes(i) ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-400'}`}>{d}</button>
-            ))}</div>
+            <>
+              <div className="flex gap-2">{DAYS.map((d, i) => (
+                <button key={i} onClick={() => toggleDay(i)} className={`w-10 h-10 rounded-lg text-xs font-medium ${recDays.includes(i) ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-400'}`}>{d}</button>
+              ))}</div>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="block"><span className="text-xs text-gray-400">Active Start Time</span><input type="time" value={recStartTime} onChange={e => setRecStartTime(e.target.value)} className={inputCls} /></label>
+                <label className="block"><span className="text-xs text-gray-400">Active End Time</span><input type="time" value={recEndTime} onChange={e => setRecEndTime(e.target.value)} className={inputCls} /></label>
+              </div>
+            </>
           )}
         </>}
 

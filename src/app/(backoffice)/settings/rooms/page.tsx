@@ -1,16 +1,18 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyR = any
 
 export default function RoomsPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [rooms, setRooms] = useState<AnyR[]>([])
   const [newName, setNewName] = useState('')
   const [loading, setLoading] = useState(true)
 
-  const fetchRooms = () => { fetch('/api/rooms').then(r => r.json()).then(d => { setRooms(d.rooms ?? []); setLoading(false) }) }
-  useEffect(() => { fetchRooms() }, [])
+  const fetchRooms = useCallback(() => { fetch(`/api/rooms${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => { setRooms(d.rooms ?? []); setLoading(false) }) }, [locationId])
+  useEffect(() => { if (hydrated) fetchRooms() }, [hydrated, fetchRooms])
 
   const addRoom = async () => {
     if (!newName.trim()) return

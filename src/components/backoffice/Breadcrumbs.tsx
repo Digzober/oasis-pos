@@ -16,7 +16,7 @@ const LABELS: Record<string, string> = {
   transactions: 'Transactions', cogs: 'COGS', reconciliation: 'Reconciliation',
   locations: 'Locations', rooms: 'Rooms', taxes: 'Taxes',
   limits: 'Limits', fees: 'Fees & Donations', receipts: 'Receipts',
-  labels: 'Labels', new: 'New', edit: 'Edit', permissions: 'Permissions',
+  labels: 'Labels', new: 'New', edit: 'Edit', permissions: 'Permissions', manifest: 'Manifest',
   'time-clock': 'Time Clock', 'low-stock': 'Low Stock', schedules: 'Schedules',
 }
 

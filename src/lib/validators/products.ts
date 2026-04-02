@@ -17,6 +17,11 @@ export const ProductQuerySchema = PaginationSchema.extend({
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional(),
+  tagId: z.uuid().optional(),
+  onlineAvailable: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .optional(),
 })
 
 export type ProductQueryInput = z.infer<typeof ProductQuerySchema>
@@ -45,9 +50,30 @@ export const ProductCreateSchema = z.object({
   flowerEquivalent: z.number().min(0).nullable().optional(),
   description: z.string().nullable().optional(),
   onlineTitle: z.string().nullable().optional(),
-  onlineDescription: z.string().nullable().optional(),
+  onlineDescription: z.string().max(2500).nullable().optional(),
   regulatoryCategory: z.string().nullable().optional(),
-  barcode: z.string().nullable().optional(),
+  barcode: z.string().max(20).nullable().optional(),
+  externalCategory: z.string().nullable().optional(),
+  isOnSale: z.boolean().optional(),
+  salePrice: z.number().nonnegative().nullable().optional(),
+  alternateName: z.string().nullable().optional(),
+  producerId: z.string().uuid().nullable().optional(),
+  size: z.string().nullable().optional(),
+  flavor: z.string().nullable().optional(),
+  availableFor: z.enum(['all', 'recreational', 'medical']).optional(),
+  allowAutomaticDiscounts: z.boolean().optional(),
+  dosage: z.string().nullable().optional(),
+  netWeight: z.number().nonnegative().nullable().optional(),
+  netWeightUnit: z.string().nullable().optional(),
+  grossWeightGrams: z.number().nonnegative().nullable().optional(),
+  unitThcDose: z.number().nonnegative().nullable().optional(),
+  unitCbdDose: z.number().nonnegative().nullable().optional(),
+  administrationMethod: z.string().nullable().optional(),
+  packageSize: z.number().int().nonnegative().nullable().optional(),
+  externalSubCategory: z.string().nullable().optional(),
+  allergens: z.string().nullable().optional(),
+  ingredients: z.string().nullable().optional(),
+  instructions: z.string().nullable().optional(),
 })
 
 export type ProductCreateInput = z.infer<typeof ProductCreateSchema>

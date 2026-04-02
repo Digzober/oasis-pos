@@ -34,6 +34,7 @@ function makeCartInput(p: {
 export default function CheckoutPage() {
   const [activeTab, setActiveTab] = useState<TerminalTab>('sale')
   const [showNewCustomer, setShowNewCustomer] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string } | null>(null)
   const addItem = useCart((s) => s.addItem)
   const initializeCart = useCart((s) => s.initializeCart)
   const configLoaded = useCart((s) => s.configLoaded)
@@ -41,7 +42,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (session && !configLoaded) {
-      initializeCart({ locationId: session.locationId, organizationId: session.organizationId, employeeId: session.employeeId, registerId: '' })
+      initializeCart({ locationId: session.locationId, organizationId: session.organizationId, employeeId: session.employeeId, registerId: session.registerId ?? '' })
     }
   }, [session, configLoaded, initializeCart])
 
@@ -64,9 +65,18 @@ export default function CheckoutPage() {
           {activeTab === 'sale' && (
             <div className="flex flex-col gap-4 h-full">
               <ProductSearch locationId={session?.locationId}
+                categoryId={selectedCategory?.id}
                 onSelect={(product) => addItem(makeCartInput(product))}
                 onBarcodeScan={(result) => addItem(makeCartInput(result.product, result.inventory_item.id, result.inventory_item.biotrack_barcode))} />
-              <CategoryGrid onSelect={(category) => console.log('Category:', category.name)} />
+              {selectedCategory && (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-900/50 border border-emerald-700 rounded-full text-sm text-emerald-300">
+                    {selectedCategory.name}
+                    <button onClick={() => setSelectedCategory(null)} className="hover:text-white">&#10005;</button>
+                  </div>
+                </div>
+              )}
+              <CategoryGrid onSelect={(category) => setSelectedCategory({ id: category.id, name: category.name })} />
             </div>
           )}
 

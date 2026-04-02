@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react'
 import BioTrackStatus from './BioTrackStatus'
 import OfflineQueuePanel from './OfflineQueuePanel'
 import { useConnectivity } from '@/hooks/useConnectivity'
+import { useSession } from '@/hooks/useSession'
 import { getLastCacheTime } from '@/lib/offline/offlineCache'
 
 export default function StatusBar() {
   const { isOnline, queueDepth } = useConnectivity()
+  const { session } = useSession()
   const [time, setTime] = useState('')
   const [cacheAge, setCacheAge] = useState('')
   const [showQueue, setShowQueue] = useState(false)
@@ -39,7 +41,7 @@ export default function StatusBar() {
 
       {/* Center: Register + cache age */}
       <div className="flex-1 text-center">
-        Register 1
+        {session?.registerName || 'No Register'}
         {cacheAge && <span className="ml-2 text-gray-500">Data: {cacheAge} ago</span>}
       </div>
 

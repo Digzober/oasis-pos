@@ -34,6 +34,7 @@ function makeInput(overrides: Partial<CartItemInput> = {}): CartItemInput {
 describe('useCart store', () => {
   beforeEach(() => {
     useCart.getState().clearCart()
+    useCart.setState({ heldCarts: [] })
   })
 
   it('1. add item: appears in cart, subtotal updates', () => {
@@ -135,5 +136,43 @@ describe('useCart store', () => {
 
     expect(useCart.getState().items).toHaveLength(0)
     expect(useCart.getState().subtotal).toBe(0)
+  })
+
+  it('11. hold saves current cart to heldCarts', () => {
+    useCart.getState().addItem(makeInput())
+    useCart.getState().addItem(makeInput({ productId: 'prod-2', inventoryItemId: 'inv-2', productName: 'Other', unitPrice: 20 }))
+    useCart.getState().holdCart('Test Employee')
+
+    const state = useCart.getState()
+    expect(state.items).toHaveLength(0)
+    expect(state.heldCarts).toHaveLength(1)
+    expect(state.heldCarts[0]!.heldBy).toBe('Test Employee')
+    expect(state.heldCarts[0]!.itemCount).toBe(2)
+  })
+
+  it('12. resume restores held cart as active', () => {
+    useCart.getState().addItem(makeInput())
+    useCart.getState().holdCart('Test Employee')
+
+    const heldId = useCart.getState().heldCarts[0]!.id
+    useCart.getState().resumeCart(heldId)
+
+    const state = useCart.getState()
+    expect(state.items).toHaveLength(1)
+    expect(state.items[0]!.productName).toBe('Test Product')
+    expect(state.heldCarts).toHaveLength(0)
+  })
+
+  it('13. cannot hold empty cart', () => {
+    useCart.getState().holdCart('Test Employee')
+    expect(useCart.getState().heldCarts).toHaveLength(0)
+  })
+
+  it('14. delete held cart removes it', () => {
+    useCart.getState().addItem(makeInput())
+    useCart.getState().holdCart('Test Employee')
+    const heldId = useCart.getState().heldCarts[0]!.id
+    useCart.getState().deleteHeldCart(heldId)
+    expect(useCart.getState().heldCarts).toHaveLength(0)
   })
 })

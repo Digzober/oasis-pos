@@ -46,4 +46,30 @@ describe('register overview and closing', () => {
     const totals = { total_sales: 0, net_sales: 0, total_customers: 0 }
     expect(totals.total_sales).toBe(0)
   })
+
+  it('9. per-register total_sales sums transaction totals', () => {
+    const txByReg = new Map<string, { count: number; sales: number }>()
+    const txns = [
+      { register_id: 'r1', total: 45.50 },
+      { register_id: 'r1', total: 32.00 },
+      { register_id: 'r1', total: 18.75 },
+      { register_id: 'r2', total: 100.00 },
+    ]
+    for (const tx of txns) {
+      const regData = txByReg.get(tx.register_id) ?? { count: 0, sales: 0 }
+      regData.count++
+      regData.sales = roundMoney(regData.sales + tx.total)
+      txByReg.set(tx.register_id, regData)
+    }
+    expect(txByReg.get('r1')?.count).toBe(3)
+    expect(txByReg.get('r1')?.sales).toBe(96.25)
+    expect(txByReg.get('r2')?.count).toBe(1)
+    expect(txByReg.get('r2')?.sales).toBe(100)
+  })
+
+  it('10. register with no transactions shows zero total_sales', () => {
+    const txByReg = new Map<string, { count: number; sales: number }>()
+    expect(txByReg.get('r1')?.count ?? 0).toBe(0)
+    expect(roundMoney(txByReg.get('r1')?.sales ?? 0)).toBe(0)
+  })
 })

@@ -8,7 +8,7 @@ import type { RegisterStatus, DailyTotals } from '@/lib/services/registerOvervie
 function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) }
 
 export default function RegistersOverviewPage() {
-  const { locationId } = useSelectedLocation()
+  const { locationId, hydrated } = useSelectedLocation()
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [registers, setRegisters] = useState<RegisterStatus[]>([])
   const [totals, setTotals] = useState<DailyTotals | null>(null)
@@ -22,7 +22,7 @@ export default function RegistersOverviewPage() {
     setLoading(false)
   }, [locationId, date])
 
-  useEffect(() => { fetchData(); const id = setInterval(fetchData, 30000); return () => clearInterval(id) }, [fetchData])
+  useEffect(() => { if (!hydrated) return; fetchData(); const id = setInterval(fetchData, 30000); return () => clearInterval(id) }, [hydrated, fetchData])
 
   const statusDot = (s: string) => s === 'open' ? 'bg-emerald-400' : s === 'closed' ? 'bg-gray-500' : 'bg-gray-700 border border-gray-600'
 

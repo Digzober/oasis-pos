@@ -10,13 +10,26 @@ export async function GET(request: NextRequest) {
     const locationId = request.nextUrl.searchParams.get('location_id') ?? session.locationId
 
     const sb = await createSupabaseServerClient()
-    const { data: location } = await sb.from('locations').select('biotrack_location_id').eq('id', locationId).single()
 
-    if (!location?.biotrack_location_id) {
+    // Check biotrack_config first (has the correct BioTrack location ID)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: btConfig } = await (sb as any).from('biotrack_config')
+      .select('biotrack_location_id')
+      .eq('location_id', locationId)
+      .maybeSingle()
+
+    // Fallback to locations table
+    let biotrackLocationId = btConfig?.biotrack_location_id
+    if (!biotrackLocationId) {
+      const { data: location } = await sb.from('locations').select('biotrack_location_id').eq('id', locationId).single()
+      biotrackLocationId = location?.biotrack_location_id
+    }
+
+    if (!biotrackLocationId) {
       return NextResponse.json({ manifests: [], message: 'No BioTrack location ID configured' })
     }
 
-    const manifests = await fetchPendingManifests(location.biotrack_location_id, session.organizationId)
+    const manifests = await fetchPendingManifests(biotrackLocationId, session.organizationId, locationId)
     return NextResponse.json({ manifests })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'UNAUTHORIZED')

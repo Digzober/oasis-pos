@@ -34,7 +34,7 @@ export async function getRegisterOverview(locationId: string, date: string) {
   const { data: txns } = await sb.from('transactions').select('register_id, total, discount_amount, tax_amount, status, transaction_type, customer_id, is_medical, transaction_lines ( quantity, is_cannabis ), transaction_payments ( payment_method, amount )')
     .eq('location_id', locationId).gte('created_at', dateFrom).lte('created_at', dateTo)
 
-  const txByReg = new Map<string, number>()
+  const txByReg = new Map<string, { count: number; sales: number }>()
   let totalSales = 0, discounted = 0, totalTax = 0, totalVoids = 0, totalReturns = 0
   let cashPaid = 0, debitPaid = 0, creditPaid = 0, totalItems = 0
   const customers = new Set<string>()
@@ -47,7 +47,10 @@ export async function getRegisterOverview(locationId: string, date: string) {
     discounted = roundMoney(discounted + tx.discount_amount)
     totalTax = roundMoney(totalTax + tx.tax_amount)
     if (tx.customer_id) customers.add(tx.customer_id)
-    txByReg.set(tx.register_id, (txByReg.get(tx.register_id) ?? 0) + 1)
+    const regData = txByReg.get(tx.register_id) ?? { count: 0, sales: 0 }
+    regData.count++
+    regData.sales = roundMoney(regData.sales + tx.total)
+    txByReg.set(tx.register_id, regData)
     for (const line of tx.transaction_lines ?? []) totalItems += line.quantity
     for (const pay of tx.transaction_payments ?? []) {
       if (pay.payment_method === 'cash') cashPaid = roundMoney(cashPaid + pay.amount)
@@ -65,8 +68,8 @@ export async function getRegisterOverview(locationId: string, date: string) {
       opened_by: drawer?.employees ? `${drawer.employees.first_name} ${drawer.employees.last_name}` : null,
       opened_at: drawer?.opened_at ?? null,
       current_cash: drawer ? roundMoney(drawer.opening_amount + (drawer.total_sales ?? 0) - (drawer.total_drops ?? 0)) : null,
-      transaction_count: txByReg.get(r.id) ?? 0,
-      total_sales: 0, total_drops: drawer?.total_drops ?? 0,
+      transaction_count: txByReg.get(r.id)?.count ?? 0,
+      total_sales: roundMoney(txByReg.get(r.id)?.sales ?? 0), total_drops: drawer?.total_drops ?? 0,
     }
   })
 

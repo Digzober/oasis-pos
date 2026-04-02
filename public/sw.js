@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oasis-pos-v1'
+const CACHE_NAME = 'oasis-pos-v2'
 const STATIC_ASSETS = ['/', '/login', '/checkout', '/manifest.json']
 const API_CACHE = 'oasis-api-v1'
 

@@ -9,7 +9,7 @@ function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', 
 type R = any
 
 export default function ClosingReportPage() {
-  const { locationId } = useSelectedLocation()
+  const { locationId, hydrated } = useSelectedLocation()
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [report, setReport] = useState<R>(null)
   const [loading, setLoading] = useState(true)
@@ -24,7 +24,7 @@ export default function ClosingReportPage() {
     setLoading(false)
   }, [locationId, date])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
 
   const exportCsv = () => {
     if (!report) return

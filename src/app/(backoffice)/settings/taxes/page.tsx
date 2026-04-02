@@ -1,17 +1,19 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Rate = any
 
 export default function TaxRatesPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [rates, setRates] = useState<Rate[]>([])
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', rate_percent: '', is_excise: false, applies_to: 'both' })
   const [loading, setLoading] = useState(true)
 
-  const fetchRates = () => { fetch('/api/tax-rates').then(r => r.json()).then(d => { setRates(d.tax_rates ?? []); setLoading(false) }) }
-  useEffect(() => { fetchRates() }, [])
+  const fetchRates = useCallback(() => { fetch(`/api/tax-rates${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => { setRates(d.tax_rates ?? []); setLoading(false) }) }, [locationId])
+  useEffect(() => { if (hydrated) fetchRates() }, [hydrated, fetchRates])
 
   const save = async () => {
     await fetch('/api/tax-rates', { method: 'POST', headers: { 'Content-Type': 'application/json' },

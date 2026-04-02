@@ -15,7 +15,7 @@ function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', 
 type R = any
 
 export default function DashboardPage() {
-  const { locationId } = useSelectedLocation()
+  const { locationId, hydrated } = useSelectedLocation()
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [kpis, setKpis] = useState<DashboardKPIs | null>(null)
   const [salesByHour, setSalesByHour] = useState<Array<{ hour: number; total: number; count: number }>>([])
@@ -41,13 +41,14 @@ export default function DashboardPage() {
     setLoading(false)
   }, [date, locationId])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
 
   // Refresh every 60 seconds
   useEffect(() => {
+    if (!hydrated) return
     const id = setInterval(fetchData, 60000)
     return () => clearInterval(id)
-  }, [fetchData])
+  }, [hydrated, fetchData])
 
   const isToday = date === new Date().toISOString().slice(0, 10)
   const paymentTotal = payments.reduce((s: number, p: R) => s + p.total, 0)

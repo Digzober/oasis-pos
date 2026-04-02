@@ -2,8 +2,22 @@
 
 import { useState, useEffect } from 'react'
 
-const FIELDS = ['lifetime_spend', 'total_visits', 'last_visit_days_ago', 'customer_type', 'created_days_ago', 'avg_transaction_value']
-const OPS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte']
+const FIELDS: Array<{ value: string; label: string }> = [
+  { value: 'lifetime_spend', label: 'Lifetime Spend ($)' },
+  { value: 'total_visits', label: 'Total Visits' },
+  { value: 'last_visit_days_ago', label: 'Days Since Last Visit' },
+  { value: 'customer_type', label: 'Customer Type' },
+  { value: 'created_days_ago', label: 'Days Since Signup' },
+  { value: 'avg_transaction_value', label: 'Avg Transaction Value ($)' },
+]
+const OPS: Array<{ value: string; label: string }> = [
+  { value: 'eq', label: 'equals' },
+  { value: 'neq', label: 'does not equal' },
+  { value: 'gt', label: 'is greater than' },
+  { value: 'gte', label: 'is at least' },
+  { value: 'lt', label: 'is less than' },
+  { value: 'lte', label: 'is at most' },
+]
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Seg = any
@@ -62,8 +76,8 @@ export default function SegmentsPage() {
 
           {conditions.map((c, i) => (
             <div key={i} className="flex items-center gap-2">
-              <select value={c.field} onChange={e => updateCondition(i, 'field', e.target.value)} className={inputCls}>{FIELDS.map(f => <option key={f} value={f}>{f}</option>)}</select>
-              <select value={c.op} onChange={e => updateCondition(i, 'op', e.target.value)} className={inputCls}>{OPS.map(o => <option key={o} value={o}>{o}</option>)}</select>
+              <select value={c.field} onChange={e => updateCondition(i, 'field', e.target.value)} className={inputCls}>{FIELDS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}</select>
+              <select value={c.op} onChange={e => updateCondition(i, 'op', e.target.value)} className={inputCls}>{OPS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
               <input value={c.value} onChange={e => updateCondition(i, 'value', e.target.value)} className={inputCls + ' w-32'} />
               <button onClick={() => removeCondition(i)} className="text-red-400 text-xs">Remove</button>
             </div>

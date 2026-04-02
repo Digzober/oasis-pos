@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 import TransactionDetailDrawer from '@/components/backoffice/TransactionDetailDrawer'
 import type { TransactionSummary } from '@/lib/services/reportingService'
 
@@ -15,6 +16,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function TransactionLogPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const today = new Date().toISOString().split('T')[0]!
   const [dateFrom, setDateFrom] = useState(today)
   const [dateTo, setDateTo] = useState(today)
@@ -37,6 +39,7 @@ export default function TransactionLogPage() {
       page: String(page),
       per_page: String(perPage),
     })
+    if (locationId) params.set('location_id', locationId)
     if (txType) params.set('transaction_type', txType)
     if (status) params.set('status', status)
 
@@ -49,9 +52,9 @@ export default function TransactionLogPage() {
       }
     } catch { /* ignore */ }
     setLoading(false)
-  }, [dateFrom, dateTo, txType, status, page])
+  }, [dateFrom, dateTo, txType, status, page, locationId])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
 
   const exportCsv = () => {
     const headers = ['#', 'Date', 'Location', 'Employee', 'Customer', 'Type', 'Status', 'Items', 'Total']

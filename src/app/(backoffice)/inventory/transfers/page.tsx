@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Transfer = any
 
 export default function TransfersPage() {
+  const { locationId, hydrated } = useSelectedLocation()
   const [transfers, setTransfers] = useState<Transfer[]>([])
   const [loading, setLoading] = useState(true)
   const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([])
@@ -20,9 +22,13 @@ export default function TransfersPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/inventory/transfers').then(r => r.json()).then(d => { setTransfers(d.transfers ?? []); setLoading(false) })
+    if (!hydrated) return
+    const params = new URLSearchParams()
+    if (locationId) params.set('location_id', locationId)
+    const qs = params.toString()
+    fetch(`/api/inventory/transfers${qs ? `?${qs}` : ''}`).then(r => r.json()).then(d => { setTransfers(d.transfers ?? []); setLoading(false) })
     fetch('/api/auth/locations').then(r => r.json()).then(d => setLocations(d.locations ?? []))
-  }, [])
+  }, [hydrated, locationId])
 
   const searchInventory = async () => {
     if (!itemSearch.trim()) return

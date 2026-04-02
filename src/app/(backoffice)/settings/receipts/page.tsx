@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useSession } from '@/hooks/useSession'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 
 const RECEIPT_SETTINGS = [
   { key: 'show_location_name', label: 'Show location name', section: 'Header' },
@@ -19,23 +20,24 @@ const RECEIPT_SETTINGS = [
 ]
 
 export default function ReceiptsPage() {
+  const { locationId } = useSelectedLocation()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [config, setConfig] = useState<Record<string, any>>({})
   const { session } = useSession()
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(null)
 
   useEffect(() => {
-    if (!session) return
-    fetch(`/api/locations/${session.locationId}/settings`).then(r => r.json()).then(d => setConfig(d.settings?.receipt ?? {}))
-  }, [session])
+    if (!locationId) return
+    fetch(`/api/locations/${locationId}/settings`).then(r => r.json()).then(d => setConfig(d.settings?.receipt ?? {}))
+  }, [locationId])
 
   const toggle = (key: string) => {
     const next = { ...config, [key]: !config[key] }
     setConfig(next)
     if (saveTimer.current) clearTimeout(saveTimer.current)
     saveTimer.current = setTimeout(() => {
-      if (!session) return
-      fetch(`/api/locations/${session.locationId}/settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receipt: next }) })
+      if (!locationId) return
+      fetch(`/api/locations/${locationId}/settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receipt: next }) })
     }, 500)
   }
 

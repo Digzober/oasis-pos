@@ -19,6 +19,13 @@ export interface BioTrackManifest {
   status: 'pending' | 'in_transit' | 'delivered'
 }
 
+export interface ProductMatch {
+  product_id: string
+  product_name: string
+  confidence: number
+  match_method: 'barcode' | 'exact_name' | 'fuzzy_name' | 'brand_strain' | 'manual'
+}
+
 export interface AcceptedManifestItem {
   barcode: string
   accepted_quantity: number
@@ -28,6 +35,18 @@ export interface AcceptedManifestItem {
   subroom_id: string | null
   cost_per_unit: number | null
   discrepancy_reason: string | null
+  strain_id: string | null
+  lot_number: string | null
+  expiration_date: string | null
+  packaging_date: string | null
+  external_package_id: string | null
+  package_ndc: string | null
+  tax_per_unit: number | null
+  med_price: number | null
+  rec_price: number | null
+  flower_equivalent: number | null
+  inventory_status: string | null
+  tags: string[]
 }
 
 export interface ReceiveManifestInput {
@@ -37,6 +56,15 @@ export interface ReceiveManifestInput {
   manifest: BioTrackManifest
   accepted_items: AcceptedManifestItem[]
   vendor_id: string | null
+  producer_id: string | null
+  delivered_by: string | null
+  vendor_license: string | null
+  order_title: string | null
+  delivered_on: string | null
+  total_credits: number | null
+  shipping_charges: number | null
+  cost_option: 'none' | 'divide_equally' | 'by_weight' | null
+  notes: string | null
 }
 
 export interface ManualReceiveInput {
@@ -54,6 +82,12 @@ export interface ManualReceiveInput {
   expiration_date: string | null
   vendor_id: string | null
   notes: string | null
+  strain_id: string | null
+  flower_equivalent: number | null
+  med_price: number | null
+  rec_price: number | null
+  inventory_status: string | null
+  tags: string[]
 }
 
 export interface ReceiveResult {

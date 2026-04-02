@@ -137,7 +137,7 @@ export async function getTransactionLog(
       `id, transaction_number, transaction_type, status, is_medical,
        subtotal, discount_amount, tax_amount, total, biotrack_synced, created_at,
        locations!inner ( name ),
-       employees!inner ( first_name, last_name ),
+       employees!transactions_employee_id_fkey ( first_name, last_name ),
        customers ( first_name, last_name ),
        transaction_lines ( id )`,
       { count: 'exact' },

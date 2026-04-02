@@ -1,40 +1,19 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import Cookies from 'js-cookie'
-
-const COOKIE_KEY = 'oasis-location-id'
-const NAME_KEY = 'oasis-location-name'
+import { useEffect } from 'react'
+import { useLocationStore } from '@/stores/locationStore'
 
 export function useSelectedLocation() {
-  const [locationId, setLocationIdState] = useState<string | null>(null)
-  const [locationName, setLocationName] = useState('All Locations')
+  const locationId = useLocationStore(s => s.locationId)
+  const locationName = useLocationStore(s => s.locationName)
+  const setLocation = useLocationStore(s => s.setLocation)
+  const requireLocation = useLocationStore(s => s.requireLocation)
+  const hydrate = useLocationStore(s => s.hydrate)
+  const hydrated = useLocationStore(s => s._hydrated)
 
   useEffect(() => {
-    const id = Cookies.get(COOKIE_KEY) ?? null
-    const name = Cookies.get(NAME_KEY) ?? 'All Locations'
-    setLocationIdState(id)
-    setLocationName(name)
-  }, [])
+    hydrate()
+  }, [hydrate])
 
-  const setLocation = useCallback((id: string | null, name?: string) => {
-    if (id) {
-      Cookies.set(COOKIE_KEY, id, { expires: 365 })
-      Cookies.set(NAME_KEY, name ?? 'Location', { expires: 365 })
-    } else {
-      Cookies.remove(COOKIE_KEY)
-      Cookies.set(NAME_KEY, 'All Locations', { expires: 365 })
-    }
-    setLocationIdState(id)
-    setLocationName(name ?? 'All Locations')
-    window.dispatchEvent(new CustomEvent('location-change', { detail: { locationId: id } }))
-  }, [])
-
-  const requireLocation = useCallback((): string => {
-    const id = Cookies.get(COOKIE_KEY)
-    if (!id) throw new Error('Please select a specific location')
-    return id
-  }, [])
-
-  return { locationId, locationName, setLocation, requireLocation }
+  return { locationId, locationName, setLocation, requireLocation, hydrated }
 }
