@@ -13,6 +13,7 @@ interface LocationOption {
 interface RegisterOption {
   id: string
   name: string
+  has_open_drawer?: boolean
 }
 
 type LoginStep = 'pin' | 'register'
@@ -31,6 +32,9 @@ export default function LoginPage() {
   const [registers, setRegisters] = useState<RegisterOption[]>([])
   const [loadingRegisters, setLoadingRegisters] = useState(false)
   const [validatedPin, setValidatedPin] = useState('')
+
+  // Track which dot just got filled for scale animation
+  const [filledIndex, setFilledIndex] = useState<number | null>(null)
 
   useEffect(() => {
     fetch('/api/auth/locations')
@@ -139,6 +143,8 @@ export default function LoginPage() {
       setError('')
       const next = pin + digit
       setPin(next)
+      setFilledIndex(next.length - 1)
+      setTimeout(() => setFilledIndex(null), 200)
       if (next.length === 4) {
         validatePin(next)
       }
@@ -165,71 +171,92 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm flex flex-col items-center gap-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white tracking-tight">
-            Oasis Cannabis
-          </h1>
-          <p className="text-gray-400 mt-1 text-sm">Point of Sale</p>
-        </div>
-
+    <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+      <div className="w-full max-w-sm px-4">
         {step === 'pin' && (
           <>
-            {/* Location Selector */}
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full rounded-lg bg-gray-800 text-white border border-gray-700 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {locations.length === 0 && (
-                <option value="">No locations available</option>
-              )}
-              {locations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name} — {loc.city}, {loc.state}
-                </option>
-              ))}
-            </select>
+            {/* Logo Mark */}
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+              <span className="text-emerald-400 text-2xl font-bold">O</span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-lg font-semibold text-gray-200 text-center">
+              Oasis Cannabis
+            </h1>
+            <p className="text-xs text-gray-600 text-center mt-0.5 font-mono uppercase tracking-widest">
+              Point of Sale
+            </p>
+
+            {/* Location Dropdown */}
+            <div className="mt-8 w-full relative">
+              <select
+                value={selectedLocation}
+                onChange={(e) => setSelectedLocation(e.target.value)}
+                className="w-full h-11 bg-gray-900 border border-gray-800 rounded-xl px-4 text-sm text-gray-300 focus:border-emerald-500/50 focus:outline-none appearance-none cursor-pointer"
+              >
+                {locations.length === 0 && (
+                  <option value="">No locations available</option>
+                )}
+                {locations.map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} — {loc.city}, {loc.state}
+                  </option>
+                ))}
+              </select>
+              {/* Dropdown chevron */}
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
 
             {/* PIN Dots */}
-            <div className={`flex gap-4 ${shake ? 'animate-shake' : ''}`}>
+            <div className={`flex justify-center gap-4 mt-10 ${shake ? 'animate-shake' : ''}`}>
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className={`w-5 h-5 rounded-full border-2 transition-colors ${
+                  className={`w-4 h-4 rounded-full transition-all duration-200 ${
                     i < pin.length
-                      ? 'bg-emerald-400 border-emerald-400'
-                      : 'border-gray-500'
+                      ? shake
+                        ? 'bg-red-500 border border-red-400 shadow-md shadow-red-500/30'
+                        : `bg-emerald-500 border border-emerald-400 shadow-md shadow-emerald-500/30 ${filledIndex === i ? 'scale-125' : ''}`
+                      : 'bg-gray-800 border border-gray-700'
                   }`}
                 />
               ))}
             </div>
 
-            {/* Error Message */}
-            <div className="h-6 flex items-center">
-              {error && <p className="text-red-400 text-sm">{error}</p>}
-              {isLoading && <p className="text-gray-400 text-sm">Verifying...</p>}
+            {/* Error / Loading Message */}
+            <div className="h-6 mt-3">
+              {error && (
+                <p className="text-red-400 text-xs text-center">{error}</p>
+              )}
+              {isLoading && !error && (
+                <p className="text-emerald-400 text-xs text-center animate-pulse">
+                  Verifying...
+                </p>
+              )}
             </div>
 
             {/* Number Pad */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-[280px]">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'CLR', '0', '⌫'].map(
+            <div className="mt-8 grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'CLR', '0', '←'].map(
                 (key) => (
                   <button
                     key={key}
                     type="button"
                     disabled={isLoading}
                     onClick={() => {
-                      if (key === '⌫') handleBackspace()
+                      if (key === '←') handleBackspace()
                       else if (key === 'CLR') handleClear()
                       else handleDigit(key)
                     }}
-                    className={`h-16 rounded-xl text-xl font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 ${
-                      key === 'CLR' || key === '⌫'
-                        ? 'bg-gray-700 text-gray-300 active:bg-gray-600'
-                        : 'bg-gray-800 text-white active:bg-gray-700'
+                    className={`h-14 rounded-xl transition-all focus:outline-none disabled:opacity-50 ${
+                      key === 'CLR'
+                        ? 'bg-gray-900 border border-gray-800 text-xs text-gray-500 hover:bg-gray-800 hover:border-gray-700 active:scale-95'
+                        : key === '←'
+                          ? 'bg-gray-900 border border-gray-800 text-gray-500 hover:bg-gray-800 hover:border-gray-700 active:scale-95 text-lg'
+                          : 'bg-gray-900 border border-gray-800 text-xl font-medium text-gray-200 hover:bg-gray-800 hover:border-gray-700 active:scale-95'
                     }`}
                   >
                     {key}
@@ -242,41 +269,83 @@ export default function LoginPage() {
 
         {step === 'register' && (
           <>
-            <p className="text-gray-300 text-sm">Select your register</p>
+            {/* Logo Mark */}
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+              <span className="text-emerald-400 text-2xl font-bold">O</span>
+            </div>
+
+            <h1 className="text-lg font-semibold text-gray-200 text-center">
+              Oasis Cannabis
+            </h1>
+            <p className="text-sm text-gray-400 text-center mt-2">
+              Select Register
+            </p>
 
             {loadingRegisters ? (
-              <div className="text-gray-400 text-sm">Loading registers...</div>
+              <div className="text-emerald-400 text-xs text-center mt-8 animate-pulse">
+                Loading registers...
+              </div>
             ) : registers.length === 0 ? (
-              <div className="text-center">
-                <p className="text-gray-400 text-sm mb-4">No registers available. Contact a manager.</p>
-                <button onClick={handleBackToPin} className="text-sm text-emerald-400 hover:text-emerald-300">Back</button>
+              <div className="text-center mt-8">
+                <p className="text-gray-500 text-sm">
+                  No registers available. Contact a manager.
+                </p>
+                <button
+                  onClick={handleBackToPin}
+                  className="mt-4 text-sm text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  Back
+                </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 w-full">
+              <div className="grid grid-cols-2 gap-3 mt-6 max-w-sm mx-auto">
                 {registers.map((reg) => (
                   <button
                     key={reg.id}
                     disabled={isLoading}
                     onClick={() => selectRegister(reg.id)}
-                    className="h-20 rounded-xl bg-gray-800 border border-gray-700 text-white font-medium hover:border-emerald-500 hover:bg-gray-750 transition-colors disabled:opacity-50 flex items-center justify-center"
+                    className={`p-5 bg-gray-900 rounded-xl cursor-pointer hover:border-emerald-500/40 hover:bg-gray-800/60 active:scale-[0.97] transition-all text-center disabled:opacity-50 border ${
+                      reg.has_open_drawer
+                        ? 'border-emerald-500/20'
+                        : 'border-gray-800'
+                    }`}
                   >
-                    {reg.name}
+                    <span className="text-sm font-medium text-gray-200 block">
+                      {reg.name}
+                    </span>
+                    <span
+                      className={`text-[11px] mt-1 block ${
+                        reg.has_open_drawer
+                          ? 'text-emerald-400'
+                          : 'text-gray-600'
+                      }`}
+                    >
+                      {reg.has_open_drawer ? 'Drawer Open' : 'No Drawer'}
+                    </span>
                   </button>
                 ))}
               </div>
             )}
 
             {/* Error Message */}
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && (
+              <p className="text-red-400 text-xs text-center mt-4">{error}</p>
+            )}
 
-            <button onClick={handleBackToPin} className="text-sm text-gray-400 hover:text-gray-300">
-              Back to PIN
-            </button>
+            {/* Back button */}
+            {registers.length > 0 && (
+              <p
+                onClick={handleBackToPin}
+                className="mt-6 text-sm text-gray-600 hover:text-gray-400 text-center cursor-pointer transition-colors"
+              >
+                Back to PIN
+              </p>
+            )}
           </>
         )}
       </div>
 
-      {/* Shake animation */}
+      {/* Animations */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }

@@ -50,6 +50,8 @@ interface ProductSearchProps {
   categoryId?: string
 }
 
+const QUICK_CATEGORIES = ['All', 'Flower', 'Concentrates', 'Edibles', 'Vapes', 'Pre-Rolls', 'Tinctures', 'Topicals', 'Accessories']
+
 function playBeep() {
   try {
     const ctx = new AudioContext()
@@ -67,6 +69,47 @@ function playBeep() {
   }
 }
 
+function StockBar({ quantity }: { quantity: number }) {
+  const max = 50
+  const pct = Math.min((quantity / max) * 100, 100)
+  const color =
+    quantity === 0
+      ? 'bg-red-500'
+      : quantity <= 10
+        ? 'bg-amber-500'
+        : 'bg-emerald-500'
+  const trackColor =
+    quantity === 0
+      ? 'bg-red-500/20'
+      : quantity <= 10
+        ? 'bg-amber-500/20'
+        : 'bg-emerald-500/20'
+
+  return (
+    <div className={`w-full h-0.5 rounded-full ${trackColor}`}>
+      <div
+        className={`h-full rounded-full ${color} transition-all`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  )
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 animate-pulse">
+      <div className="flex items-center justify-between mb-1.5">
+        <div className="h-3 w-16 bg-gray-800 rounded" />
+        <div className="h-4 w-12 bg-gray-800 rounded" />
+      </div>
+      <div className="h-4 w-full bg-gray-800 rounded mb-1" />
+      <div className="h-3 w-3/4 bg-gray-800 rounded mb-2.5" />
+      <div className="h-3 w-2/3 bg-gray-800 rounded mb-2" />
+      <div className="h-0.5 w-full bg-gray-800 rounded" />
+    </div>
+  )
+}
+
 export default function ProductSearch({ onSelect, onBarcodeScan, locationId, categoryId }: ProductSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -75,6 +118,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
   const [isScanning, setIsScanning] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [categoryFilter, setCategoryFilter] = useState('All')
   const inputRef = useRef<HTMLInputElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
   const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
@@ -177,9 +221,9 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
     if (e.key === 'Enter') {
       e.preventDefault()
 
-      // If dropdown result selected, use it
-      if (selectedIndex >= 0 && results[selectedIndex]) {
-        selectResult(results[selectedIndex])
+      // If grid result selected, use it
+      if (selectedIndex >= 0 && filteredResults[selectedIndex]) {
+        selectResult(filteredResults[selectedIndex])
         return
       }
 
@@ -200,7 +244,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
-      setSelectedIndex((i) => Math.min(i + 1, results.length - 1))
+      setSelectedIndex((i) => Math.min(i + 1, filteredResults.length - 1))
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
       setSelectedIndex((i) => Math.max(i - 1, 0))
@@ -216,42 +260,33 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
     inputRef.current?.focus()
   }
 
+  // Client-side category filtering
+  const filteredResults = categoryFilter === 'All'
+    ? results
+    : results.filter((r) => {
+        const cat = (r.category_name ?? '').toLowerCase()
+        const filter = categoryFilter.toLowerCase()
+        // Match category_name containing the filter word (e.g. "Flower" matches "Flower", "Pre-Rolls" matches "Pre-Roll")
+        return cat.includes(filter.replace(/-/g, ' ').replace(/s$/, ''))
+      })
+
   return (
-    <div className="relative">
+    <div className="flex flex-col gap-3">
       {/* Toast */}
       {toast && (
         <div
-          className={`absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 shadow-lg transition-opacity ${
+          className={`fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 shadow-xl border transition-opacity ${
             toast.type === 'success'
-              ? 'bg-emerald-600 text-white'
-              : 'bg-red-600 text-white'
+              ? 'bg-gray-800 border-emerald-500/30 text-gray-50'
+              : 'bg-gray-800 border-red-500/30 text-gray-50'
           }`}
         >
           {toast.message}
         </div>
       )}
 
+      {/* Search Input */}
       <div className="relative">
-        {/* Icon: barcode or search */}
-        {isScanning ? (
-          <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400 pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 4v16M12 4v16M16 4v16" />
-          </svg>
-        ) : (
-          <svg
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        )}
         <input
           ref={inputRef}
           type="text"
@@ -260,57 +295,150 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="Search products, scan barcode..."
-          className="w-full h-12 pl-12 pr-4 bg-gray-800 border border-gray-700 rounded-xl text-gray-50 placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          className="w-full h-12 bg-gray-900 border border-gray-800 rounded-xl px-4 pr-12 text-gray-50 placeholder-gray-600 text-sm shadow-inner focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
         />
-        {isLoading && (
+        {isLoading ? (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <div className="w-4 h-4 border-2 border-gray-600 border-t-emerald-400 rounded-full animate-spin" />
           </div>
+        ) : isScanning ? (
+          <svg
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 4v16M12 4v16M16 4v16" />
+          </svg>
+        ) : (
+          <svg
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3M8 4v16M12 4v16M16 4v16" />
+          </svg>
         )}
       </div>
 
-      {/* Dropdown results */}
-      {isOpen && results.length > 0 && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-40 max-h-80 overflow-y-auto">
-            {results.map((r, idx) => (
-              <button
-                key={r.id}
-                onClick={() => selectResult(r)}
-                className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
-                  idx === selectedIndex ? 'bg-gray-700' : 'hover:bg-gray-700/50'
-                } ${idx > 0 ? 'border-t border-gray-700/50' : ''}`}
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-50 truncate">{r.name}</p>
-                  <p className="text-xs text-gray-400 truncate">
-                    {[r.brand_name, r.category_name, r.strain_name].filter(Boolean).join(' · ')}
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm text-gray-50 font-medium tabular-nums">
-                    ${r.rec_price.toFixed(2)}
-                  </p>
-                  {r.quantity_available > 0 ? (
-                    <p className="text-xs text-gray-400 tabular-nums">{r.quantity_available} avail</p>
-                  ) : (
-                    <p className="text-xs text-red-400">Out of Stock</p>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </>
+      {/* Category Filter Bar */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {QUICK_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setCategoryFilter(cat)
+              setSelectedIndex(-1)
+            }}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+              categoryFilter === cat
+                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                : 'bg-gray-800/80 text-gray-400 border border-gray-700/50 hover:border-gray-600'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Product Card Grid */}
+      {isOpen && isLoading && (
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       )}
 
-      {isOpen && results.length === 0 && query.length >= 2 && !isLoading && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-40 p-6 text-center text-gray-500 text-sm">
-            No products found
-          </div>
-        </>
+      {isOpen && !isLoading && filteredResults.length > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
+          {filteredResults.map((r, idx) => {
+            const isOutOfStock = r.quantity_available === 0
+            const metaParts = [
+              r.strain_name,
+              r.category_name,
+              r.thc_percentage != null ? `${r.thc_percentage}%` : null,
+            ].filter(Boolean)
+
+            return (
+              <button
+                key={r.id}
+                onClick={() => !isOutOfStock && selectResult(r)}
+                className={`relative bg-gray-900 border rounded-xl p-3 text-left transition-all duration-150 ${
+                  isOutOfStock
+                    ? 'opacity-40 pointer-events-none border-gray-800'
+                    : idx === selectedIndex
+                      ? 'border-emerald-500/60 bg-gray-800/60'
+                      : 'border-gray-800 cursor-pointer hover:border-emerald-500/40 hover:bg-gray-800/60 active:scale-[0.97] active:border-emerald-500/60'
+                }`}
+              >
+                {isOutOfStock && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <span className="text-xs font-semibold text-red-400 bg-gray-900/80 px-2 py-0.5 rounded">Out of Stock</span>
+                  </div>
+                )}
+
+                {/* Brand + Price Row */}
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {r.is_cannabis && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    )}
+                    <span className="text-[11px] text-gray-500 truncate">
+                      {r.brand_name ?? 'Unbranded'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-50 tabular-nums shrink-0 ml-2">
+                    ${r.rec_price.toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Product Name */}
+                <p className="text-sm font-medium text-gray-200 line-clamp-2 mb-1.5 leading-snug">
+                  {r.name}
+                </p>
+
+                {/* Metadata */}
+                {metaParts.length > 0 && (
+                  <p className="text-[11px] text-gray-500 truncate mb-2.5">
+                    {metaParts.join(' \u00b7 ')}
+                  </p>
+                )}
+
+                {/* Stock Bar + Count */}
+                <div className="mt-auto">
+                  <StockBar quantity={r.quantity_available} />
+                  <p className={`text-[11px] mt-1 tabular-nums ${
+                    r.quantity_available === 0
+                      ? 'text-red-400'
+                      : r.quantity_available <= 10
+                        ? 'text-amber-400'
+                        : 'text-gray-500'
+                  }`}>
+                    {r.quantity_available} in stock
+                  </p>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {isOpen && !isLoading && filteredResults.length === 0 && (query.length >= 2 || categoryFilter !== 'All') && (
+        <div className="flex flex-col items-center justify-center py-16 text-gray-600">
+          <svg
+            className="w-10 h-10 mb-3 opacity-30"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <p className="text-sm">No products found</p>
+          <p className="text-xs mt-1 text-gray-700">Try a different search or scan a barcode</p>
+        </div>
       )}
     </div>
   )

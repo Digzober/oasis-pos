@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useCart } from '@/hooks/useCart'
 
 function fmt(n: number) {
@@ -70,12 +70,6 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
       }
 
       setResult({ transactionNumber: data.transactionNumber, changeDue: data.changeDue })
-
-      // Auto-clear after 5 seconds
-      setTimeout(() => {
-        clearCart()
-        onClose()
-      }, 5000)
     } catch {
       setError('Connection error')
       setIsProcessing(false)
@@ -84,121 +78,182 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
 
   // Success screen
   if (result) {
-    return (
-      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl text-white">✓</span>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-50 mb-2">Sale Complete</h2>
-          <p className="text-gray-400 text-sm mb-6">Transaction #{result.transactionNumber}</p>
-
-          {result.changeDue > 0 && (
-            <div className="bg-gray-900 rounded-xl p-4 mb-6">
-              <p className="text-gray-400 text-sm">Change Due</p>
-              <p className="text-4xl font-bold text-emerald-400 tabular-nums">{fmt(result.changeDue)}</p>
-            </div>
-          )}
-
-          <button
-            onClick={() => { clearCart(); onClose() }}
-            className="w-full h-12 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 transition-colors"
-          >
-            New Sale
-          </button>
-        </div>
-      </div>
-    )
+    return <SuccessScreen result={result} clearCart={clearCart} onClose={onClose} />
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl max-w-lg w-full shadow-2xl flex flex-col max-h-[80vh]">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="px-6 pt-5 pb-4 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-50">Checkout</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">✕</button>
+        <div className="px-6 pt-6 pb-4 border-b border-gray-800 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-50">Complete Sale</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 4l8 8M12 4l-8 8" />
+            </svg>
+          </button>
         </div>
 
-        {/* Order Summary */}
-        <div className="px-6 py-4 border-b border-gray-700 space-y-1">
-          <div className="flex justify-between text-sm text-gray-400">
-            <span>Subtotal ({items.length} items)</span>
-            <span className="tabular-nums">{fmt(subtotal)}</span>
-          </div>
-          {discountTotal > 0 && (
-            <div className="flex justify-between text-sm text-emerald-400">
-              <span>Discounts</span>
-              <span className="tabular-nums">-{fmt(discountTotal)}</span>
-            </div>
-          )}
-          <div className="flex justify-between text-sm text-gray-400">
-            <span>Tax</span>
-            <span className="tabular-nums">{fmt(taxTotal)}</span>
-          </div>
-          <div className="flex justify-between text-lg font-bold text-gray-50 pt-2 border-t border-gray-700">
-            <span>Total</span>
-            <span className="tabular-nums">{fmt(total)}</span>
-          </div>
+        {/* Item count + customer */}
+        <p className="text-sm text-gray-500 px-6 pt-3">
+          {items.length} item{items.length !== 1 ? 's' : ''}
+          {customerId ? ' \u00b7 Customer attached' : ''}
+        </p>
+
+        {/* Total Due */}
+        <div className="mx-6 mt-4 bg-[#0a0a0b] rounded-xl p-6 text-center">
+          <p className="text-xs text-gray-600 uppercase tracking-widest font-mono">Total Due</p>
+          <p className="text-5xl font-bold text-gray-50 tabular-nums font-mono tracking-tight mt-1">
+            {fmt(total)}
+          </p>
         </div>
 
-        {/* Tender Input */}
-        <div className="px-6 py-4 flex-1">
-          <label className="block text-sm text-gray-400 mb-2">Cash Tendered</label>
+        {/* Cash Tendered */}
+        <div className="mx-6 mt-5">
+          <label className="block text-xs text-gray-500 mb-1.5">Cash Tendered</label>
           <input
             type="number"
             step="0.01"
             value={tendered}
             onChange={(e) => setTendered(e.target.value)}
             autoFocus
-            className="w-full h-14 text-2xl text-center bg-gray-900 border border-gray-600 rounded-xl text-gray-50 tabular-nums focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full h-16 text-3xl text-center bg-[#0a0a0b] border-2 border-gray-800 focus:border-emerald-500 rounded-xl font-mono tabular-nums text-gray-50 outline-none transition-colors"
             placeholder="0.00"
           />
-
-          <div className="grid grid-cols-4 gap-2 mt-3">
-            {QUICK_AMOUNTS.map((amt) => (
-              <button
-                key={amt}
-                onClick={() => handleQuick(amt)}
-                className="h-10 bg-gray-700 text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
-              >
-                +${amt}
-              </button>
-            ))}
-            <button
-              onClick={handleExact}
-              className="h-10 bg-emerald-700 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors col-span-2"
-            >
-              Exact
-            </button>
-          </div>
-
-          {tenderedAmount > 0 && tenderedAmount >= total && (
-            <div className="mt-3 text-center">
-              <span className="text-gray-400 text-sm">Change: </span>
-              <span className="text-emerald-400 text-lg font-bold tabular-nums">{fmt(changeDue)}</span>
-            </div>
-          )}
-
-          {error && <p className="mt-3 text-red-400 text-sm text-center">{error}</p>}
         </div>
 
-        {/* Actions */}
-        <div className="px-6 py-4 border-t border-gray-700 flex gap-3">
+        {/* Quick Amount Buttons */}
+        <div className="px-6 mt-4 grid grid-cols-4 gap-2">
+          {QUICK_AMOUNTS.map((amt) => (
+            <button
+              key={amt}
+              onClick={() => handleQuick(amt)}
+              className="h-11 rounded-lg bg-gray-800 border border-gray-700/50 text-gray-300 text-sm font-medium hover:bg-gray-700 hover:border-gray-600 transition-all"
+            >
+              ${amt}
+            </button>
+          ))}
           <button
-            onClick={onClose}
-            className="flex-1 h-12 bg-gray-700 text-gray-300 rounded-lg font-medium hover:bg-gray-600 transition-colors"
+            onClick={handleExact}
+            className="col-span-2 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium hover:bg-emerald-500/20 transition-all"
           >
-            Back
+            Exact
           </button>
+        </div>
+
+        {/* Change Due */}
+        {tenderedAmount > 0 && tenderedAmount >= total && (
+          <div className="mx-6 mt-4 text-center">
+            <p className="text-xs text-gray-600">Change Due</p>
+            <p className="text-3xl font-bold text-emerald-400 font-mono tabular-nums mt-0.5">
+              {fmt(changeDue)}
+            </p>
+          </div>
+        )}
+
+        {/* Error */}
+        {error && (
+          <p className="mx-6 mt-3 text-sm text-red-400 text-center">{error}</p>
+        )}
+
+        {/* Complete Button */}
+        <div className="mx-6 mt-5 mb-6">
           <button
             onClick={handleComplete}
             disabled={!canComplete}
-            className="flex-1 h-12 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="w-full h-14 rounded-xl bg-emerald-600 text-white text-lg font-bold hover:bg-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/40"
           >
             {isProcessing ? 'Processing...' : 'Complete Sale'}
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Success Screen ─── */
+
+function SuccessScreen({
+  result,
+  clearCart,
+  onClose,
+}: {
+  result: { transactionNumber: number; changeDue: number }
+  clearCart: () => void
+  onClose: () => void
+}) {
+  const [countdown, setCountdown] = useState(5)
+  const closedRef = useRef(false)
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1 && !closedRef.current) {
+          closedRef.current = true
+          clearCart()
+          onClose()
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [clearCart, onClose])
+
+  const handleNewSale = () => {
+    if (!closedRef.current) {
+      closedRef.current = true
+      clearCart()
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl py-10 px-8 text-center">
+        {/* Checkmark */}
+        <svg
+          className="w-16 h-16 text-emerald-400 mx-auto"
+          viewBox="0 0 64 64"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="32" cy="32" r="28" className="text-emerald-400/20" />
+          <path d="M20 33l8 8 16-16" />
+        </svg>
+
+        <p className="text-lg text-gray-300 font-medium mt-4">Sale Complete</p>
+        <p className="text-sm text-gray-500 font-mono mt-1">
+          Transaction #{result.transactionNumber}
+        </p>
+
+        {/* Change Due */}
+        {result.changeDue > 0 && (
+          <div className="mt-6">
+            <p className="text-xs text-gray-600 uppercase tracking-widest">Change Due</p>
+            <p className="text-5xl font-bold text-emerald-400 font-mono tabular-nums mt-1">
+              {fmt(result.changeDue)}
+            </p>
+          </div>
+        )}
+
+        {/* New Sale */}
+        <button
+          onClick={handleNewSale}
+          className="mt-8 h-12 w-full max-w-xs mx-auto rounded-xl bg-gray-800 border border-gray-700 text-gray-200 font-medium hover:bg-gray-700 transition-colors block"
+        >
+          New Sale
+        </button>
+
+        {/* Countdown */}
+        <p className="text-xs text-gray-600 mt-3">
+          Auto-closing in {Math.max(countdown, 0)}s
+        </p>
       </div>
     </div>
   )

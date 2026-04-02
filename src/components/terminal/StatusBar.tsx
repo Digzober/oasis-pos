@@ -29,26 +29,49 @@ export default function StatusBar() {
   }, [])
 
   return (
-    <div className="h-8 bg-gray-800 border-t border-gray-700 flex items-center px-4 text-xs text-gray-400 shrink-0">
+    <div className="h-8 bg-gray-900/80 border-t border-gray-800/60 px-4 flex items-center text-[11px] font-mono shrink-0">
       {showQueue && <OfflineQueuePanel onClose={() => setShowQueue(false)} />}
 
       {/* Left: connectivity */}
-      <button onClick={() => queueDepth > 0 && setShowQueue(true)} className="flex items-center gap-1.5 hover:text-gray-300">
-        <span className={`w-2 h-2 rounded-full ${isOnline ? (queueDepth > 0 ? 'bg-amber-400' : 'bg-emerald-400') : 'bg-red-500'}`} />
-        {isOnline ? 'Online' : 'Offline'}
-        {queueDepth > 0 && <span className="bg-amber-600 text-white text-[10px] px-1 rounded">{queueDepth}</span>}
+      <button
+        onClick={() => !isOnline && queueDepth > 0 && setShowQueue(true)}
+        className="flex items-center gap-1.5"
+      >
+        {isOnline ? (
+          <>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+            <span className="text-gray-500">Online</span>
+          </>
+        ) : (
+          <>
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-red-400">Offline</span>
+            {queueDepth > 0 && (
+              <span className="bg-red-500/20 text-red-400 px-1.5 rounded text-[10px]">
+                {queueDepth}
+              </span>
+            )}
+          </>
+        )}
       </button>
 
-      {/* Center: Register + cache age */}
-      <div className="flex-1 text-center">
-        {session?.registerName || 'No Register'}
-        {cacheAge && <span className="ml-2 text-gray-500">Data: {cacheAge} ago</span>}
+      {/* Center: register + cache age */}
+      <div className="flex-1 flex items-center justify-center gap-2">
+        <span className="text-gray-600">
+          {session?.registerName || 'No Register'}
+        </span>
+        {cacheAge && (
+          <>
+            <span className="text-gray-800">|</span>
+            <span className="text-gray-700">Data: {cacheAge} ago</span>
+          </>
+        )}
       </div>
 
       {/* Right: BioTrack + clock */}
       <div className="flex items-center gap-3">
         <BioTrackStatus />
-        <span className="tabular-nums">{time}</span>
+        <span className="text-gray-500 tabular-nums">{time}</span>
       </div>
     </div>
   )

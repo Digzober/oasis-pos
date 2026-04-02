@@ -58,37 +58,60 @@ export default function CheckoutPage() {
 
   return (
     <TerminalLayout>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
+        {/* Tab bar — fixed at top of left panel */}
         <TerminalTabBar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="flex-1 overflow-y-auto p-4">
-          {activeTab === 'sale' && (
-            <div className="flex flex-col gap-4 h-full">
-              <ProductSearch locationId={session?.locationId}
-                categoryId={selectedCategory?.id}
-                onSelect={(product) => addItem(makeCartInput(product))}
-                onBarcodeScan={(result) => addItem(makeCartInput(result.product, result.inventory_item.id, result.inventory_item.biotrack_barcode))} />
-              {selectedCategory && (
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-900/50 border border-emerald-700 rounded-full text-sm text-emerald-300">
-                    {selectedCategory.name}
-                    <button onClick={() => setSelectedCategory(null)} className="hover:text-white">&#10005;</button>
-                  </div>
+        {/* Persistent search bar — Sale tab only */}
+        {activeTab === 'sale' && (
+          <div className="shrink-0 px-4 pt-3 pb-2 bg-gray-900 border-b border-gray-800/50">
+            <ProductSearch
+              locationId={session?.locationId}
+              categoryId={selectedCategory?.id}
+              onSelect={(product) => addItem(makeCartInput(product))}
+              onBarcodeScan={(result) => addItem(makeCartInput(result.product, result.inventory_item.id, result.inventory_item.biotrack_barcode))}
+            />
+            {selectedCategory && (
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-900/50 border border-emerald-700/60 rounded-full text-xs text-emerald-300 font-medium">
+                  {selectedCategory.name}
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="hover:text-white transition-colors"
+                  >
+                    &#10005;
+                  </button>
                 </div>
-              )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {activeTab === 'sale' && (
+            <div className="p-4">
               <CategoryGrid onSelect={(category) => setSelectedCategory({ id: category.id, name: category.name })} />
             </div>
           )}
 
-          {activeTab === 'returns' && <ReturnPanel onClose={() => setActiveTab('sale')} />}
+          {activeTab === 'returns' && (
+            <div className="p-4 h-full">
+              <ReturnPanel onClose={() => setActiveTab('sale')} />
+            </div>
+          )}
 
-          {activeTab === 'orders' && session && <OrderQueue locationId={session.locationId} />}
+          {activeTab === 'orders' && session && (
+            <div className="p-4 h-full">
+              <OrderQueue locationId={session.locationId} />
+            </div>
+          )}
 
           {activeTab === 'customers' && (
-            <>
+            <div className="p-4 h-full">
               <CustomerSearchPanel onClose={() => setActiveTab('sale')} onNewCustomer={() => setShowNewCustomer(true)} />
               {showNewCustomer && <QuickCustomerForm onClose={() => setShowNewCustomer(false)} />}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -55,7 +55,6 @@ export default function CartSidebar() {
 
   const handleResume = (id: string) => {
     if (items.length > 0) {
-      // Hold current cart first
       holdCart(session?.employeeName ?? 'Unknown')
     }
     resumeCart(id)
@@ -70,7 +69,8 @@ export default function CartSidebar() {
   }
 
   return (
-    <aside className="w-96 bg-gray-800 border-l border-gray-700 flex flex-col shrink-0">
+    <aside className="w-[420px] shrink-0 flex flex-col bg-gray-900 border-l border-gray-800 relative">
+      {/* Modals & Panels */}
       {showSearch && (
         <CustomerSearchPanel
           onClose={() => setShowSearch(false)}
@@ -174,162 +174,196 @@ export default function CartSidebar() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="h-12 border-b border-gray-700 flex items-center justify-between px-4">
+      {/* ── A. Cart Header ── */}
+      <div className="shrink-0 h-12 border-b border-gray-800 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-gray-50 font-semibold text-sm">Current Sale</h2>
+          <span className="text-sm font-semibold text-gray-300">Current Sale</span>
           {items.length > 0 && (
-            <span className="bg-emerald-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-emerald-500/15 text-emerald-400 text-xs font-mono px-1.5 py-0.5 rounded">
               {items.length}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {heldCarts.length > 0 && (
-            <button onClick={() => setShowHeldCarts(true)} className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
-              Held
-              <span className="bg-amber-600 text-white text-[10px] px-1 rounded-full">{heldCarts.length}</span>
+            <button
+              onClick={() => setShowHeldCarts(true)}
+              className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-lg hover:bg-amber-400/20 transition-colors"
+            >
+              Held {heldCarts.length}
             </button>
           )}
           {items.length > 0 && (
-            <button onClick={clearCart} className="text-xs text-gray-400 hover:text-red-400 transition-colors">
+            <button
+              onClick={clearCart}
+              className="text-xs text-gray-600 hover:text-red-400 transition-colors"
+            >
               Clear
             </button>
           )}
         </div>
       </div>
 
-      {/* Customer */}
-      <div className="px-4 py-2 border-b border-gray-700 flex items-center justify-between">
+      {/* ── B. Customer Section ── */}
+      <div className="shrink-0 border-b border-gray-800">
         {customerId ? (
-          <CustomerBadge onViewProfile={() => setShowProfile(true)} />
-        ) : (
-          <>
-            <span className="text-sm text-gray-300">{customerName}</span>
-            <button onClick={() => setShowSearch(true)} className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors">
-              + Customer
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Purchase Limit */}
-      <PurchaseLimitGauge limit={purchaseLimit} />
-
-      {/* Items */}
-      <div className="flex-1 overflow-y-auto">
-        {items.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 text-sm px-4 text-center">
-            Scan or search to add items
+          <div className="px-4 py-2.5">
+            <CustomerBadge onViewProfile={() => setShowProfile(true)} />
           </div>
         ) : (
-          <ul className="divide-y divide-gray-700">
-            {items.map((item) => (
-              <li key={item.id} className="px-4 py-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm text-gray-50 truncate">{item.productName}</p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {[item.brandName, item.categoryName].filter(Boolean).join(' · ')}
-                    </p>
-                  </div>
-                  <p className="text-sm text-gray-50 font-medium tabular-nums shrink-0">
-                    {fmt(item.unitPrice * item.quantity)}
-                  </p>
-                </div>
-                {item.discountAmount > 0 && (
-                  <p className="text-xs text-emerald-400 mt-0.5">
-                    -{fmt(item.discountAmount * item.quantity)} discount
-                  </p>
-                )}
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center border border-gray-600 rounded-lg">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 flex items-center justify-center text-gray-300 hover:bg-gray-700 rounded-l-lg transition-colors"
-                    >&#8722;</button>
-                    <span className="w-8 text-center text-sm text-gray-50 tabular-nums">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 flex items-center justify-center text-gray-300 hover:bg-gray-700 rounded-r-lg transition-colors"
-                    >+</button>
-                  </div>
-                  <span className="text-xs text-gray-400 tabular-nums">@ {fmt(item.unitPrice)}</span>
-                  <button onClick={() => removeItem(item.id)} className="ml-auto text-xs text-gray-500 hover:text-red-400 transition-colors">
-                    Remove
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div className="px-4 py-2.5 flex items-center gap-2">
+            <svg className="w-4 h-4 text-gray-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+            <span className="text-sm text-gray-500 flex-1">Walk-in Customer</span>
+            <button
+              onClick={() => setShowSearch(true)}
+              className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+            >
+              Assign
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Applied Discounts */}
+      {/* ── C. Cart Items ── */}
+      <div className="flex-1 overflow-y-auto">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3">
+            <svg className="w-10 h-10 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+            </svg>
+            <span className="text-sm text-gray-600">Cart is empty</span>
+          </div>
+        ) : (
+          <div>
+            {items.map((item) => (
+              <div key={item.id} className="px-4 py-3 border-b border-gray-800/60 relative">
+                {/* Row 1: Name + Remove */}
+                <div className="flex items-start justify-between gap-6 mb-1.5">
+                  <p className="text-sm text-gray-200 truncate flex-1">{item.productName}</p>
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="w-5 h-5 flex items-center justify-center text-gray-600 hover:text-red-400 transition-colors shrink-0"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {/* Row 2: Qty controls + Line total */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="w-7 h-7 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600 flex items-center justify-center text-xs transition-colors"
+                    >
+                      &#8722;
+                    </button>
+                    <span className="text-sm font-mono text-gray-100 w-8 text-center">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="w-7 h-7 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:border-gray-600 flex items-center justify-center text-xs transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="text-right">
+                    {item.discountAmount > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600 line-through tabular-nums font-mono">
+                          {fmt(item.unitPrice * item.quantity)}
+                        </span>
+                        <span className="text-sm font-semibold text-emerald-400 tabular-nums font-mono">
+                          {fmt((item.unitPrice - item.discountAmount) * item.quantity)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm font-semibold text-gray-100 tabular-nums font-mono">
+                        {fmt(item.unitPrice * item.quantity)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── D. Applied Discounts ── */}
       {discountResult && discountResult.applied_discounts.length > 0 && (
-        <div className="border-t border-gray-700 px-4 py-2">
+        <div className="shrink-0">
           {discountResult.applied_discounts.map((d) => (
-            <div key={d.discount_id} className="flex justify-between text-xs py-0.5">
-              <span className="text-emerald-400 truncate">{d.discount_name}</span>
-              <span className="text-emerald-400 tabular-nums shrink-0">-{fmt(d.total_savings)}</span>
+            <div key={d.discount_id} className="px-4 py-1.5 flex justify-between text-xs">
+              <span className="text-emerald-400 truncate flex items-center gap-1.5">
+                <svg className="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+                </svg>
+                {d.discount_name}
+              </span>
+              <span className="text-emerald-400 font-mono shrink-0">-{fmt(d.total_savings)}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* Totals */}
-      <div className="border-t border-gray-700 px-4 py-3 space-y-1">
-        <div className="flex justify-between text-sm text-gray-400">
-          <span>Subtotal</span>
-          <span className="tabular-nums">{fmt(subtotal)}</span>
+      {/* ── E. Purchase Limit Gauge ── */}
+      <div className="shrink-0 px-4 py-2">
+        <PurchaseLimitGauge limit={purchaseLimit} />
+      </div>
+
+      {/* ── F. Totals ── */}
+      <div className="shrink-0 px-4 py-3 border-t border-gray-800">
+        <div className="flex justify-between mb-1">
+          <span className="text-xs text-gray-500">Subtotal</span>
+          <span className="text-sm text-gray-200 tabular-nums font-mono">{fmt(subtotal)}</span>
         </div>
         {discountTotal > 0 && (
-          <div className="flex justify-between text-sm text-emerald-400">
-            <span>Discounts</span>
-            <span className="tabular-nums">-{fmt(discountTotal)}</span>
+          <div className="flex justify-between mb-1">
+            <span className="text-xs text-emerald-400">Discounts</span>
+            <span className="text-sm text-emerald-400 tabular-nums font-mono">-{fmt(discountTotal)}</span>
           </div>
         )}
-        <div className="flex justify-between text-sm text-gray-400">
-          <span>Tax</span>
-          <span className="tabular-nums">{fmt(taxTotal)}</span>
+        <div className="flex justify-between mb-1">
+          <span className="text-xs text-gray-500">Tax</span>
+          <span className="text-sm text-gray-200 tabular-nums font-mono">{fmt(taxTotal)}</span>
         </div>
-        <div className="flex justify-between text-base font-bold text-gray-50 pt-1">
-          <span>Total</span>
-          <span className="tabular-nums">{fmt(total)}</span>
+        <div className="border-t border-gray-700 pt-2 mt-1 flex justify-between">
+          <span className="text-base font-bold text-gray-50">TOTAL</span>
+          <span className="text-base font-bold text-gray-50 tabular-nums font-mono">{fmt(total)}</span>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="border-t border-gray-700 p-3 grid grid-cols-3 gap-2">
+      {/* ── G. Action Buttons ── */}
+      <div className="shrink-0 px-4 py-3 flex gap-2.5">
         <button
           disabled={items.length === 0}
           onClick={handleVoidClick}
-          className="col-span-1 h-12 rounded-lg bg-gray-700 text-gray-300 text-sm font-medium hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 h-12 rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed bg-gray-800 border border-gray-700 text-gray-400 hover:bg-red-500/10 hover:border-red-500/40 hover:text-red-400"
         >
-          Void
+          VOID
         </button>
         <button
           disabled={items.length === 0 || heldCarts.length >= 10}
           onClick={handleHoldClick}
-          className="col-span-1 h-12 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors relative"
+          className="flex-1 h-12 rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
         >
-          Hold
-          {heldCarts.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-amber-400 text-gray-900 text-[10px] font-bold px-1 rounded-full">{heldCarts.length}</span>
-          )}
+          HOLD
         </button>
         {drawer ? (
           <button
             disabled={!canPay}
             onClick={() => setShowCheckout(true)}
-            className="col-span-1 h-12 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 h-12 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30"
           >
-            Pay
+            PAY
           </button>
         ) : (
           <button
             onClick={() => setShowOpenDrawer(true)}
-            className="col-span-1 h-12 rounded-lg bg-blue-600 text-white text-sm font-bold hover:bg-blue-500 transition-colors"
+            className="flex-1 h-12 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.97] bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-900/30"
           >
             Open Drawer
           </button>
