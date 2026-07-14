@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('product_categories', id, session.organizationId)) return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
@@ -31,9 +33,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('product_categories', id, session.organizationId)) return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     const body = await req.json()
+    if (body.parent_id && !await assertOrgOwnership('product_categories', body.parent_id, session.organizationId)) return NextResponse.json({ error: 'Parent category not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const updates: Record<string, unknown> = {}
@@ -75,8 +79,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('product_categories', id, session.organizationId)) return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     // Check for active products using this category

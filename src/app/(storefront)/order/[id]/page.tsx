@@ -20,15 +20,16 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ id
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchOrder = () => {
-    fetch(`/api/orders/${id}`).then(r => r.json()).then(d => { setOrder(d.order); setLoading(false) })
-  }
+  const capability = () => window.location.hash.slice(1)
+  const fetchOrder = () => fetch(`/api/orders/${id}`, {
+    headers: { Authorization: `Bearer ${capability()}` },
+  }).then(r => r.json()).then(d => { setOrder(d.order); setLoading(false) })
 
-  useEffect(() => { fetchOrder(); const iv = setInterval(fetchOrder, 30000); return () => clearInterval(iv) }, [id])
+  useEffect(() => { const load = () => fetch(`/api/orders/${id}`, { headers: { Authorization: `Bearer ${window.location.hash.slice(1)}` } }).then(r => r.json()).then(d => { setOrder(d.order); setLoading(false) }); void load(); const iv = setInterval(load, 30000); return () => clearInterval(iv) }, [id])
 
   const cancelOrder = async () => {
     if (!confirm('Cancel this order?')) return
-    await fetch(`/api/orders/${id}/cancel`, { method: 'POST' })
+    await fetch(`/api/orders/${id}/cancel`, { method: 'POST', headers: { Authorization: `Bearer ${capability()}` } })
     fetchOrder()
   }
 

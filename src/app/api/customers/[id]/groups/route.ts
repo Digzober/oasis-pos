@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -14,8 +15,11 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: customerId } = await params
+    if (!await assertOrgOwnership('customers', customerId, session.organizationId)) {
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+    }
     const body = await request.json()
     const parsed = GroupsSchema.safeParse(body)
 
@@ -24,6 +28,10 @@ export async function PATCH(
     }
 
     const { add_group_ids, remove_group_ids } = parsed.data
+    const groupIds = [...(add_group_ids ?? []), ...(remove_group_ids ?? [])]
+    if (!await assertOrgOwnership('customer_groups', groupIds, session.organizationId)) {
+      return NextResponse.json({ error: 'Customer group not found' }, { status: 404 })
+    }
     const sb = await createSupabaseServerClient()
 
     // Add groups (upsert with ignoreDuplicates)

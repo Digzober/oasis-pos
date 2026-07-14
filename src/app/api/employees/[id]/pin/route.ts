@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { PERMISSIONS } from '@/lib/auth/permissions'
 import { getEmployeePermissions, hasAnyPermission } from '@/lib/services/permissionService'
 import { resetPin } from '@/lib/services/employeeManagementService'
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { id } = await params
+    if (!await assertOrgOwnership('employees', id, session.organizationId)) return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
     const parsed = PinSchema.safeParse(await req.json())
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })

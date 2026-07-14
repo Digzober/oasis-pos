@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     if (res.ok) {
       const data = await res.json()
       clear()
-      router.push(`/order/${data.order.id}`)
+      router.push(`/order/${data.order.id}#${data.cancellation_token}`)
     } else {
       const data = await res.json()
       setError(data.error ?? 'Failed to place order')

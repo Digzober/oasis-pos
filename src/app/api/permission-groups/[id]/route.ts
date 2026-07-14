@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession(); const { id } = await params
+    const session = await requireSession(); const { id } = await params
+    if (!await assertOrgOwnership('permission_groups', id, session.organizationId)) return NextResponse.json({ error: 'Permission group not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
     const { data } = await sb.from('permission_groups').select('*, permission_group_permissions ( permission_id, permission_definitions ( id, category, code, name, sub_category ) )').eq('id', id).single()
     return NextResponse.json({ group: data })
@@ -14,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession(); const { id } = await params; const body = await req.json()
+    const session = await requireSession(); const { id } = await params; if (!await assertOrgOwnership('permission_groups', id, session.organizationId)) return NextResponse.json({ error: 'Permission group not found' }, { status: 404 }); const body = await req.json()
     const sb = await createSupabaseServerClient()
     const { data } = await sb.from('permission_groups').update({ name: body.name, description: body.description }).eq('id', id).select().single()
     return NextResponse.json({ group: data })
@@ -23,7 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession(); const { id } = await params; const body = await req.json()
+    const session = await requireSession(); const { id } = await params; if (!await assertOrgOwnership('permission_groups', id, session.organizationId)) return NextResponse.json({ error: 'Permission group not found' }, { status: 404 }); const body = await req.json()
     const sb = await createSupabaseServerClient()
     // Atomic: delete old, insert new
     await sb.from('permission_group_permissions').delete().eq('permission_group_id', id)

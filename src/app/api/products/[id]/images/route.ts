@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -12,8 +13,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('products', id, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data } = await sb
@@ -37,8 +39,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: productId } = await params
+    if (!await assertOrgOwnership('products', productId, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     let formData: FormData
@@ -125,9 +128,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: productId } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('products', productId, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
     const body = await request.json()
     const { imageId, alt_text } = body as { imageId?: string; alt_text?: string }
@@ -135,6 +138,8 @@ export async function PATCH(
     if (!imageId) {
       return NextResponse.json({ error: 'imageId is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('product_images', imageId, session.organizationId, productId)) return NextResponse.json({ error: 'Image not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     if (typeof alt_text !== 'string') {
       return NextResponse.json({ error: 'alt_text must be a string' }, { status: 400 })
@@ -173,9 +178,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: productId } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('products', productId, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
 
     const body = await request.json()
     const { image_ids } = body as { image_ids?: string[] }
@@ -183,6 +188,8 @@ export async function PUT(
     if (!Array.isArray(image_ids) || image_ids.length === 0) {
       return NextResponse.json({ error: 'image_ids must be a non-empty array' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('product_images', image_ids, session.organizationId, productId)) return NextResponse.json({ error: 'Image not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     // Update sort_order and is_primary for each image
     const updates = image_ids.map((imageId, index) =>
@@ -226,15 +233,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: productId } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('products', productId, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     const { searchParams } = new URL(request.url)
     const imageId = searchParams.get('imageId')
 
     if (!imageId) {
       return NextResponse.json({ error: 'imageId required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('product_images', imageId, session.organizationId, productId)) return NextResponse.json({ error: 'Image not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     // Get image to find storage path
     const { data: img } = await sb

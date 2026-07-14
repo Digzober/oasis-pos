@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -18,8 +19,9 @@ const UpdatePrinterSchema = z.object({
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('printers', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data: printer, error } = await (sb.from('printers') as any)
@@ -43,8 +45,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('printers', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
     const body = await request.json()
     const parsed = UpdatePrinterSchema.safeParse(body)
@@ -75,8 +78,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('printers', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { error } = await (sb.from('printers') as any)

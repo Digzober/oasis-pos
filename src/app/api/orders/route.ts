@@ -4,6 +4,7 @@ import { placeOrder } from '@/lib/services/onlineOrderService'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 import { requireSession } from '@/lib/auth/session'
+import { createOrderCapability } from '@/lib/auth/orderCapability'
 
 const PlaceOrderSchema = z.object({
   location_id: z.uuid(),
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
 
     const order = await placeOrder({ ...parsed.data, customer_email: parsed.data.customer_email ?? null, notes: parsed.data.notes ?? null })
-    return NextResponse.json({ order }, { status: 201 })
+    return NextResponse.json({ order, cancellation_token: createOrderCapability(order.id) }, { status: 201 })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) {
       const a = err as { code: string; message: string; statusCode?: number }

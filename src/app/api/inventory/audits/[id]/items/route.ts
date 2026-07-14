@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getEmployeePermissions, hasPermission } from '@/lib/services/permissionService'
 import { PERMISSIONS } from '@/lib/auth/permissions'
@@ -17,8 +18,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('inventory_audits', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
 
     const searchParams = request.nextUrl.searchParams
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
@@ -104,6 +106,7 @@ export async function POST(
   try {
     const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('inventory_audits', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Audit not found' }, { status: 404 })
 
     const perms = await getEmployeePermissions(session.employeeId)
     if (!hasPermission(perms, PERMISSIONS.ADJUST_INVENTORY)) {
@@ -120,6 +123,7 @@ export async function POST(
     if (!itemId) {
       return NextResponse.json({ error: 'itemId is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('inventory_audit_items', itemId, session.organizationId, id, session.locationId)) return NextResponse.json({ error: 'Audit item not found' }, { status: 404 })
     if (countedQuantity == null || countedQuantity < 0) {
       return NextResponse.json({ error: 'countedQuantity must be a non-negative number' }, { status: 400 })
     }

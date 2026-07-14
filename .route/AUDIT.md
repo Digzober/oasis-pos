@@ -20,8 +20,8 @@ Scope: Phase A only from `.route/PLAN.md` v4 (the committed v4 content retains a
 | A2-RESPONSE | `src/app/(backoffice)/customers/**`; inventory/manifest/marketing pages and modals; `src/components/terminal/DrawerCloseModal.tsx` | API response contract | Consumers used stale generic fallbacks (`data`, `history`, `transactions`, top-level role) instead of the named keys actually returned by their routes. Customer-field settings also sent `{sections}` although the PATCH schema accepts `pos`/`backend`/`prescription`, and campaign analytics rendered fields absent from its API. | Aligned all statically traced reads to route response keys, converted field visibility between UI sections and the API record contract, unwrapped product/session payloads, and normalized campaign analytics from the API counters with numeric defaults. The response-key inventory now reports zero mismatches. | Orchestrator checkpoint after A2 API audit |
 | A2-RECONCILIATION | `src/app/(backoffice)/reports/reconciliation/page.tsx:44`; `src/app/api/reconciliation/manual/route.ts:1`; `src/lib/services/reconciliationService.ts:119` | UI dead-end / authorization | After S6 made the cron POST fail closed, the authenticated “Run Now” button still called that cron-only endpoint without a secret. Reconciliation list/detail service-role reads also accepted resource IDs without an organization predicate. | Added a separate session-authenticated manual endpoint that validates the requested location against the session organization; pointed the UI to it; scoped list/detail reads through `locations.organization_id`. The cron endpoint remains strictly secret-only. | Orchestrator checkpoint after A2 UI/security audit |
 | A2-NAV-FETCH | `scripts/phase-a-inventory.mjs`; navigation/fetch consumers listed below | broken links / API methods | Static inventory found two dead navigation targets and 15 missing/wrong-method fetches, including nonexistent subroom, manifest-search, label-print, adjustment, image-reorder, and base-collection DELETE endpoints. | Pointed links to real edit/report pages; aligned dynamic DELETE and image methods; reused existing rooms/inventory/labels APIs; added an org-scoped marketing-tag DELETE; repaired adjustment payload/path; and made multi-label printing use the existing generation API. Final inventory is zero-dead. | Orchestrator checkpoint after A2 route audit |
-| S5-IDOR | 66 dynamic resource handlers marked in the matrix | security / tenant isolation | The required S5 spot-audit found resource-ID handlers whose service-role queries do not expose a tenant predicate. The matrix deliberately keeps each one marked `S5-IDOR`; reconciliation list/detail were fixed during A2. | Unfixed in this checkpoint: S5's plan scope is a spot-audit + per-route matrix, and these handlers require route-specific ownership semantics rather than a blind generic predicate. They remain explicit security debt and must block a production-security signoff even though the requested S5 inventory deliverable is complete. | No fix — explicit unresolved finding |
-| S5-ORDER-CAP | `src/app/api/orders/[id]/route.ts:5` | security / public capability | Public order status/cancellation uses possession of the UUID as its only capability; adding a customer cancellation token requires schema storage and rotation semantics. | GET/PATCH staff mutations are organization scoped. Customer cancellation-token DDL is deferred to the Phase B migration per the no-DDL Phase A rule. | Deferred to Phase B migration |
+| S5-IDOR | `src/lib/auth/ownership.ts:1`; 65 route files listed in the matrix | security / tenant isolation | The S5 audit identified 65 dynamic route files whose handlers accessed service-role data by resource ID without proving tenant ownership first. (The previously reported total of 66 combined these 65 matrix rows with S5-ORDER-CAP.) | Added one fail-closed `assertOrgOwnership` boundary with direct `organization_id`, resource `location_id → locations.organization_id`, and child→parent ownership modes. Every exported handler in all 65 files now invokes it before sensitive detail reads or mutations; location-specific domains also bind `session.locationId`, and mutation payload foreign keys are checked where applicable. Added a source-enforced handler matrix test plus five foreign-organization negative route tests. | Orchestrator checkpoint after S5 matrix closeout |
+| S5-ORDER-CAP | `src/lib/auth/orderCapability.ts:1`; `src/app/api/orders/{route.ts,[id]/route.ts,[id]/cancel/route.ts}`; storefront checkout/status pages | security / public capability | Public order status and cancellation used possession of the order UUID as the only capability. | Resolved without DDL: order creation returns a stateless HMAC-SHA256 capability bound to the order ID and `SESSION_SECRET`; the storefront carries it in the URL fragment and sends it as a bearer token. Public status/cancellation fail closed with 404 on missing/invalid tokens, use timing-safe verification, and staff access still requires session plus `assertOrgOwnership`. Added UUID-only rejection and valid-token tests for both status and cancellation. | Orchestrator checkpoint after public order capability closeout |
 
 ## Verification log
 
@@ -42,10 +42,17 @@ Scope: Phase A only from `.route/PLAN.md` v4 (the committed v4 content retains a
 | A2 final inventories/lint | `node scripts/phase-a-inventory.mjs`; `npm run lint` | 0 | Inventory reports zero dead navigation targets, dead fetch/method targets, response-key mismatches, and live-CHECK literal violations. Lint exits 0 with zero errors and 217 warnings. |
 | Phase A final typecheck | `npm run typecheck` | 0 | Final TypeScript gate passed with zero errors. |
 | Phase A final test suite | `npm run test` | 0 | Final Vitest run passed: 37 files, 335 tests, zero failures. |
+| S5 foreign-org negative red | `npx vitest run src/app/api/__tests__/tenant-ownership.test.ts` | 1 | All five required negative cases reproduced the vulnerability: customer, order, workflow, inventory, and transaction routes returned 200 for foreign resource IDs. |
+| S5 handler-matrix red | `npx vitest run src/lib/auth/__tests__/ownership-matrix.test.ts` | 1 | Source-enforced matrix initially reported 60 unguarded route files after the first five negative-test routes were wired. |
+| S5 public-order capability red | `npx vitest run src/app/api/orders/[id]/cancel/__tests__/route.test.ts` | 1 | UUID possession without any proof reached `cancelOrder` and returned 200. |
+| S5 ownership/capability targeted green | `npx vitest run src/lib/auth/__tests__/ownership.test.ts src/lib/auth/__tests__/ownership-matrix.test.ts src/app/api/__tests__/tenant-ownership.test.ts src/app/api/orders/[id]/__tests__/route.test.ts src/app/api/orders/[id]/cancel/__tests__/route.test.ts`; `npm run typecheck` | 0 | 5 files and 13 tests passed. Direct-org, selected-location, child-parent, all-handler coverage, five foreign-org route negatives, and missing/valid status/cancellation capability cases passed; follow-up typecheck passed. |
+| S5 inventory/lint | `node scripts/phase-a-inventory.mjs`; `npm run lint` | 0 | Inventory remains zero-dead/zero-response-mismatch/zero-schema-violation. Lint exits 0 with zero errors and 207 warnings. |
+| S5 closeout final typecheck | `npm run typecheck` | 0 | Final TypeScript gate passed with zero errors. |
+| S5 closeout final test suite | `npm run test` | 0 | Final Vitest run passed: 42 files, 348 tests, zero failures. |
 
 ## S5 per-route service-role security matrix
 
-Legend: `PASS` has an explicit session/role/cron boundary and an organization/location predicate (or an intentional minimal public contract). `S5-IDOR` is a resource-ID handler whose tenant predicate is not statically visible and remains a concrete Phase A finding to close.
+Legend: `PASS` has an explicit session/role/cron boundary and an organization/location predicate (or an intentional minimal public contract). Former `S5-IDOR` rows name the `assertOrgOwnership` path that now closes them.
 
 | Route | Methods | Boundary | Service-role scope / status |
 |---|---|---|---|
@@ -56,42 +63,42 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/auth/pin-login` | POST | Auth flow | PASS — authentication entry; selected location determines organization |
 | `/api/badges` | GET,POST | Session | PASS — organization predicate |
 | `/api/badges/[id]` | GET,PATCH,DELETE | Session | PASS — organization predicate |
-| `/api/badges/[id]/members` | POST,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/badges/[id]/members` | POST,DELETE | Session | PASS — `assertOrgOwnership`: badge/customer `organization_id` |
 | `/api/biotrack/config` | GET,POST,DELETE | Session | PASS — organization predicate |
 | `/api/biotrack/generate-package-id` | POST | Session | PASS — location predicate / location-owned service |
 | `/api/biotrack/inventory-sync` | POST | Cron secret | PASS — fail-closed bearer |
 | `/api/biotrack/retry` | POST | Cron secret | PASS — fail-closed bearer |
 | `/api/biotrack/status` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/brands` | GET,POST | Session | PASS — organization predicate |
-| `/api/brands/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/brands/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: brand `organization_id` |
 | `/api/campaigns` | GET,POST | Session | PASS — organization predicate |
-| `/api/campaigns/[id]` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/campaigns/[id]/analytics` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/campaigns/[id]/recipients` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/campaigns/[id]/schedule` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/campaigns/[id]` | GET,PATCH | Session | PASS — `assertOrgOwnership`: campaign `organization_id`; referenced template/segment/tag IDs checked |
+| `/api/campaigns/[id]/analytics` | GET | Session | PASS — `assertOrgOwnership`: parent campaign `organization_id` |
+| `/api/campaigns/[id]/recipients` | GET | Session | PASS — `assertOrgOwnership`: parent campaign `organization_id` |
+| `/api/campaigns/[id]/schedule` | POST | Session | PASS — `assertOrgOwnership`: campaign `organization_id` |
 | `/api/campaigns/[id]/send` | POST | Session | PASS — organization predicate |
 | `/api/cart/config` | GET | Session | PASS — organization predicate |
 | `/api/cash-drawers` | POST | Session | PASS — location predicate / location-owned service |
 | `/api/categories` | GET,POST | Session | PASS — organization predicate |
-| `/api/categories/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/categories/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: category/parent `organization_id` |
 | `/api/customer-groups` | GET,POST | Session | PASS — organization predicate |
 | `/api/customer-groups/[id]` | GET,PATCH | Session | PASS — organization predicate |
-| `/api/customer-groups/[id]/members/bulk` | POST,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customer-groups/[id]/members/bulk` | POST,DELETE | Session | PASS — `assertOrgOwnership`: group/customer `organization_id` |
 | `/api/customers` | GET,POST | Session | PASS — organization predicate |
 | `/api/customers/[id]` | GET,PATCH | Session | PASS — organization predicate |
-| `/api/customers/[id]/badges` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/customers/[id]/groups` | PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customers/[id]/badges` | GET,PATCH | Session | PASS — `assertOrgOwnership`: customer/badge `organization_id` |
+| `/api/customers/[id]/groups` | PATCH | Session | PASS — `assertOrgOwnership`: customer/group `organization_id` |
 | `/api/customers/[id]/loyalty/adjust` | POST | Session | PASS — organization predicate |
-| `/api/customers/[id]/loyalty/history` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customers/[id]/loyalty/history` | GET | Session | PASS — `assertOrgOwnership`: customer `organization_id` |
 | `/api/customers/[id]/purchase-history` | GET | Session | PASS — location predicate / location-owned service |
-| `/api/customers/[id]/transaction-history` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customers/[id]/transaction-history` | GET | Session | PASS — `assertOrgOwnership`: customer `organization_id` |
 | `/api/customers/bulk` | PATCH | Session | PASS — organization predicate |
 | `/api/customers/configure/badge-priority` | GET,PATCH | Session | PASS — organization predicate |
 | `/api/customers/configure/doctors` | GET,POST | Session | PASS — organization predicate |
-| `/api/customers/configure/doctors/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customers/configure/doctors/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: doctor `organization_id` |
 | `/api/customers/configure/fields` | GET,PATCH | Session | PASS — location predicate / location-owned service |
 | `/api/customers/configure/qualifying-conditions` | GET,POST | Session | PASS — organization predicate |
-| `/api/customers/configure/qualifying-conditions/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/customers/configure/qualifying-conditions/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: condition `organization_id` |
 | `/api/customers/duplicates/merge` | POST | Session | PASS — organization predicate |
 | `/api/customers/duplicates/scan` | POST | Session | PASS — organization predicate |
 | `/api/customer-types` | GET | Session | PASS — authenticated non-resource handler |
@@ -101,10 +108,10 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/delivery/drivers` | GET,POST | Session | PASS — organization predicate |
 | `/api/delivery/vehicles` | GET,POST | Session | PASS — location predicate / location-owned service |
 | `/api/delivery/zones` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/delivery/zones/[id]` | PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/delivery/zones/[id]` | PATCH | Session | PASS — `assertOrgOwnership`: delivery-zone `organization_id` |
 | `/api/discounts` | GET,POST | Session | PASS — organization predicate |
-| `/api/discounts/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/discounts/[id]/duplicate` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/discounts/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: discount `organization_id` |
+| `/api/discounts/[id]/duplicate` | POST | Session | PASS — `assertOrgOwnership`: source discount `organization_id` |
 | `/api/drivers` | GET | Session | PASS — organization predicate |
 | `/api/dutchie/cron` | GET,POST | Cron secret | PASS — fail-closed bearer |
 | `/api/dutchie/jobs` | GET | Dutchie role | PASS — manager/admin/owner + organization |
@@ -113,28 +120,28 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/dutchie/sync/log` | GET | Dutchie role | PASS — manager/admin/owner + organization |
 | `/api/dutchie/test-connection` | POST | Dutchie role | PASS — manager/admin/owner + organization |
 | `/api/employees` | GET,POST | Session | PASS — organization predicate |
-| `/api/employees/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/employees/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: employee `organization_id` |
 | `/api/employees/[id]/locations` | PUT | Session | PASS — location predicate / location-owned service |
-| `/api/employees/[id]/permissions` | PUT | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/employees/[id]/pin` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/employees/[id]/permissions` | PUT | Session | PASS — `assertOrgOwnership`: employee/permission-group `organization_id` |
+| `/api/employees/[id]/pin` | POST | Session | PASS — permission gate + `assertOrgOwnership`: employee `organization_id` |
 | `/api/events` | GET,POST | Session | PASS — organization predicate |
-| `/api/events/[id]` | PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/events/[id]` | PATCH | Session | PASS — `assertOrgOwnership`: event `organization_id` |
 | `/api/fees-donations` | GET,POST,PATCH | Session | PASS — location predicate / location-owned service |
 | `/api/health` | GET | None | PASS — public liveness returns aggregate status only |
 | `/api/inventory` | GET | Session | PASS — organization predicate |
-| `/api/inventory/[id]/adjust` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/inventory/[id]/move` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/inventory/[id]/adjust` | POST | Session | PASS — permission gate + `assertOrgOwnership`: item `location_id` → session location/organization |
+| `/api/inventory/[id]/move` | POST | Session | PASS — `assertOrgOwnership`: item/room/subroom bound to session location/organization |
 | `/api/inventory/audits` | GET,POST | Session | PASS — organization predicate |
 | `/api/inventory/audits/[id]` | GET,PATCH | Session | PASS — location predicate / location-owned service |
-| `/api/inventory/audits/[id]/items` | GET,POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/inventory/audits/[id]/items` | GET,POST | Session | PASS — `assertOrgOwnership`: audit location plus audit-item → audit parent binding |
 | `/api/inventory/bulk` | PATCH | Session | PASS — organization predicate |
 | `/api/inventory/check` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/inventory/combine` | POST | Session | PASS — organization predicate |
 | `/api/inventory/convert` | POST | Session | PASS — organization predicate |
 | `/api/inventory/destroy` | POST | Session | PASS — organization predicate |
 | `/api/inventory/items/[id]` | GET,PATCH | Session | PASS — organization predicate |
-| `/api/inventory/items/[id]/history` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/inventory/items/[id]/transactions` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/inventory/items/[id]/history` | GET | Session | PASS — `assertOrgOwnership`: item `location_id` → session location/organization |
+| `/api/inventory/items/[id]/transactions` | GET | Session | PASS — `assertOrgOwnership`: item `location_id` → session location/organization |
 | `/api/inventory/journal` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/inventory/lab-sample` | POST | Session | PASS — organization predicate |
 | `/api/inventory/last-cost/[productId]` | GET | Session | PASS — location predicate / location-owned service |
@@ -147,23 +154,23 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/inventory/transfers` | GET,POST | Session | PASS — location predicate / location-owned service |
 | `/api/labels/generate` | POST | Session | PASS — authenticated non-resource handler |
 | `/api/labels/templates` | GET,POST | Session | PASS — organization predicate |
-| `/api/labels/templates/[id]` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/locations/[id]` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/locations/[id]/settings` | GET,PUT | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/labels/templates/[id]` | GET,PATCH | Session | PASS — `assertOrgOwnership`: label-template `organization_id` |
+| `/api/locations/[id]` | GET,PATCH | Session | PASS — `assertOrgOwnership`: location `organization_id` |
+| `/api/locations/[id]/settings` | GET,PUT | Session | PASS — `assertOrgOwnership`: parent location `organization_id` |
 | `/api/loyalty/adjust` | POST | Session | PASS — organization predicate |
 | `/api/loyalty/adjustment-reasons` | GET,POST | Session | PASS — organization predicate |
 | `/api/loyalty/config` | GET,PUT | Session | PASS — organization predicate |
 | `/api/loyalty/tiers` | GET,POST | Session | PASS — organization predicate |
-| `/api/loyalty/tiers/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/loyalty/tiers/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: tier → loyalty-config → `organization_id` |
 | `/api/manifests` | GET,POST | Session | PASS — organization predicate |
-| `/api/manifests/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/export` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/history` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/items` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/items/[itemId]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/receive` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/reopen` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/manifests/[id]/send` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/manifests/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: manifest `organization_id` |
+| `/api/manifests/[id]/export` | GET | Session | PASS — `assertOrgOwnership`: parent manifest `organization_id` |
+| `/api/manifests/[id]/history` | GET | Session | PASS — `assertOrgOwnership`: parent manifest `organization_id` |
+| `/api/manifests/[id]/items` | POST | Session | PASS — `assertOrgOwnership`: manifest/product plus inventory-item location |
+| `/api/manifests/[id]/items/[itemId]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: item → manifest parent, bound to URL manifest ID |
+| `/api/manifests/[id]/receive` | POST | Session | PASS — `assertOrgOwnership`: manifest `organization_id` |
+| `/api/manifests/[id]/reopen` | POST | Session | PASS — `assertOrgOwnership`: manifest `organization_id` |
+| `/api/manifests/[id]/send` | POST | Session | PASS — `assertOrgOwnership`: manifest `organization_id` |
 | `/api/manifests/export` | GET | Session | PASS — organization predicate |
 | `/api/marketing-tags` | GET,POST | Session | PASS — organization predicate |
 | `/api/orders` | POST,GET | Session | PASS — POST storefront create; GET session + organization join |
@@ -171,20 +178,20 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/orders/[id]/cancel` | POST | None | DEFERRED Phase B migration — public UUID capability needs a customer cancellation token |
 | `/api/orders/expire` | POST | Cron secret | PASS — fail-closed bearer |
 | `/api/permission-groups` | GET,POST | Session | PASS — organization predicate |
-| `/api/permission-groups/[id]` | GET,PATCH,PUT | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/permission-groups/[id]` | GET,PATCH,PUT | Session | PASS — `assertOrgOwnership`: permission-group `organization_id` |
 | `/api/producers` | GET,POST | Session | PASS — organization predicate |
-| `/api/producers/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/producers/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: producer `organization_id` |
 | `/api/product-kits` | GET,POST | Session | PASS — organization predicate |
 | `/api/product-kits/[id]` | GET,PATCH,DELETE | Session | PASS — organization predicate |
 | `/api/product-kits/[id]/items` | POST,DELETE | Session | PASS — organization predicate |
 | `/api/products` | GET,POST | Session | PASS — organization predicate |
 | `/api/products/[id]` | GET,PATCH,DELETE | Session | PASS — organization predicate |
-| `/api/products/[id]/analytics` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/products/[id]/images` | GET,POST,PATCH,PUT,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/products/[id]/label-settings` | GET,PUT | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/products/[id]/price-history` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/products/[id]/analytics` | GET | Session | PASS — `assertOrgOwnership`: product `organization_id` |
+| `/api/products/[id]/images` | GET,POST,PATCH,PUT,DELETE | Session | PASS — `assertOrgOwnership`: product plus image → product parent/URL binding |
+| `/api/products/[id]/label-settings` | GET,PUT | Session | PASS — `assertOrgOwnership`: product/label-template `organization_id` |
+| `/api/products/[id]/price-history` | GET | Session | PASS — `assertOrgOwnership`: product `organization_id` |
 | `/api/products/[id]/prices` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/products/[id]/tags` | GET,PUT | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/products/[id]/tags` | GET,PUT | Session | PASS — `assertOrgOwnership`: product/tag `organization_id` |
 | `/api/products/barcode/[code]` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/products/bulk/deactivate` | POST | Session | PASS — organization predicate |
 | `/api/products/bulk/price-update` | POST | Session | PASS — organization predicate |
@@ -202,16 +209,16 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/referrals` | POST | Session | PASS — organization predicate |
 | `/api/referrals/config` | GET,PUT | Session | PASS — organization predicate |
 | `/api/registers` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/registers/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/registers/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: register bound to session location/organization |
 | `/api/registers/configure/guestlist-entries` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/registers/configure/guestlist-entries/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/registers/configure/guestlist-entries/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: entry/status/register bound to session location; employee organization checked |
 | `/api/registers/configure/guestlist-statuses` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/registers/configure/guestlist-statuses/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/registers/configure/guestlist-statuses/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: status bound to session location/organization |
 | `/api/registers/configure/order-sources` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/registers/configure/order-sources/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/registers/configure/order-sources/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: source bound to session location/organization |
 | `/api/registers/configure/settings` | GET,PATCH | Session | PASS — location predicate / location-owned service |
 | `/api/registers/configure/transaction-reasons` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/registers/configure/transaction-reasons/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/registers/configure/transaction-reasons/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: reason bound to session location/organization |
 | `/api/registers/overview` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/reports/closing` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/reports/cogs` | GET | Session | PASS — location predicate / location-owned service |
@@ -219,16 +226,16 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/reports/low-stock` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/reports/sales-summary` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/reports/schedules` | GET,POST | Session | PASS — organization predicate |
-| `/api/reports/schedules/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/reports/schedules/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: schedule `organization_id` |
 | `/api/reports/schedules/execute` | POST | Cron secret | PASS — fail-closed bearer |
 | `/api/reports/shrinkage` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/reports/transactions` | GET | Session | PASS — location predicate / location-owned service |
-| `/api/reports/transactions/[id]` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/reports/transactions/[id]` | GET | Session | PASS — `assertOrgOwnership`: transaction bound to session location/organization |
 | `/api/reports/valuation` | GET | Session | PASS — location predicate / location-owned service |
 | `/api/rooms` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/rooms/[id]` | PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/rooms/[id]` | PATCH | Session | PASS — `assertOrgOwnership`: room bound to session location/organization |
 | `/api/segments` | GET,POST | Session | PASS — organization predicate |
-| `/api/segments/[id]` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/segments/[id]` | GET,PATCH | Session | PASS — `assertOrgOwnership`: segment `organization_id` |
 | `/api/segments/preview` | POST | Session | PASS — organization predicate |
 | `/api/settings/adjustment-reasons` | GET,POST | Session | PASS — organization predicate |
 | `/api/settings/adjustment-reasons/[id]` | PATCH,DELETE | Session | PASS — organization predicate |
@@ -250,8 +257,8 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/settings/pricing-tiers` | GET,POST | Session | PASS — organization predicate |
 | `/api/settings/pricing-tiers/[id]` | PATCH,DELETE | Session | PASS — organization predicate |
 | `/api/settings/printers` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/settings/printers/[id]` | GET,PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/settings/printers/[id]/assignments` | GET,POST,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/settings/printers/[id]` | GET,PATCH,DELETE | Session | PASS — `assertOrgOwnership`: printer bound to session location/organization |
+| `/api/settings/printers/[id]/assignments` | GET,POST,DELETE | Session | PASS — `assertOrgOwnership`: printer/register location plus assignment → printer parent |
 | `/api/settings/print-service` | GET,PATCH | Session | PASS — location predicate / location-owned service |
 | `/api/settings/product-fields` | GET,PUT | Session | PASS — location predicate / location-owned service |
 | `/api/smart-tags` | GET,POST | Session | PASS — organization predicate |
@@ -259,14 +266,14 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/smart-tags/[id]/run` | POST | Session | PASS — organization predicate |
 | `/api/smart-tags/run-all` | POST | Session | PASS — organization predicate |
 | `/api/strains` | GET,POST | Session | PASS — organization predicate |
-| `/api/strains/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/strains/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: strain `organization_id` |
 | `/api/tags` | GET,POST | Session | PASS — organization predicate |
-| `/api/tags/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/tags/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: tag `organization_id` |
 | `/api/tax-rates` | GET,POST | Session | PASS — location predicate / location-owned service |
-| `/api/tax-rates/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/tax-rates/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: tax rate bound to session location/organization |
 | `/api/templates` | GET,POST | Session | PASS — organization predicate |
-| `/api/templates/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/templates/[id]/preview` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/templates/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: campaign-template `organization_id` |
+| `/api/templates/[id]/preview` | POST | Session | PASS — `assertOrgOwnership`: template/customer `organization_id` |
 | `/api/terminal/drawer/close` | POST | Session | PASS — location predicate / location-owned service |
 | `/api/terminal/queue` | GET,POST,PATCH,DELETE | Session | PASS — location predicate / location-owned service |
 | `/api/terminal/receipt/[transactionId]` | GET | Session | PASS — location predicate / location-owned service |
@@ -274,14 +281,14 @@ Legend: `PASS` has an explicit session/role/cron boundary and an organization/lo
 | `/api/time-clock` | GET,POST | Session | PASS — location predicate / location-owned service |
 | `/api/transactions` | POST | Session | PASS — organization predicate |
 | `/api/transactions/[id]/return` | POST | Session | PASS — organization predicate |
-| `/api/transactions/[id]/void` | POST | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/transactions/[id]/void` | POST | Session | PASS — permission gate + `assertOrgOwnership`: transaction bound to session location/organization |
 | `/api/vendors` | GET,POST | Session | PASS — organization predicate |
-| `/api/vendors/[id]` | PATCH,DELETE | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/vendors/[id]` | PATCH,DELETE | Session | PASS — `assertOrgOwnership`: vendor `organization_id` |
 | `/api/workflows` | GET,POST | Session | PASS — organization predicate |
-| `/api/workflows/[id]` | GET,PATCH | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
-| `/api/workflows/[id]/executions` | GET | Session | S5-IDOR — authenticated resource ID lacks visible tenant predicate |
+| `/api/workflows/[id]` | GET,PATCH | Session | PASS — `assertOrgOwnership`: workflow `organization_id` |
+| `/api/workflows/[id]/executions` | GET | Session | PASS — `assertOrgOwnership`: parent workflow `organization_id` |
 
-S5 inventory output: 231 route handlers inventoried (the matrix includes every `src/app/api/**/route.ts`, including the Phase A manual reconciliation route). Dynamic resource routes marked `S5-IDOR` are tracked under finding S5-IDOR and are not silently treated as scoped.
+S5 inventory output: 231 route files inventoried (the matrix includes every `src/app/api/**/route.ts`, including the Phase A manual reconciliation route). All 65 formerly flagged dynamic route files are now `PASS`; `src/lib/auth/__tests__/ownership-matrix.test.ts` verifies every exported handler in those files contains the shared boundary.
 
 ## A2 route, fetch, response, and schema inventory output
 
@@ -292,9 +299,9 @@ PAGE_ROUTES=102
 NAV_TARGETS=89
 DEAD_NAV_TARGETS=0
 API_ROUTES=231
-CLIENT_FETCHES=394
+CLIENT_FETCHES=395
 DEAD_FETCH_TARGETS=0
-RESPONSE_KEY_READS=312
+RESPONSE_KEY_READS=314
 RESPONSE_KEY_MISMATCHES=0
 DB_WRITES=310
 CONSTRAINED_LITERAL_WRITES=45

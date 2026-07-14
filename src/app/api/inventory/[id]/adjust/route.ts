@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { adjustInventory } from '@/lib/services/inventoryAdjustmentService'
 import { logger } from '@/lib/utils/logger'
@@ -18,6 +19,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Manager permission required' }, { status: 403 })
     }
     const { id } = await params
+    if (!await assertOrgOwnership('inventory_items', id, session.organizationId, undefined, session.locationId)) {
+      return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
+    }
     const body = await request.json()
     const parsed = AdjustSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -8,8 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('inventory_items', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
     const p = request.nextUrl.searchParams
     const page = Number(p.get('page') || 1)
     const perPage = Math.min(Number(p.get('per_page') || 50), 100)

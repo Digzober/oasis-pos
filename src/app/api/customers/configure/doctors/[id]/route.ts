@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -15,8 +16,9 @@ const UpdateSchema = z.object({
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('doctors', id, session.organizationId)) return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
     const body = await request.json()
     const parsed = UpdateSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
@@ -41,8 +43,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('doctors', id, session.organizationId)) return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
 
     const sb = await createSupabaseServerClient()
     const { error } = await sb

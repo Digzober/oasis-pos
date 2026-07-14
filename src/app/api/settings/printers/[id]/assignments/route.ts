@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -16,8 +17,9 @@ const DeleteAssignmentSchema = z.object({
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('printers', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data: assignments, error } = await (sb.from('printer_assignments') as any)
@@ -41,15 +43,17 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('printers', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer not found' }, { status: 404 })
     const body = await request.json()
     const parsed = CreateAssignmentSchema.safeParse(body)
 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (!await assertOrgOwnership('registers', parsed.data.register_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Register not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const { data: assignment, error } = await (sb.from('printer_assignments') as any)
       .insert({ ...parsed.data, printer_id: id })
@@ -72,14 +76,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
 export async function DELETE(request: NextRequest) {
   try {
-    await requireSession()
-    const sb = await createSupabaseServerClient()
+    const session = await requireSession()
     const body = await request.json()
     const parsed = DeleteAssignmentSchema.safeParse(body)
 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (!await assertOrgOwnership('printer_assignments', parsed.data.assignment_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Printer assignment not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const { error } = await (sb.from('printer_assignments') as any)
       .delete()

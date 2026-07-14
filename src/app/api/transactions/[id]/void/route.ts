@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { hasPermission, PERMISSIONS } from '@/lib/auth/permissions'
 import { voidTransaction } from '@/lib/services/voidReturnService'
 import { logger } from '@/lib/utils/logger'
@@ -21,6 +22,9 @@ export async function POST(
     // Manager permission check
     if (!hasPermission(session, PERMISSIONS.ADMINISTRATOR) && !hasPermission(session, PERMISSIONS.POS_MANAGER)) {
       return NextResponse.json({ error: 'Manager permission required to void transactions' }, { status: 403 })
+    }
+    if (!await assertOrgOwnership('transactions', id, session.organizationId, undefined, session.locationId)) {
+      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
     }
 
     const body = await request.json()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { moveInventoryToRoom } from '@/lib/services/roomMovementService'
 import { logger } from '@/lib/utils/logger'
 
@@ -13,9 +14,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   try {
     const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('inventory_items', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
     const body = await request.json()
     const parsed = MoveSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    if (!await assertOrgOwnership('rooms', parsed.data.room_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (parsed.data.subroom_id && !await assertOrgOwnership('subrooms', parsed.data.subroom_id, session.organizationId, parsed.data.room_id, session.locationId)) return NextResponse.json({ error: 'Subroom not found' }, { status: 404 })
 
     await moveInventoryToRoom(id, parsed.data.room_id, parsed.data.subroom_id ?? null, session.employeeId)
     return NextResponse.json({ success: true })

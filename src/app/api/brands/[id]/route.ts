@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { updateLookup, deactivateLookup } from '@/lib/services/lookupService'
 import { logger } from '@/lib/utils/logger'
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('brands', id, session.organizationId)) return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
     const body = await request.json()
     const brand = await updateLookup('brands', id, body)
     return NextResponse.json({ brand })
@@ -22,8 +24,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('brands', id, session.organizationId)) return NextResponse.json({ error: 'Brand not found' }, { status: 404 })
     await deactivateLookup('brands', id)
     return NextResponse.json({ success: true })
   } catch (err) {

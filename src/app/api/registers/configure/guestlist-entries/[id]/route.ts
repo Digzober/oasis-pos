@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -21,15 +22,19 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('guestlist_entries', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Guestlist entry not found' }, { status: 404 })
     const body = await request.json()
     const parsed = UpdateEntrySchema.safeParse(body)
 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (parsed.data.status_id && !await assertOrgOwnership('guestlist_statuses', parsed.data.status_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Guestlist status not found' }, { status: 404 })
+    if (parsed.data.employee_id && !await assertOrgOwnership('employees', parsed.data.employee_id, session.organizationId)) return NextResponse.json({ error: 'Employee not found' }, { status: 404 })
+    if (parsed.data.register_id && !await assertOrgOwnership('registers', parsed.data.register_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Register not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
       .from('guestlist_entries')
@@ -60,8 +65,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('guestlist_entries', id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Guestlist entry not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { error } = await sb

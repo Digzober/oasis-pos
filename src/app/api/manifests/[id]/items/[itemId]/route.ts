@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import {
   updateManifestItem,
   removeManifestItem,
@@ -27,6 +28,7 @@ export async function PATCH(
     if (!itemId || typeof itemId !== 'string') {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifest_items', itemId, session.organizationId, id)) return NextResponse.json({ error: 'Manifest item not found' }, { status: 404 })
 
     const body = await request.json()
 
@@ -89,6 +91,7 @@ export async function DELETE(
     if (!itemId || typeof itemId !== 'string') {
       return NextResponse.json({ error: 'Item ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifest_items', itemId, session.organizationId, id)) return NextResponse.json({ error: 'Manifest item not found' }, { status: 404 })
 
     await removeManifestItem(itemId)
 

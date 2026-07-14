@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -14,8 +15,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('customers', id, session.organizationId)) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
@@ -45,6 +47,7 @@ export async function PATCH(
   try {
     const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('customers', id, session.organizationId)) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
     const body = await request.json()
     const parsed = UpdateCustomerBadgesSchema.safeParse(body)
@@ -52,6 +55,8 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    const badgeIds = [...(parsed.data.add_badge_ids ?? []), ...(parsed.data.remove_badge_ids ?? [])]
+    if (!await assertOrgOwnership('badges', badgeIds, session.organizationId)) return NextResponse.json({ error: 'Badge not found' }, { status: 404 })
 
     if (parsed.data.add_badge_ids && parsed.data.add_badge_ids.length > 0) {
       const rows = parsed.data.add_badge_ids.map((badgeId) => ({

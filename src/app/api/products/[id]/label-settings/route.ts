@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -8,8 +9,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('products', id, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data } = await sb
@@ -32,9 +34,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id: productId } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('products', productId, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     const body = await request.json()
     const settings: Array<{
       customer_type: string
@@ -42,6 +44,9 @@ export async function PUT(
       print_quantity: number
       enabled: boolean
     }> = body.settings ?? []
+    const templateIds = settings.map((setting) => setting.label_template_id).filter(Boolean) as string[]
+    if (!await assertOrgOwnership('label_templates', templateIds, session.organizationId)) return NextResponse.json({ error: 'Label template not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     // Remove existing settings
     await sb.from('product_label_settings').delete().eq('product_id', productId)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import {
   getManifestDetail,
   updateManifest,
@@ -24,6 +25,7 @@ export async function GET(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Manifest ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifests', id, session.organizationId)) return NextResponse.json({ error: 'Manifest not found' }, { status: 404 })
 
     const manifest = await getManifestDetail(id)
 
@@ -51,6 +53,7 @@ export async function PATCH(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Manifest ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifests', id, session.organizationId)) return NextResponse.json({ error: 'Manifest not found' }, { status: 404 })
 
     const body = await request.json()
 
@@ -99,6 +102,7 @@ export async function DELETE(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Manifest ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifests', id, session.organizationId)) return NextResponse.json({ error: 'Manifest not found' }, { status: 404 })
 
     await deleteManifest(id)
 

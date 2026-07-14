@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { addManifestItem } from '@/lib/services/manifestService'
 import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
@@ -19,6 +20,7 @@ export async function POST(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Manifest ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifests', id, session.organizationId)) return NextResponse.json({ error: 'Manifest not found' }, { status: 404 })
 
     const body = await request.json()
 
@@ -34,6 +36,8 @@ export async function POST(
       unit_price,
       discount,
     } = body
+    if (product_id && !await assertOrgOwnership('products', product_id, session.organizationId)) return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    if (inventory_item_id && !await assertOrgOwnership('inventory_items', inventory_item_id, session.organizationId, undefined, session.locationId)) return NextResponse.json({ error: 'Inventory item not found' }, { status: 404 })
 
     if (!description || typeof description !== 'string') {
       return NextResponse.json({ error: 'Item description is required' }, { status: 400 })

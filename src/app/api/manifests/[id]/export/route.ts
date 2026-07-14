@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { exportManifestItems } from '@/lib/services/manifestService'
 import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
@@ -19,6 +20,7 @@ export async function GET(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Manifest ID is required' }, { status: 400 })
     }
+    if (!await assertOrgOwnership('manifests', id, session.organizationId)) return NextResponse.json({ error: 'Manifest not found' }, { status: 404 })
 
     const csv = await exportManifestItems(id)
 

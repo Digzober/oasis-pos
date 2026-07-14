@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -24,8 +25,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
+    if (!await assertOrgOwnership('campaigns', id, session.organizationId)) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
@@ -60,9 +62,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('campaigns', id, session.organizationId)) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
 
     const body = await req.json()
     const parsed = UpdateCampaignSchema.safeParse(body)
@@ -70,6 +72,10 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (parsed.data.template_id && !await assertOrgOwnership('campaign_templates', parsed.data.template_id, session.organizationId)) return NextResponse.json({ error: 'Template not found' }, { status: 404 })
+    if (parsed.data.segment_ids && !await assertOrgOwnership('segments', parsed.data.segment_ids, session.organizationId)) return NextResponse.json({ error: 'Segment not found' }, { status: 404 })
+    if (parsed.data.tag_ids && !await assertOrgOwnership('tags', parsed.data.tag_ids, session.organizationId)) return NextResponse.json({ error: 'Tag not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
       .from('campaigns')

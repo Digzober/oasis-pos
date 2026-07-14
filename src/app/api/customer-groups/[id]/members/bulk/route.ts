@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -13,15 +14,17 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('customer_groups', id, session.organizationId)) return NextResponse.json({ error: 'Customer group not found' }, { status: 404 })
     const body = await request.json()
     const parsed = BulkMembersSchema.safeParse(body)
 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (!await assertOrgOwnership('customers', parsed.data.customer_ids, session.organizationId)) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const rows = parsed.data.customer_ids.map((customerId) => ({
       customer_group_id: id,
@@ -54,15 +57,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const { id } = await params
-    const sb = await createSupabaseServerClient()
+    if (!await assertOrgOwnership('customer_groups', id, session.organizationId)) return NextResponse.json({ error: 'Customer group not found' }, { status: 404 })
     const body = await request.json()
     const parsed = BulkMembersSchema.safeParse(body)
 
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+    if (!await assertOrgOwnership('customers', parsed.data.customer_ids, session.organizationId)) return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+    const sb = await createSupabaseServerClient()
 
     const { data, error } = await sb
       .from('customer_group_members')
