@@ -29,7 +29,7 @@ export async function adjustLoyaltyPoints(
   })
 
   // Audit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await sb.from('audit_log').insert({
     organization_id: orgId, employee_id: employeeId, entity_type: 'loyalty',
     event_type: 'adjust', entity_id: customerId, metadata: { points, reason: reason.name, notes, new_balance: newBalance },

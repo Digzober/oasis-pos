@@ -79,9 +79,9 @@ export default function LookupCrudPage({
     setLoading(false)
   }, [apiPath, entityKey, page, limit, includeInactive, filterValues])
 
-  useEffect(() => { fetchItems() }, [fetchItems])
+  useEffect(() => { void Promise.resolve().then(fetchItems) }, [fetchItems])
 
-  useEffect(() => { setPage(1) }, [includeInactive, limit, filterValues])
+  useEffect(() => { void Promise.resolve().then(() => setPage(1)) }, [includeInactive, limit, filterValues])
 
   const openNew = () => {
     setEditId(null)

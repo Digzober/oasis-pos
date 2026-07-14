@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .map((t: any) => t.customer_id)
       .filter(Boolean)
 
-    let customerMap: Record<string, string> = {}
+    const customerMap: Record<string, string> = {}
     if (customerIds.length > 0) {
       const { data: customers } = await (sb as any)
         .from('customers')

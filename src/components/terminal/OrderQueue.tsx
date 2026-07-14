@@ -16,6 +16,7 @@ const NEXT_STATUS: Record<string, string> = {
 export default function OrderQueue({ locationId }: { locationId: string }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [now] = useState(() => Date.now())
 
   const fetchOrders = () => {
     fetch(`/api/orders?location_id=${locationId}`)
@@ -31,8 +32,6 @@ export default function OrderQueue({ locationId }: { locationId: string }) {
     await fetch(`/api/orders/${orderId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: next }) })
     fetchOrders()
   }
-
-  const now = Date.now()
 
   return (
     <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">

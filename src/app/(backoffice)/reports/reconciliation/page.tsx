@@ -29,17 +29,21 @@ export default function ReconciliationPage() {
   const fetchReports = useCallback(() => {
     fetch(`/api/reconciliation${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => setReports(d.reports ?? []))
   }, [locationId])
-  useEffect(() => { if (hydrated) fetchReports() }, [hydrated, fetchReports])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchReports) }, [hydrated, fetchReports])
 
   useEffect(() => {
-    if (!selectedId) { setDetail(null); return }
-    fetch(`/api/reconciliation/${selectedId}`).then(r => r.json()).then(d => setDetail(d.report))
+    void Promise.resolve().then(async () => {
+      if (!selectedId) { setDetail(null); return }
+      const response = await fetch(`/api/reconciliation/${selectedId}`)
+      const data = await response.json()
+      setDetail(data.report)
+    })
   }, [selectedId])
 
   const runNow = async () => {
     if (!locationId) return
     setRunning(true)
-    await fetch('/api/reconciliation', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location_id: locationId }) })
+    await fetch('/api/reconciliation/manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location_id: locationId }) })
     setRunning(false)
     fetchReports()
   }

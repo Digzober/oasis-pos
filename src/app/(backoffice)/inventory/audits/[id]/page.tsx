@@ -309,12 +309,12 @@ export default function AuditDetailPage() {
   }, [id, filter, search, locationId])
 
   useEffect(() => {
-    if (hydrated) fetchAudit()
+    if (hydrated) void Promise.resolve().then(fetchAudit)
   }, [hydrated, fetchAudit])
 
   useEffect(() => {
     if (audit && audit.status !== 'draft') {
-      fetchItems(1)
+      void Promise.resolve().then(() => fetchItems(1))
     }
   }, [audit?.status, fetchItems]) // eslint-disable-line react-hooks/exhaustive-deps
 

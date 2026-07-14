@@ -24,7 +24,7 @@ export function useConnectivity() {
   }, [])
 
   useEffect(() => {
-    setIsOnline(navigator.onLine)
+    void Promise.resolve().then(() => setIsOnline(navigator.onLine))
 
     const goOnline = () => { setIsOnline(true); setLastOnline(new Date()) }
     const goOffline = () => setIsOnline(false)
@@ -33,7 +33,7 @@ export function useConnectivity() {
 
     const healthId = setInterval(checkHealth, 30000)
     const queueId = setInterval(updateQueue, 5000)
-    updateQueue()
+    void Promise.resolve().then(updateQueue)
 
     return () => {
       window.removeEventListener('online', goOnline)

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         organization_id: session.organizationId,
         entity_type: 'inventory_item',
         entity_id: data.source_item_id,
-        event_type: 'convert',
+        event_type: 'adjust',
         employee_id: session.employeeId,
         new_value: `Converted ${data.source_quantity} to new item ${newItem.id}`,
       },

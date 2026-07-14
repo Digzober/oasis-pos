@@ -98,7 +98,7 @@ export default function CardsConfigPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const toggleField = (key: string) => {
     setFieldConfig(prev => ({
@@ -141,7 +141,7 @@ export default function CardsConfigPage() {
         {/* Card Attributes */}
         <div>
           <h1 className="text-xl font-bold text-gray-50 mb-1">Card attributes</h1>
-          <p className="text-sm text-gray-400 mb-5">Attributes for customer cards. These will show the following information based on the status of a customer's order.</p>
+          <p className="text-sm text-gray-400 mb-5">Attributes for customer cards. These will show the following information based on the status of a customer&apos;s order.</p>
 
           {/* Card Status Selector */}
           <div className="mb-6">
@@ -263,4 +263,3 @@ function Row({ label, value, highlight }: { label: string; value: string; highli
     </div>
   )
 }
-

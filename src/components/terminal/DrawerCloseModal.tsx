@@ -70,7 +70,7 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
         const res = await fetch('/api/auth/me')
         if (res.ok) {
           const data = await res.json()
-          if (!cancelled) setUserRole(data.role ?? data.employee?.role ?? '')
+          if (!cancelled) setUserRole(data.session?.role ?? '')
         }
       } catch {
         // Role check will fail gracefully; server also enforces
@@ -83,15 +83,17 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setStep('count')
-      setCountedCash(0)
-      setManualEntry(false)
-      setManualValue('')
-      setNotes('')
-      setSummary(null)
-      setError('')
-      setSubmitting(false)
-      setAutoCloseTimer(10)
+      void Promise.resolve().then(() => {
+        setStep('count')
+        setCountedCash(0)
+        setManualEntry(false)
+        setManualValue('')
+        setNotes('')
+        setSummary(null)
+        setError('')
+        setSubmitting(false)
+        setAutoCloseTimer(10)
+      })
     }
   }, [isOpen])
 

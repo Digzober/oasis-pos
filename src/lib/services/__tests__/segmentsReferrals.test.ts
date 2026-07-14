@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { evaluateRules } from '../segmentService'
+import { awardReferralPoints } from '../referralService'
 
 const makeCustomer = (overrides = {}) => ({
   lifetime_spend: 100, visit_count: 5, last_visit_at: new Date().toISOString(),
@@ -73,5 +74,38 @@ describe('segments and referrals', () => {
     const employeePerms = ['GENERAL_LOGIN_POS']
     const hasManagerPerm = employeePerms.includes('GENERAL_ADMIN_ADMINISTRATOR')
     expect(reason.requires_manager && !hasManagerPerm).toBe(true)
+  })
+
+  it('11. referral reward creates a numeric balance when no loyalty row exists', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+    const upsert = vi.fn().mockResolvedValue({ error: null })
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    const from = vi.fn((table: string) => {
+      if (table === 'loyalty_balances') {
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({ maybeSingle }),
+            }),
+          }),
+          upsert,
+        }
+      }
+      return { insert }
+    })
+
+    const nextBalance = await awardReferralPoints(
+      { from } as unknown as Parameters<typeof awardReferralPoints>[0],
+      'customer-1',
+      'org-1',
+      50,
+    )
+
+    expect(nextBalance).toBe(50)
+    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
+      current_points: 50,
+      lifetime_points: 50,
+    }), { onConflict: 'customer_id,organization_id' })
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ balance_after: 50 }))
   })
 })

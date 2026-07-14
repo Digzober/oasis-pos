@@ -45,7 +45,7 @@ export default function OrderConfirmationPage({ params }: { params: Promise<{ id
           {statusInfo.label}
         </div>
         <h1 className="text-2xl font-bold mt-3">Order Placed!</h1>
-        <p className="text-gray-500 text-sm mt-1">We'll have it ready for you</p>
+        <p className="text-gray-500 text-sm mt-1">We&apos;ll have it ready for you</p>
       </div>
 
       <div className="border rounded-xl p-4 mb-4">

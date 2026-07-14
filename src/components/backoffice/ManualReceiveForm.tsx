@@ -103,13 +103,12 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
   const fetchTags = useCallback(async () => {
     const res = await fetch('/api/tags?type=inventory')
     const data = await res.json()
-    const tags: AnyRecord[] = data.tags ?? data.data ?? []
+    const tags: AnyRecord[] = data.tags ?? []
     setTagOptions(tags.map((t) => ({ value: t.id, label: t.name })))
   }, [])
 
   useEffect(() => {
-    fetchDropdownData()
-    fetchTags()
+    void Promise.resolve().then(() => Promise.all([fetchDropdownData(), fetchTags()]))
   }, [fetchDropdownData, fetchTags])
 
   const handleProductChange = useCallback(async (id: string | null) => {
@@ -119,7 +118,8 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
     try {
       const res = await fetch(`/api/products/${id}?include=brand,vendor,strain,category`)
       if (!res.ok) return
-      const product = await res.json()
+      const { product } = await res.json()
+      if (!product) return
 
       // Auto-populate from product data (only if field is currently empty)
       if (!vendorId && product.vendor_id) setVendorId(product.vendor_id)
@@ -133,7 +133,7 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
     } catch {
       // Product detail fetch is best-effort for auto-population
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [vendorId, strainId, medPrice, recPrice, cost, flowerEquivalent])
 
   const toggleTag = useCallback((tagId: string) => {

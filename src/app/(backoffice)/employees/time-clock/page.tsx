@@ -23,7 +23,7 @@ export default function TimeClockPage() {
     setLoading(false)
   }, [dateFrom, dateTo, locationId])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   const totalHours = entries.reduce((s: number, e: Entry) => s + (e.total_hours ?? 0), 0)
 

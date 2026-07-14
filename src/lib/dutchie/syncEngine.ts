@@ -59,10 +59,10 @@ async function completeSyncLog(
   }).eq('id', logId)
 }
 
-async function batchUpsert(
+async function batchUpsert<T extends object>(
   sb: ReturnType<typeof Object>,
   table: string,
-  rows: Record<string, unknown>[],
+  rows: T[],
   conflictColumns: string,
   result: SyncResult,
 ): Promise<void> {
@@ -71,10 +71,12 @@ async function batchUpsert(
   const seen = new Set<string>()
   const deduped: Record<string, unknown>[] = []
   for (let i = rows.length - 1; i >= 0; i--) {
-    const key = conflictKeys.map(k => String(rows[i][k] ?? '')).join('|')
+    const row = rows[i] as Record<string, unknown> | undefined
+    if (!row) continue
+    const key = conflictKeys.map(k => String(row[k] ?? '')).join('|')
     if (seen.has(key)) { result.skipped++; continue }
     seen.add(key)
-    deduped.push(rows[i])
+    deduped.push(row)
   }
   deduped.reverse()
 
@@ -93,7 +95,9 @@ async function batchUpsert(
   }
 }
 
-async function getClient(locationId: string): Promise<{ client: DutchieClient; config: Awaited<ReturnType<typeof loadDutchieConfig>> } | null> {
+type LoadedDutchieConfig = NonNullable<Awaited<ReturnType<typeof loadDutchieConfig>>>
+
+async function getClient(locationId: string): Promise<{ client: DutchieClient; config: LoadedDutchieConfig } | null> {
   const config = await loadDutchieConfig(locationId)
   if (!config || !config.isEnabled || !config.apiKey) return null
   return { client: new DutchieClient(config.apiKey), config }
@@ -218,7 +222,7 @@ export async function syncCustomers(locationId: string, organizationId: string):
 async function dedupAndUpsertCustomers(
   sb: ReturnType<typeof Object>,
   organizationId: string,
-  mapped: Record<string, unknown>[],
+  mapped: Array<{ email?: unknown; dutchie_customer_id?: unknown }>,
   result: SyncResult,
 ): Promise<void> {
   // Load existing customers that have email but no dutchie_customer_id
@@ -251,7 +255,7 @@ async function dedupAndUpsertCustomers(
         dutchie_customer_id: record.dutchie_customer_id as number,
       })
     }
-    toUpsert.push(record)
+    toUpsert.push(record as Record<string, unknown>)
   }
 
   // Stamp existing email matches
@@ -1136,10 +1140,14 @@ export async function syncLocation(
   const results: SyncResult[] = []
   const typesToSync = entityTypes ?? SYNC_ORDER
 
+  if (!config) {
+    return { locationId, locationName, results, totalDurationMs: Date.now() - start }
+  }
+
   for (const entityType of SYNC_ORDER) {
     if (!typesToSync.includes(entityType)) continue
     const enabledKey = ENTITY_ENABLED_KEY[entityType] as keyof typeof config
-    if (config && enabledKey !== 'isEnabled' && !(config as Record<string, unknown>)[enabledKey]) {
+    if (enabledKey !== 'isEnabled' && !(config as unknown as Record<string, unknown>)[enabledKey]) {
       logger.info('Skipping disabled entity sync', { locationId, entityType })
       continue
     }
@@ -1203,14 +1211,15 @@ export async function syncAllLocations(organizationId: string): Promise<Location
 // Shared utilities
 // ---------------------------------------------------------------------------
 
-function filterValid<T extends Record<string, unknown>>(
+function filterValid<T extends object>(
   records: T[],
   requiredField: string,
   result: SyncResult,
-): Record<string, unknown>[] {
-  const valid: Record<string, unknown>[] = []
+): T[] {
+  const valid: T[] = []
   for (const record of records) {
-    if (record[requiredField] === undefined || record[requiredField] === null) {
+    const value = (record as Record<string, unknown>)[requiredField]
+    if (value === undefined || value === null) {
       result.errored++
       result.errors.push(`Missing required field: ${requiredField}`)
       continue

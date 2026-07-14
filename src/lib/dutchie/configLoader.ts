@@ -23,15 +23,18 @@ export interface DutchieLocationConfig {
 const cache = new Map<string, { config: DutchieLocationConfig; timestamp: number }>()
 const CACHE_TTL = 5 * 60 * 1000
 
-export async function loadDutchieConfig(locationId: string): Promise<DutchieLocationConfig | null> {
-  const cached = cache.get(locationId)
+export async function loadDutchieConfig(locationId: string, organizationId?: string): Promise<DutchieLocationConfig | null> {
+  const cacheKey = organizationId ? `${organizationId}:${locationId}` : locationId
+  const cached = cache.get(cacheKey)
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) return cached.config
 
   const sb = await createSupabaseServerClient()
-  const { data } = await (sb as any).from('dutchie_config')
-    .select('*')
+  let query = (sb as any).from('dutchie_config')
+    .select(organizationId ? '*, locations!inner(organization_id)' : '*')
     .eq('location_id', locationId)
-    .maybeSingle()
+
+  if (organizationId) query = query.eq('locations.organization_id', organizationId)
+  const { data } = await query.maybeSingle()
 
   if (!data) return null
 
@@ -55,7 +58,7 @@ export async function loadDutchieConfig(locationId: string): Promise<DutchieLoca
     lastSyncedTransactionsAt: data.last_synced_transactions_at ? new Date(data.last_synced_transactions_at) : null,
   }
 
-  cache.set(locationId, { config, timestamp: Date.now() })
+  cache.set(cacheKey, { config, timestamp: Date.now() })
   return config
 }
 

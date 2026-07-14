@@ -38,7 +38,7 @@ export default function TransactionSettingsPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const save = async () => {
     setSaving(true)

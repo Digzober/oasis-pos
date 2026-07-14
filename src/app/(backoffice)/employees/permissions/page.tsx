@@ -18,15 +18,13 @@ export default function PermissionGroupsPage() {
   }, [])
 
   useEffect(() => {
-    if (!selectedId) { setGroupDetail(null); return }
-    fetch(`/api/permission-groups/${selectedId}`).then(r => r.json()).then(d => {
+    void Promise.resolve().then(async () => {
+      if (!selectedId) { setGroupDetail(null); return }
+      const response = await fetch(`/api/permission-groups/${selectedId}`)
+      const d = await response.json()
       setGroupDetail(d.group)
       const permIds = new Set<string>((d.group?.permission_group_permissions ?? []).map((p: AnyR) => p.permission_id as string))
       setSelectedPerms(permIds)
-    })
-    // Load all permission definitions
-    fetch('/api/permission-groups/' + selectedId).then(r => r.json()).then(() => {
-      // We need all definitions - fetch from a dedicated endpoint or use the group's data
     })
   }, [selectedId])
 

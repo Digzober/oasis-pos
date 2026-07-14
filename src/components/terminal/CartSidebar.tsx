@@ -32,6 +32,7 @@ export default function CartSidebar() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showHeldCarts, setShowHeldCarts] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [now] = useState(() => Date.now())
 
   const canPay = items.length > 0 && (purchaseLimit?.allowed ?? true) && !!drawer
 
@@ -62,7 +63,7 @@ export default function CartSidebar() {
   }
 
   const getHeldAge = (heldAt: string) => {
-    const mins = Math.floor((Date.now() - new Date(heldAt).getTime()) / 60000)
+    const mins = Math.floor((now - new Date(heldAt).getTime()) / 60000)
     if (mins < 1) return '<1m'
     if (mins < 60) return `${mins}m`
     return `${Math.floor(mins / 60)}h ${mins % 60}m`
@@ -113,7 +114,7 @@ export default function CartSidebar() {
               <ul className="space-y-2 max-h-80 overflow-y-auto">
                 {heldCarts.map((held) => {
                   const age = getHeldAge(held.heldAt)
-                  const isOld = (Date.now() - new Date(held.heldAt).getTime()) > 120 * 60000
+                  const isOld = (now - new Date(held.heldAt).getTime()) > 120 * 60000
                   return (
                     <li key={held.id} className={`bg-gray-900 rounded-lg p-3 ${isOld ? 'border border-amber-600' : 'border border-gray-700'}`}>
                       <div className="flex items-center justify-between mb-1">

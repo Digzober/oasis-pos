@@ -61,7 +61,7 @@ export default function PurchaseOrdersPage() {
     setLoading(false)
   }, [tab, pagination.page, search, locationId])
 
-  useEffect(() => { if (hydrated) fetchOrders() }, [hydrated, fetchOrders])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchOrders) }, [hydrated, fetchOrders])
 
   const handleSearch = () => {
     setSearch(searchInput)

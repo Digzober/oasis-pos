@@ -82,11 +82,13 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
   // Auto-expand active section
   useEffect(() => {
-    for (const item of navigation) {
-      if (item.children?.some(c => pathname?.startsWith(c.href))) {
-        setExpanded(prev => new Set(prev).add(item.label))
+    void Promise.resolve().then(() => {
+      for (const item of navigation) {
+        if (item.children?.some(c => pathname?.startsWith(c.href))) {
+          setExpanded(prev => new Set(prev).add(item.label))
+        }
       }
-    }
+    })
   }, [pathname])
 
   const toggle = (label: string) => {

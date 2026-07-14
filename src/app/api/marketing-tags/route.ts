@@ -20,3 +20,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ tag: data }, { status: 201 })
   } catch (err) { logger.error('Marketing tag create error', { error: String(err) }); return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const session = await requireSession()
+    const { id } = await req.json() as { id?: string }
+    if (!id) return NextResponse.json({ error: 'Tag ID is required' }, { status: 400 })
+    const sb = await createSupabaseServerClient()
+    // Generated types lag the live is_active column already used by GET.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (sb.from('marketing_tags') as any)
+      .update({ is_active: false })
+      .eq('id', id)
+      .eq('organization_id', session.organizationId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (err) {
+    logger.error('Marketing tag delete error', { error: String(err) })
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}

@@ -412,7 +412,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
     }))
     setImages(withUpdatedOrder)
 
-    await fetch(`/api/products/${productId}/images/reorder`, {
+    await fetch(`/api/products/${productId}/images`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image_ids: withUpdatedOrder.map(img => img.id) }),

@@ -53,6 +53,8 @@ interface InvItem {
   testing_status: string | null
   is_on_hold: boolean | null
   flower_equivalent_grams: number | null
+  thc_percentage: number | null
+  cbd_percentage: number | null
   vendor_id: string | null
   status: string | null
   products: InventoryProduct | null
@@ -642,7 +644,7 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    fetch('/api/tags?type=inventory').then(r => r.json()).then(d => setTags(d.tags ?? d.data ?? []))
+    fetch('/api/tags?type=inventory').then(r => r.json()).then(d => setTags(d.tags ?? []))
   }, [])
 
   const handleSubmit = async () => {
@@ -899,7 +901,7 @@ export default function InventoryListPage() {
   }, [locationId, page, perPage, search, sortBy, sortDir, roomFilter, brandFilter, vendorFilter, categoryFilter, testingFilter, onHoldFilter])
 
   useEffect(() => {
-    if (hydrated) fetchInventory()
+    if (hydrated) void Promise.resolve().then(fetchInventory)
   }, [hydrated, fetchInventory])
 
   /* --- Debounced search input --- */

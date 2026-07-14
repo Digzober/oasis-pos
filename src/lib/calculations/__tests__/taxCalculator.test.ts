@@ -41,7 +41,7 @@ describe('calculateTaxes', () => {
     const result = calculateTaxes(items, rates)
 
     expect(result.line_taxes).toHaveLength(1)
-    const line = result.line_taxes[0]
+    const line = result.line_taxes[0]!
 
     // Excise: 50 * 0.12 = 6.00
     expect(line.excise_amount).toBe(6)
@@ -62,7 +62,7 @@ describe('calculateTaxes', () => {
 
     const result = calculateTaxes(items, rates)
 
-    const line = result.line_taxes[0]
+    const line = result.line_taxes[0]!
     // Excise is rec-only, should NOT apply
     expect(line.excise_amount).toBe(0)
     // GRT (both): 50 * 0.079375 = 3.97
@@ -78,11 +78,11 @@ describe('calculateTaxes', () => {
     ]
 
     const result = calculateTaxes(items, rates)
-    const line = result.line_taxes[0]
+    const line = result.line_taxes[0]!
 
     // Only null-category GRT matches non-cannabis
     expect(line.applied_rates).toHaveLength(1)
-    expect(line.applied_rates[0].name).toBe('Albuquerque GRT')
+    expect(line.applied_rates[0]!.name).toBe('Albuquerque GRT')
     // 20 * 0.079375 = 1.59
     expect(line.total_tax).toBe(1.59)
   })
@@ -108,9 +108,9 @@ describe('calculateTaxes', () => {
     expect(result.line_taxes).toHaveLength(2)
 
     // Flower: excise 30*0.12=3.60, GRT 30*0.079375=2.38 → 5.98
-    expect(result.line_taxes[0].total_tax).toBe(5.98)
+    expect(result.line_taxes[0]!.total_tax).toBe(5.98)
     // Pipe: GRT only 30*0.079375=2.38
-    expect(result.line_taxes[1].total_tax).toBe(2.38)
+    expect(result.line_taxes[1]!.total_tax).toBe(2.38)
 
     expect(result.summary.total_excise).toBe(3.6)
     expect(result.summary.total_grt).toBe(4.76)
@@ -155,7 +155,7 @@ describe('calculateTaxes', () => {
 
     const result = calculateTaxes(items, rates)
 
-    expect(result.line_taxes[0].total_tax).toBe(0)
+    expect(result.line_taxes[0]!.total_tax).toBe(0)
     expect(result.summary.total_tax).toBe(0)
   })
 })

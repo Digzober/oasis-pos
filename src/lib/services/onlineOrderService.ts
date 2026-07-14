@@ -60,9 +60,6 @@ export async function placeOrder(input: PlaceOrderInput) {
   const estimatedTax = roundMoney(subtotal * 0.21) // rough estimate
   const estimatedTotal = roundMoney(subtotal + estimatedTax)
 
-  // Get org id
-  const { data: loc } = await sb.from('locations').select('organization_id').eq('id', input.location_id).single()
-
   // Reserve inventory atomically
   for (const item of input.items) {
     const { data: invItems } = await sb
@@ -94,7 +91,6 @@ export async function placeOrder(input: PlaceOrderInput) {
   // Create order
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: order, error: orderErr } = await (sb.from('online_orders') as any).insert({
-    organization_id: loc?.organization_id,
     location_id: input.location_id,
     customer_name: input.customer_name,
     customer_phone: input.customer_phone,
@@ -143,9 +139,18 @@ export async function cancelOrder(orderId: string) {
   await sb.from('online_orders').update({ status: 'cancelled' }).eq('id', orderId)
 }
 
-export async function updateOrderStatus(orderId: string, newStatus: string) {
+export async function updateOrderStatus(orderId: string, newStatus: string, organizationId: string) {
   const sb = await createSupabaseServerClient()
-  await sb.from('online_orders').update({ status: newStatus }).eq('id', orderId)
+  const { data: order } = await sb.from('online_orders')
+    .select('id, locations!inner(organization_id)')
+    .eq('id', orderId)
+    .eq('locations.organization_id', organizationId)
+    .maybeSingle()
+  if (!order) throw new AppError('NOT_FOUND', 'Order not found', undefined, 404)
+
+  await sb.from('online_orders')
+    .update({ status: newStatus })
+    .eq('id', orderId)
 }
 
 export async function convertToTransaction(orderId: string) {
@@ -184,7 +189,7 @@ export async function releaseExpiredReservations() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await releaseReservation(sb, line.product_id, (order as any).location_id, line.quantity)
     }
-    await sb.from('online_orders').update({ status: 'expired' }).eq('id', order.id)
+    await sb.from('online_orders').update({ status: 'cancelled' }).eq('id', order.id)
     count++
   }
 

@@ -24,7 +24,7 @@ export default function ClosingReportPage() {
     setLoading(false)
   }, [locationId, date])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   const exportCsv = () => {
     if (!report) return

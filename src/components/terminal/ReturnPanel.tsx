@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import type { TransactionDetail } from '@/lib/services/reportingService'
 
 function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) }
@@ -46,24 +46,20 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
       if (detailRes.ok) {
         const detail = await detailRes.json()
         setTx(detail.transaction)
+        setReturnLines(detail.transaction.lines.map((line: TransactionDetail['lines'][number]) => ({
+          lineId: line.id,
+          productName: line.product_name,
+          originalQty: line.quantity,
+          returnQty: 0,
+          unitRefund: Math.round((line.line_total / line.quantity) * 100) / 100,
+          restoreToInventory: true,
+        })))
       } else {
         setError('Failed to load transaction details')
       }
     } catch { setError('Search failed') }
     setIsSearching(false)
   }, [searchQuery])
-
-  useEffect(() => {
-    if (!tx) return
-    setReturnLines(tx.lines.map((l) => ({
-      lineId: l.id,
-      productName: l.product_name,
-      originalQty: l.quantity,
-      returnQty: 0,
-      unitRefund: Math.round((l.line_total / l.quantity) * 100) / 100,
-      restoreToInventory: true,
-    })))
-  }, [tx])
 
   const updateReturnQty = (lineId: string, qty: number) => {
     setReturnLines((prev) => prev.map((l) =>
@@ -80,7 +76,7 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
   const selectedLines = returnLines.filter((l) => l.returnQty > 0)
   const refundTotal = selectedLines.reduce((s, l) => s + l.unitRefund * l.returnQty, 0)
 
-  const handleReturn = useCallback(async () => {
+  const handleReturn = async () => {
     if (!tx || selectedLines.length === 0 || !reason.trim()) return
     setIsProcessing(true)
     setError('')
@@ -108,7 +104,7 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
       }
     } catch { setError('Connection error') }
     setIsProcessing(false)
-  }, [tx, selectedLines, reason])
+  }
 
   if (success) {
     return (

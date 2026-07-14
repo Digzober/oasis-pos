@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
 /* ------------------------------------------------------------------ */
@@ -77,21 +77,21 @@ interface Badge { id: string; name: string; color: string; icon: string | null; 
 function BadgesSection({ customerId }: { customerId: string }) {
   const [badges, setBadges] = useState<Badge[]>([])
   const [allBadges, setAllBadges] = useState<Badge[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const loaded = useRef(false)
   const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-6'
   const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
   const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
 
   useEffect(() => {
-    if (loaded) return
-    setLoaded(true)
+    if (loaded.current) return
+    loaded.current = true
     fetch(`/api/customers/${customerId}/badges`, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { badges: [] })
       .then(d => setBadges(d.badges ?? []))
     fetch('/api/badges', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : { badges: [] })
       .then(d => setAllBadges(d.badges ?? []))
-  }, [customerId, loaded])
+  }, [customerId])
 
   async function addBadge(badgeId: string) {
     await fetch(`/api/customers/${customerId}/badges`, {
@@ -229,17 +229,17 @@ export default function CustomerDetailPage() {
   const fetchLoyaltyHistory = useCallback(async () => {
     if (loyaltyHistory) return
     const res = await fetch(`/api/customers/${id}/loyalty/history`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setLoyaltyHistory(d.entries ?? d.history ?? []) }
+    if (res.ok) { const d = await res.json(); setLoyaltyHistory(d.entries ?? []) }
   }, [id, loyaltyHistory])
 
   const fetchPurchases = useCallback(async (page: number) => {
     const res = await fetch(`/api/customers/${id}/purchase-history?page=${page}&per_page=20`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setPurchases(d.lines ?? []); setPurchaseTotal(d.pagination?.total ?? d.total ?? 0); setPurchasePage(page) }
+    if (res.ok) { const d = await res.json(); setPurchases(d.lines ?? []); setPurchaseTotal(d.pagination?.total ?? 0); setPurchasePage(page) }
   }, [id])
 
   const fetchTransactions = useCallback(async (page: number) => {
     const res = await fetch(`/api/customers/${id}/transaction-history?page=${page}&per_page=20`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setTransactions(d.transactions ?? []); setTxTotal(d.pagination?.total ?? d.total ?? 0); setTxPage(page) }
+    if (res.ok) { const d = await res.json(); setTransactions(d.transactions ?? []); setTxTotal(d.pagination?.total ?? 0); setTxPage(page) }
   }, [id])
 
   const fetchGroups = useCallback(async () => {
@@ -595,7 +595,7 @@ export default function CustomerDetailPage() {
               </tr></thead>
               <tbody>
                 {transactions?.map(t => (
-                  <tr key={t.id} className="border-b border-gray-700/50 cursor-pointer hover:bg-gray-700/30" onClick={() => router.push(`/transactions/${t.id}`)}>
+                  <tr key={t.id} className="border-b border-gray-700/50 cursor-pointer hover:bg-gray-700/30" onClick={() => router.push('/reports/transactions')}>
                     <td className="py-2 pr-4">{fmtDate(t.created_at)}</td>
                     <td className="py-2 pr-4 capitalize">{t.transaction_type}</td>
                     <td className="py-2 pr-4 text-right">{t.line_count}</td>

@@ -51,7 +51,7 @@ export default function SalesDashboardPage() {
     setLoading(false)
   }, [dateFrom, dateTo, locationId])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   return (
     <div>

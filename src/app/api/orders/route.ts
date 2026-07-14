@@ -3,6 +3,7 @@ import { z } from 'zod/v4'
 import { placeOrder } from '@/lib/services/onlineOrderService'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import { requireSession } from '@/lib/auth/session'
 
 const PlaceOrderSchema = z.object({
   location_id: z.uuid(),
@@ -35,17 +36,23 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await requireSession()
     const p = request.nextUrl.searchParams
     const sb = await createSupabaseServerClient()
     const locationId = p.get('location_id')
     const status = p.get('status')
 
-    let query = sb.from('online_orders').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(50)
+    let query = sb.from('online_orders')
+      .select('*, locations!inner(organization_id)', { count: 'exact' })
+      .eq('locations.organization_id', session.organizationId)
+      .order('created_at', { ascending: false })
+      .limit(50)
     if (locationId) query = query.eq('location_id', locationId)
     if (status) query = query.eq('status', status)
 
     const { data, count } = await query
-    return NextResponse.json({ orders: data ?? [], total: count ?? 0 })
+    const orders = (data ?? []).map(({ locations: _locations, ...order }) => order)
+    return NextResponse.json({ orders, total: count ?? 0 })
   } catch (err) {
     logger.error('Orders list error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

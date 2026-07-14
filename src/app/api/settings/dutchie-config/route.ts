@@ -17,7 +17,8 @@ const UpdateDutchieConfigSchema = z.object({
 
 const DEFAULT_CONFIG = {
   isEnabled: false,
-  apiKey: '',
+  hasApiKey: false,
+  apiKeyTail: '',
   dutchieLocationId: '',
   dutchieLocationName: '',
   syncEmployees: true,
@@ -44,7 +45,8 @@ function dbRowToFrontend(row: Record<string, unknown>) {
   const rawKey = (row.api_key_encrypted as string) ?? ''
   return {
     isEnabled: row.is_enabled ?? DEFAULT_CONFIG.isEnabled,
-    apiKey: maskApiKey(rawKey),
+    hasApiKey: rawKey.length > 0,
+    apiKeyTail: maskApiKey(rawKey),
     dutchieLocationId: (row.dutchie_location_id as string) ?? '',
     dutchieLocationName: (row.dutchie_location_name as string) ?? '',
     syncEmployees: row.sync_employees ?? DEFAULT_CONFIG.syncEmployees,

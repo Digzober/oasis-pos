@@ -9,12 +9,17 @@ export function usePermissions() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!session) { setLoading(false); return }
+    if (!session) {
+      void Promise.resolve().then(() => setLoading(false))
+      return
+    }
 
     // If session already has permissions (loaded from /api/auth/me)
     if (session.permissions.length > 0) {
-      setPermissions(session.permissions)
-      setLoading(false)
+      void Promise.resolve().then(() => {
+        setPermissions(session.permissions)
+        setLoading(false)
+      })
       return
     }
 

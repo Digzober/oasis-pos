@@ -23,7 +23,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 const config: BioTrackConfig = {
   v1Url: 'https://test.biotrack.com/v1',
-  v3Url: 'https://test.biotrack.com/v3',
+  v3Url: 'https://test.biotrack.com/v1',
   username: 'test',
   password: 'pass',
   licenseNumber: 'LIC-001',
@@ -53,7 +53,7 @@ describe('BioTrackClient', () => {
 
     await client.authenticate()
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://test.biotrack.com/v3/auth/login',
+      'https://test.biotrack.com/v1/login',
       expect.objectContaining({ method: 'POST' }),
     )
   })

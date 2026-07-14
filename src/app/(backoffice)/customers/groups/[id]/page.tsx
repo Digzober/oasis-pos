@@ -156,7 +156,7 @@ export default function CustomerGroupDetailPage() {
       )
       if (res.ok) {
         const data = await res.json()
-        const customers = data.customers ?? data.data ?? []
+        const customers = data.customers ?? []
         const memberIds = new Set(members.map(m => m.id))
         setSearchResults(customers.filter((c: CustomerSearchResult) => !memberIds.has(c.id)))
       }

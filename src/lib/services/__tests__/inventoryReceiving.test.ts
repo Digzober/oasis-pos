@@ -19,8 +19,8 @@ describe('inventoryReceivingService logic', () => {
   })
 
   it('3. quantity discrepancy tracked correctly', () => {
-    const expected = 10
-    const actual = 8
+    const expected: number = 10
+    const actual: number = 8
     const hasDiscrepancy = actual !== expected
     expect(hasDiscrepancy).toBe(true)
     const discrepancy_reason = 'Short 2 units on delivery'

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSession } from '@/lib/auth/session'
+import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { loadDutchieConfig } from '@/lib/dutchie/configLoader'
 import { DutchieClient } from '@/lib/dutchie/client'
 import { syncLocation } from '@/lib/dutchie/syncEngine'
@@ -20,11 +20,11 @@ const VALID_ENTITY_TYPES: EntityType[] = ['employees', 'customers', 'products', 
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireSession()
+    const session = await requireDutchieManager()
     const body = await request.json().catch(() => ({}))
 
     // Load config
-    const config = await loadDutchieConfig(session.locationId)
+    const config = await loadDutchieConfig(session.locationId, session.organizationId)
     if (!config) {
       return NextResponse.json({ error: 'No Dutchie configuration found for this location' }, { status: 404 })
     }
@@ -82,8 +82,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ results, errors: allErrors.slice(0, 50) })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) {
-      const a = err as { code: string; statusCode?: number }
-      if (a.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Auth required' }, { status: 401 })
+      const a = err as { code: string; message?: string; statusCode?: number }
+      if (a.code === 'UNAUTHORIZED' || a.code === 'FORBIDDEN') {
+        return NextResponse.json({ error: a.message ?? 'Access denied' }, { status: a.statusCode ?? 403 })
+      }
     }
     logger.error('Dutchie sync error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

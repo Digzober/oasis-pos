@@ -138,8 +138,18 @@ export default function FieldsPage() {
         const res = await fetch('/api/customers/configure/fields', { cache: 'no-store' })
         if (res.ok) {
           const json = await res.json()
-          if (json.sections) {
-            setSections(json.sections)
+          if (json.fields && typeof json.fields === 'object') {
+            setSections(DEFAULT_SECTIONS.map((section) => {
+              const saved = json.fields[section.key] as Record<string, FieldVisibility> | undefined
+              if (!saved) return section
+              return {
+                ...section,
+                fields: section.fields.map((field) => ({
+                  ...field,
+                  visibility: saved[field.field_key] ?? field.visibility,
+                })),
+              }
+            }))
           }
         }
       } finally {
@@ -174,7 +184,10 @@ export default function FieldsPage() {
       const res = await fetch('/api/customers/configure/fields', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sections }),
+        body: JSON.stringify(Object.fromEntries(sections.map((section) => [
+          section.key,
+          Object.fromEntries(section.fields.map((field) => [field.field_key, field.visibility])),
+        ]))),
         cache: 'no-store',
       })
       if (res.ok) {

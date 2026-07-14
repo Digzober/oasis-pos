@@ -95,7 +95,7 @@ export async function fetchPendingManifests(
 
 export async function acceptManifestTransfer(
   manifestId: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   items: Array<{ barcode: string; accepted_quantity: number }>,
   organizationId: string,
 ): Promise<boolean> {

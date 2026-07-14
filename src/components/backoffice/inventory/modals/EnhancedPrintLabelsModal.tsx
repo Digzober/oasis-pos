@@ -41,7 +41,7 @@ export default function EnhancedPrintLabelsModal({
         const res = await fetch('/api/labels/templates')
         if (res.ok) {
           const data = await res.json()
-          setTemplates(data)
+          setTemplates(data.templates ?? [])
         }
       } finally {
         setLoading(false)
@@ -53,29 +53,29 @@ export default function EnhancedPrintLabelsModal({
   const submitDisabled = !templateId || quantity < 1
 
   async function handleSubmit() {
-    let res = await fetch('/api/labels/print', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        item_ids: itemIds,
-        template_id: templateId,
-        quantity,
-      }),
-    })
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) throw new Error('Pop-up blocked. Allow pop-ups to print labels.')
 
-    if (res.status === 404) {
-      res = await fetch('/api/inventory/labels', {
+    const responses = await Promise.all(itemIds.map((itemId) =>
+      fetch('/api/labels/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ item_ids: itemIds }),
+        body: JSON.stringify({ template_id: templateId, inventory_item_id: itemId }),
       })
+    ))
+
+    const failed = responses.find((response) => !response.ok)
+    if (failed) {
+      printWindow.close()
+      const data = await failed.json().catch(() => ({}))
+      throw new Error(data.error || 'Failed to generate labels')
     }
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      throw new Error(data.error || 'Failed to print labels')
-    }
-
+    const generated = await Promise.all(responses.map((response) => response.json()))
+    const labels = generated.flatMap(({ html }) => Array.from({ length: quantity }, () => html))
+    printWindow.document.write(`<html><head><title>Labels</title><style>@media print{body{margin:0}.label{page-break-after:always}}</style></head><body>${labels.map((html) => `<div class="label">${html}</div>`).join('')}</body></html>`)
+    printWindow.document.close()
+    printWindow.print()
     onSuccess?.()
     onClose()
   }

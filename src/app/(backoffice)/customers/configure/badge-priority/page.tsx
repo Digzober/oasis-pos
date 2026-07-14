@@ -67,9 +67,11 @@ export default function BadgePriorityPage() {
     if (index <= 0) return
     setBadges((prev) => {
       const next = [...prev]
-      const temp = next[index - 1]
-      next[index - 1] = next[index]
-      next[index] = temp
+      const current = next[index]
+      const previous = next[index - 1]
+      if (!current || !previous) return prev
+      next[index - 1] = current
+      next[index] = previous
       return next
     })
     setSaved(false)
@@ -79,9 +81,11 @@ export default function BadgePriorityPage() {
     if (index >= badges.length - 1) return
     setBadges((prev) => {
       const next = [...prev]
-      const temp = next[index + 1]
-      next[index + 1] = next[index]
-      next[index] = temp
+      const current = next[index]
+      const following = next[index + 1]
+      if (!current || !following) return prev
+      next[index + 1] = current
+      next[index] = following
       return next
     })
     setSaved(false)

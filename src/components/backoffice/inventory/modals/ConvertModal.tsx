@@ -65,8 +65,10 @@ export default function ConvertModal({
 
   useEffect(() => {
     if (!productSearch || productSearch.length < 2) {
-      setProducts([])
-      setShowResults(false)
+      void Promise.resolve().then(() => {
+        setProducts([])
+        setShowResults(false)
+      })
       return
     }
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -76,7 +78,7 @@ export default function ConvertModal({
       )
       if (res.ok) {
         const data = await res.json()
-        const items = Array.isArray(data) ? data : data.data ?? []
+        const items = data.products ?? []
         setProducts(items)
         setShowResults(true)
       }

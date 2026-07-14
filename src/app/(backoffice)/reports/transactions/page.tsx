@@ -54,7 +54,7 @@ export default function TransactionLogPage() {
     setLoading(false)
   }, [dateFrom, dateTo, txType, status, page, locationId])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   const exportCsv = () => {
     const headers = ['#', 'Date', 'Location', 'Employee', 'Customer', 'Type', 'Status', 'Items', 'Total']

@@ -39,4 +39,37 @@ describe('Dutchie settings authorization', () => {
 
     expect(response.status).toBe(403)
   })
+
+  it('never returns the stored API key', async () => {
+    mocks.requireSession.mockResolvedValue({
+      employeeId: 'employee-1',
+      organizationId: 'org-1',
+      locationId: 'location-1',
+      role: 'manager',
+      permissions: [],
+    })
+    const query = {
+      select: vi.fn(),
+      eq: vi.fn(),
+      maybeSingle: vi.fn().mockResolvedValue({
+        data: {
+          location_id: 'location-1',
+          api_key_encrypted: 'super-secret-key-1234',
+          is_enabled: true,
+        },
+        error: null,
+      }),
+    }
+    query.select.mockReturnValue(query)
+    query.eq.mockReturnValue(query)
+    mocks.createSupabaseServerClient.mockResolvedValue({ from: vi.fn(() => query) })
+
+    const response = await GET()
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.config).toMatchObject({ hasApiKey: true, apiKeyTail: '****...1234' })
+    expect(body.config.apiKey).toBeUndefined()
+    expect(JSON.stringify(body)).not.toContain('super-secret-key-1234')
+  })
 })

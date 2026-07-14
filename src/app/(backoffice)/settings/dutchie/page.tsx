@@ -8,6 +8,8 @@ const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg
 interface DutchieConfig {
   isEnabled: boolean
   apiKey: string
+  hasApiKey: boolean
+  apiKeyTail: string
   dutchieLocationId: string
   dutchieLocationName: string
   syncEmployees: boolean
@@ -49,12 +51,13 @@ interface SyncLogEntry {
   records_errored: number | null
   duration_ms: number | null
   error_message: string | null
-  created_at: string
 }
 
 const DEFAULT_CONFIG: DutchieConfig = {
   isEnabled: false,
   apiKey: '',
+  hasApiKey: false,
+  apiKeyTail: '',
   dutchieLocationId: '',
   dutchieLocationName: '',
   syncEmployees: true,
@@ -129,9 +132,13 @@ function fmtDuration(ms: number | null): string {
 
 function fmtDate(iso: string | null): string {
   if (!iso) return '--'
-  return new Date(iso).toLocaleDateString('en-US', {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '--'
+  return date.toLocaleString('en-US', {
+    timeZone: 'America/Denver',
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit',
+    timeZoneName: 'short',
   })
 }
 
@@ -180,8 +187,7 @@ export default function DutchieSettingsPage() {
   }, [])
 
   useEffect(() => {
-    loadConfig()
-    loadLogs()
+    void Promise.resolve().then(() => Promise.all([loadConfig(), loadLogs()]))
   }, [loadConfig, loadLogs])
 
   const updateField = <K extends keyof DutchieConfig>(key: K, value: DutchieConfig[K]) => {
@@ -197,7 +203,7 @@ export default function DutchieSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           isEnabled: config.isEnabled,
-          apiKey: config.apiKey,
+          ...(config.apiKey.trim() ? { apiKey: config.apiKey.trim() } : {}),
           syncEmployees: config.syncEmployees,
           syncCustomers: config.syncCustomers,
           syncProducts: config.syncProducts,
@@ -254,7 +260,7 @@ export default function DutchieSettingsPage() {
     setSyncResults(null)
     setMsg(null)
     if (entityTypes && entityTypes.length === 1) {
-      setSyncingEntity(entityTypes[0])
+      setSyncingEntity(entityTypes[0] ?? null)
     } else {
       setSyncingEntity('all')
     }
@@ -319,7 +325,7 @@ export default function DutchieSettingsPage() {
                 type={showApiKey ? 'text' : 'password'}
                 value={config.apiKey ?? ''}
                 onChange={e => updateField('apiKey', e.target.value)}
-                placeholder="Enter Dutchie API key"
+                placeholder={config.hasApiKey ? config.apiKeyTail : 'Enter Dutchie API key'}
                 className={inputCls}
               />
               <button
@@ -335,7 +341,7 @@ export default function DutchieSettingsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={testConnection}
-              disabled={testing || !config.apiKey}
+              disabled={testing || (!config.hasApiKey && !config.apiKey)}
               className="px-4 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {testing && <span className="w-3.5 h-3.5 border-2 border-gray-400/30 border-t-gray-200 rounded-full animate-spin" />}
@@ -521,7 +527,7 @@ export default function DutchieSettingsPage() {
                       )}
                     </td>
                     <td className="px-3 py-2 text-right text-gray-400 tabular-nums">{fmtDuration(log.duration_ms)}</td>
-                    <td className="px-3 py-2 text-right text-gray-400">{fmtDate(log.created_at)}</td>
+                    <td className="px-3 py-2 text-right text-gray-400">{fmtDate(log.started_at)}</td>
                   </tr>
                 ))}
               </tbody>

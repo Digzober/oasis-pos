@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
     const productIds = productList.map((p) => p.id)
 
     // Fetch inventory counts in parallel — only if we have products
-    let inventoryMap: Record<string, number> = {}
-    let skuCountMap: Record<string, number> = {}
+    const inventoryMap: Record<string, number> = {}
+    const skuCountMap: Record<string, number> = {}
 
     if (productIds.length > 0 && inventoryLocationId) {
       const { data: inventoryItems } = await sb

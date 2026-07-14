@@ -92,6 +92,17 @@ interface Analytics {
   }
 }
 
+interface CampaignAnalyticsResponse {
+  total_revenue?: number | null
+  total_sent?: number | null
+  total_delivered?: number | null
+  total_opened?: number | null
+  total_clicked?: number | null
+  total_bounced?: number | null
+  total_unsubscribed?: number | null
+  open_rate?: number | null
+}
+
 interface Recipient {
   id: string
   name: string
@@ -214,7 +225,27 @@ function OverviewTab({ id }: { id: string }) {
   useEffect(() => {
     fetch(`/api/campaigns/${id}/analytics`, { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d) => setAnalytics(d.analytics ?? null))
+      .then((d) => {
+        const raw = d.analytics as CampaignAnalyticsResponse | undefined
+        if (!raw) { setAnalytics(null); return }
+        const recipients = Number(raw.total_sent) || 0
+        const delivered = Number(raw.total_delivered) || 0
+        setAnalytics({
+          total_revenue: Number(raw.total_revenue) || 0,
+          recipients,
+          delivery_rate: recipients > 0 ? (delivered / recipients) * 100 : 0,
+          unsubscribes: Number(raw.total_unsubscribed) || 0,
+          failed_deliveries: Number(raw.total_bounced) || 0,
+          open_rate: Number(raw.open_rate) || 0,
+          funnel: {
+            delivered,
+            opened: Number(raw.total_opened) || 0,
+            clicked: Number(raw.total_clicked) || 0,
+            carts_created: 0,
+            orders_placed: 0,
+          },
+        })
+      })
       .catch(() => setAnalytics(null))
       .finally(() => setLoading(false))
   }, [id])
@@ -512,7 +543,7 @@ function RecipientsTab({ id }: { id: string }) {
         )
         const d = await res.json()
         setRecipients(d.recipients ?? [])
-        setTotal(d.total ?? 0)
+        setTotal(d.pagination?.total ?? 0)
       } finally {
         setLoading(false)
       }

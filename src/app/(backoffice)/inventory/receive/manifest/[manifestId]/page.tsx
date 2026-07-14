@@ -376,7 +376,7 @@ export default function ManifestReceivingPage() {
       const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`)
       if (res.ok) {
         const data = await res.json()
-        const searchMatches: ProductMatch[] = (data.products ?? []).map((p: {
+        const searchMatches: ProductMatch[] = (data.results ?? []).map((p: {
           id: string; name: string; sku?: string; brand?: { name: string }; strain?: { name: string }
         }) => ({
           product_id: p.id,
@@ -486,11 +486,12 @@ export default function ManifestReceivingPage() {
   // Load subrooms when room changes
   const handleRoomChange = useCallback(async (roomId: string) => {
     try {
-      const res = await fetch(`/api/rooms/${roomId}/subrooms`)
+      const res = await fetch('/api/rooms')
       if (res.ok) {
         const data = await res.json()
+        const room = (data.rooms ?? []).find((entry: { id: string }) => entry.id === roomId)
         setSubrooms(
-          (data.subrooms ?? []).map((s: { id: string; name: string }) => ({
+          (room?.subrooms ?? []).map((s: { id: string; name: string }) => ({
             value: s.id,
             label: s.name,
           }))

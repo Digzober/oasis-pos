@@ -7,8 +7,8 @@ import { logger } from '@/lib/utils/logger'
 const CreateEntrySchema = z.object({
   customer_id: z.uuid().optional(),
   customer_name: z.string().max(200).optional(),
-  customer_type: z.string().max(50).optional(),
-  source: z.string().max(100).optional(),
+  customer_type: z.enum(['recreational', 'medical']).optional(),
+  source: z.enum(['walk_in', 'online_pickup', 'online_delivery', 'curbside', 'drive_thru', 'phone', 'kiosk']).optional(),
   notes: z.string().max(1000).optional(),
   online_order_id: z.uuid().optional(),
 })
@@ -77,6 +77,10 @@ export async function POST(request: NextRequest) {
       statusId = firstStatus?.id ?? null
     }
 
+    if (!statusId) {
+      return NextResponse.json({ error: 'Configure an active guestlist status before adding entries' }, { status: 409 })
+    }
+
     // Calculate next position
     const { data: maxEntry } = await sb
       .from('guestlist_entries')
@@ -97,7 +101,7 @@ export async function POST(request: NextRequest) {
         customer_id: parsed.data.customer_id ?? null,
         customer_name: parsed.data.customer_name ?? null,
         customer_type: parsed.data.customer_type ?? null,
-        source: parsed.data.source ?? null,
+        source: parsed.data.source ?? 'walk_in',
         notes: parsed.data.notes ?? null,
         online_order_id: parsed.data.online_order_id ?? null,
         status_id: statusId,

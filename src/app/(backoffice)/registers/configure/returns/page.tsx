@@ -37,7 +37,7 @@ export default function ReturnsPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const addReason = async () => {
     if (!newReason.trim()) return
@@ -53,10 +53,8 @@ export default function ReturnsPage() {
   }
 
   const removeReason = async (id: string) => {
-    const res = await fetch('/api/registers/configure/transaction-reasons', {
+    const res = await fetch(`/api/registers/configure/transaction-reasons/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
     })
     if (res.ok) await fetchData()
   }

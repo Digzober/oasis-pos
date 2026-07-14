@@ -66,7 +66,7 @@ const CreateSchema = z.object({
   id_start_date: z.string().date().optional(),
   opted_into_sms: z.boolean().optional(),
   opted_into_loyalty: z.boolean().optional(),
-  caregiver_info: z.record(z.unknown()).optional(),
+  caregiver_info: z.record(z.string(), z.unknown()).optional(),
 })
 
 export async function GET(request: NextRequest) {

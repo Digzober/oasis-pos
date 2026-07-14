@@ -580,7 +580,7 @@ export default function ProductListPage() {
       setTotal(data.pagination?.total ?? 0)
     }
     setLoading(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [locationId, page, perPage, debouncedSearch, categoryId, brandId, vendorId, selectedTagIds, cannabisFilter, statusFilter, sortBy, sortOrder])
 
   useEffect(() => { if (hydrated) fetchProducts() }, [hydrated, fetchProducts])

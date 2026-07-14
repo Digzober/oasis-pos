@@ -22,13 +22,16 @@ export default function DeliveryPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoading(true)
-    const params = locationId ? `?location_id=${locationId}` : ''
-    Promise.all([
-      fetch(`/api/delivery/zones${params}`).then(r => r.json()).then(d => setZones(d.zones ?? [])),
-      fetch(`/api/delivery/vehicles${params}`).then(r => r.json()).then(d => setVehicles(d.vehicles ?? [])),
-      fetch('/api/delivery/drivers').then(r => r.json()).then(d => setDrivers(d.drivers ?? [])),
-    ]).finally(() => setLoading(false))
+    void Promise.resolve().then(async () => {
+      setLoading(true)
+      const params = locationId ? `?location_id=${locationId}` : ''
+      await Promise.all([
+        fetch(`/api/delivery/zones${params}`).then(r => r.json()).then(d => setZones(d.zones ?? [])),
+        fetch(`/api/delivery/vehicles${params}`).then(r => r.json()).then(d => setVehicles(d.vehicles ?? [])),
+        fetch('/api/delivery/drivers').then(r => r.json()).then(d => setDrivers(d.drivers ?? [])),
+      ])
+      setLoading(false)
+    })
   }, [locationId])
 
   const tabCls = (t: string) => `px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${tab === t ? 'bg-gray-800 text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400 hover:text-gray-200'}`

@@ -136,7 +136,7 @@ export function ReceivePackageModal({
               </div>
               {draft.product_id && (
                 <a
-                  href={`/products/${draft.product_id}`}
+                  href={`/products/${draft.product_id}/edit`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-emerald-400 hover:text-emerald-300"

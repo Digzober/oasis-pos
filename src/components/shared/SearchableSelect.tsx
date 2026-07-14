@@ -59,7 +59,7 @@ export function SearchableSelect({
                     <p className="text-gray-500 text-xs">{emptyMessage}</p>
                     {allowCreate && query && (
                       <button onClick={() => { onCreateNew?.(query); setOpen(false); setQuery('') }}
-                        className="mt-1 text-xs text-emerald-400 hover:text-emerald-300">+ {createLabel} "{query}"</button>
+                        className="mt-1 text-xs text-emerald-400 hover:text-emerald-300">+ {createLabel} &quot;{query}&quot;</button>
                     )}
                   </div>
                 ) : filtered.map((opt) => (
@@ -71,7 +71,7 @@ export function SearchableSelect({
                 ))}
               {allowCreate && query && filtered.length > 0 && (
                 <button onClick={() => { onCreateNew?.(query); setOpen(false); setQuery('') }}
-                  className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-gray-700 border-t border-gray-700">+ {createLabel} "{query}"</button>
+                  className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-gray-700 border-t border-gray-700">+ {createLabel} &quot;{query}&quot;</button>
               )}
             </div>
           </div>

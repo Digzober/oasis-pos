@@ -144,7 +144,7 @@ function AdjustModal({
     fetch('/api/settings/adjustment-reasons')
       .then(r => r.json())
       .then(d => {
-        const list = d.reasons ?? d.data ?? []
+        const list = d.reasons ?? []
         setReasons(list.map((r: string | { id: string; name: string }) =>
           typeof r === 'string' ? { id: r, name: r } : r
         ))
@@ -167,15 +167,13 @@ function AdjustModal({
     if (newQty === currentQty) { setError('No change'); return }
     setSubmitting(true)
     setError(null)
-    const res = await fetch('/api/inventory/adjustments', {
+    const res = await fetch(`/api/inventory/${itemId}/adjust`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        inventory_item_id: itemId,
+        adjustment_type: 'count_correction',
         new_quantity: newQty,
-        reason_id: reasonId || null,
-        reason: reasonId || null,
-        notes: notes || null,
+        reason: notes || reasonId || 'Manual adjustment',
       }),
     })
     if (res.ok) {
@@ -282,8 +280,10 @@ function MoveModal({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/rooms').then(r => r.json()).then(d => setRooms(d.rooms ?? d.data ?? []))
-    fetch('/api/subrooms').then(r => r.json()).then(d => setSubrooms(d.subrooms ?? d.data ?? []))
+    fetch('/api/rooms').then(r => r.json()).then(d => setRooms(d.rooms ?? []))
+    fetch('/api/rooms').then(r => r.json()).then(d => {
+      setSubrooms((d.rooms ?? []).flatMap((room: { subrooms?: LookupOption[] }) => room.subrooms ?? []))
+    })
   }, [])
 
   async function handleSubmit() {
@@ -369,7 +369,7 @@ function AssignStatusModal({
     fetch('/api/settings/inventory-statuses')
       .then(r => r.json())
       .then(d => {
-        const list = d.statuses ?? d.data ?? []
+        const list = d.statuses ?? []
         setStatuses(list.map((s: string | { value: string; label: string }) =>
           typeof s === 'string' ? { value: s, label: s } : s
         ))

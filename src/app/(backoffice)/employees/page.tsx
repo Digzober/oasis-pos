@@ -28,8 +28,8 @@ export default function EmployeeListPage() {
     setLoading(false)
   }, [search, role, page])
 
-  useEffect(() => { fetch_() }, [fetch_])
-  useEffect(() => { setPage(1) }, [search, role])
+  useEffect(() => { void Promise.resolve().then(fetch_) }, [fetch_])
+  useEffect(() => { void Promise.resolve().then(() => setPage(1)) }, [search, role])
 
   return (
     <div>

@@ -96,7 +96,7 @@ export default function GuestlistStatusPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const openAddModal = () => {
     setEditingStatus(null)
@@ -132,10 +132,8 @@ export default function GuestlistStatusPage() {
   }
 
   const deleteStatus = async (id: string) => {
-    const res = await fetch('/api/registers/configure/guestlist-statuses', {
+    const res = await fetch(`/api/registers/configure/guestlist-statuses/${id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
     })
     if (res.ok) await fetchData()
   }

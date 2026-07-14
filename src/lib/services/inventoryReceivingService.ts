@@ -132,7 +132,7 @@ export async function manualReceive(input: ManualReceiveInput) {
       expiration_date: input.expiration_date,
       received_at: new Date().toISOString(),
       received_by: input.employee_id,
-      testing_status: 'exempt',
+      testing_status: 'untested',
       strain_id: input.strain_id,
       flower_equivalent_grams: input.flower_equivalent,
       med_price: input.med_price,

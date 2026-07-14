@@ -834,7 +834,7 @@ export async function sendManifest(
   }
 
   // Audit log
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await sb.from('audit_log').insert({
     organization_id: manifest.organization_id,
     location_id: manifest.source_location_id,
@@ -995,7 +995,7 @@ export async function receiveManifest(
   await recalculateManifestTotals(manifestId)
 
   // Audit log
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await sb.from('audit_log').insert({
     organization_id: manifest.organization_id,
     location_id: manifest.destination_location_id ?? manifest.source_location_id,

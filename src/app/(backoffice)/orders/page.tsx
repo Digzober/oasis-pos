@@ -32,7 +32,7 @@ export default function OrdersPage() {
     setLoading(false)
   }, [locationId, statusFilter])
 
-  useEffect(() => { if (hydrated) fetchOrders() }, [hydrated, fetchOrders])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchOrders) }, [hydrated, fetchOrders])
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     await fetch(`/api/orders/${orderId}`, {

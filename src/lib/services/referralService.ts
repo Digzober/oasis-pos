@@ -2,6 +2,55 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
 
+type ServerSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+
+export async function awardReferralPoints(
+  sb: ServerSupabaseClient,
+  customerId: string,
+  organizationId: string,
+  rewardPoints: number,
+) {
+  const { data: balance, error: balanceError } = await sb
+    .from('loyalty_balances')
+    .select('current_points, lifetime_points')
+    .eq('customer_id', customerId)
+    .eq('organization_id', organizationId)
+    .maybeSingle()
+
+  if (balanceError) {
+    throw new AppError('LOYALTY_BALANCE_READ_FAILED', balanceError.message, balanceError, 500)
+  }
+
+  const currentPoints = balance?.current_points ?? 0
+  const lifetimePoints = balance?.lifetime_points ?? 0
+  const nextCurrentPoints = currentPoints + rewardPoints
+
+  const { error: upsertError } = await sb.from('loyalty_balances').upsert({
+    customer_id: customerId,
+    organization_id: organizationId,
+    current_points: nextCurrentPoints,
+    lifetime_points: lifetimePoints + rewardPoints,
+  }, { onConflict: 'customer_id,organization_id' })
+
+  if (upsertError) {
+    throw new AppError('LOYALTY_BALANCE_WRITE_FAILED', upsertError.message, upsertError, 500)
+  }
+
+  const { error: journalError } = await sb.from('loyalty_transactions').insert({
+    customer_id: customerId,
+    organization_id: organizationId,
+    points_change: rewardPoints,
+    balance_after: nextCurrentPoints,
+    reason: 'referral_bonus',
+  })
+
+  if (journalError) {
+    throw new AppError('LOYALTY_JOURNAL_WRITE_FAILED', journalError.message, journalError, 500)
+  }
+
+  return nextCurrentPoints
+}
+
 export async function getReferralConfig(orgId: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,28 +109,12 @@ export async function checkAndCompleteReferral(refereeCustomerId: string, transa
 
   // Award points to referrer
   if (config.referrer_reward_points > 0) {
-    await sb.from('loyalty_balances').update({
-      current_points: (await sb.from('loyalty_balances').select('current_points').eq('customer_id', pending.referrer_customer_id).single()).data?.current_points + config.referrer_reward_points,
-    } as Record<string, unknown>).eq('customer_id', pending.referrer_customer_id)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (sb.from('loyalty_transactions') as any).insert({
-      customer_id: pending.referrer_customer_id, organization_id: orgId,
-      points_change: config.referrer_reward_points, balance_after: 0, reason: 'referral_bonus',
-    })
+    await awardReferralPoints(sb, pending.referrer_customer_id, orgId, config.referrer_reward_points)
   }
 
   // Award points to referee
   if (config.referee_reward_points > 0) {
-    await sb.from('loyalty_balances').update({
-      current_points: (await sb.from('loyalty_balances').select('current_points').eq('customer_id', refereeCustomerId).single()).data?.current_points + config.referee_reward_points,
-    } as Record<string, unknown>).eq('customer_id', refereeCustomerId)
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (sb.from('loyalty_transactions') as any).insert({
-      customer_id: refereeCustomerId, organization_id: orgId,
-      points_change: config.referee_reward_points, balance_after: 0, reason: 'referral_bonus',
-    })
+    await awardReferralPoints(sb, refereeCustomerId, orgId, config.referee_reward_points)
   }
 
   logger.info('Referral completed', { referrerId: pending.referrer_customer_id, refereeId: refereeCustomerId })

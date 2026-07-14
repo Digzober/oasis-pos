@@ -20,8 +20,10 @@ export function ManagerOverrideDialog({ open, onOpenChange, permission, descript
 
   useEffect(() => {
     if (open) {
-      setPin('')
-      setError('')
+      void Promise.resolve().then(() => {
+        setPin('')
+        setError('')
+      })
       inputRef.current?.focus()
       // Auto-close after 60s
       timeoutRef.current = setTimeout(() => { onDenied(); onOpenChange(false) }, 60000)

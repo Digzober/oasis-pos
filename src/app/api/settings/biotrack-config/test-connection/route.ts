@@ -46,8 +46,8 @@ export async function POST() {
     if (row.rest_api_url && row.username_encrypted && row.password_encrypted) {
       const v3Start = Date.now()
       try {
-        // BioTrack Trace 2.0 v3 REST API uses /v1/login with PascalCase fields
-        const res = await fetch(`${row.rest_api_url}/v1/login`, {
+        // rest_api_url is already the versioned API base (for example, .../v1).
+        const res = await fetch(`${row.rest_api_url.replace(/\/$/, '')}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

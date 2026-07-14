@@ -203,23 +203,6 @@ export default function InventoryItemDetailPage() {
   const [showLabResults, setShowLabResults] = useState(false)
   const [showTransactions, setShowTransactions] = useState(false)
 
-  /* Fetch item data */
-  const fetchItem = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    const res = await fetch(`/api/inventory/items/${itemId}`, { cache: 'no-store' })
-    if (!res.ok) {
-      setError('Failed to load inventory item')
-      setLoading(false)
-      return
-    }
-    const data = await res.json()
-    const it: InventoryItemDetail = data.item ?? data
-    setItem(it)
-    populateForm(it)
-    setLoading(false)
-  }, [itemId])
-
   function populateForm(it: InventoryItemDetail) {
     setPackageId(it.biotrack_barcode ?? '')
     setExtPackageId(it.external_package_id ?? '')
@@ -246,20 +229,39 @@ export default function InventoryItemDetailPage() {
     }
   }
 
+  /* Fetch item data */
+  const fetchItem = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    const res = await fetch(`/api/inventory/items/${itemId}`, { cache: 'no-store' })
+    if (!res.ok) {
+      setError('Failed to load inventory item')
+      setLoading(false)
+      return
+    }
+    const data = await res.json()
+    const it: InventoryItemDetail = data.item ?? data
+    setItem(it)
+    populateForm(it)
+    setLoading(false)
+  }, [itemId])
+
   /* Fetch lookups */
   useEffect(() => {
-    fetchItem()
+    void Promise.resolve().then(fetchItem)
     const opts = { cache: 'no-store' as const }
-    fetch('/api/vendors', opts).then(r => r.json()).then(d => setVendors(d.vendors ?? d.data ?? []))
-    fetch('/api/vendors?type=producer', opts).then(r => r.json()).then(d => setProducers(d.vendors ?? d.data ?? []))
+    fetch('/api/vendors', opts).then(r => r.json()).then(d => setVendors(d.vendors ?? []))
+    fetch('/api/vendors?type=producer', opts).then(r => r.json()).then(d => setProducers(d.vendors ?? []))
     fetch('/api/settings/inventory-statuses', opts).then(r => r.json()).then(d => {
-      const list = d.statuses ?? d.data ?? []
+      const list = d.statuses ?? []
       setStatuses(list.map((s: string | { value: string; label: string }) =>
         typeof s === 'string' ? { value: s, label: s } : s
       ))
     })
-    fetch('/api/tags?type=inventory', opts).then(r => r.json()).then(d => setTags(d.tags ?? d.data ?? []))
-    fetch('/api/subrooms', opts).then(r => r.json()).then(d => setSubrooms(d.subrooms ?? d.data ?? []))
+    fetch('/api/tags?type=inventory', opts).then(r => r.json()).then(d => setTags(d.tags ?? []))
+    fetch('/api/rooms', opts).then(r => r.json()).then(d => {
+      setSubrooms((d.rooms ?? []).flatMap((room: { subrooms?: LookupOption[] }) => room.subrooms ?? []))
+    })
   }, [fetchItem])
 
   /* Save handler */

@@ -11,14 +11,15 @@ const STATUS_COLORS: Record<string, string> = { pending: 'text-amber-400', synci
 export default function OfflineQueuePanel({ onClose }: { onClose: () => void }) {
   const [items, setItems] = useState<OfflineTransaction[]>([])
   const [syncing, setSyncing] = useState(false)
+  const [now] = useState(() => Date.now())
 
   const refresh = async () => { try { setItems(await getAll()) } catch { /* */ } }
-  useEffect(() => { refresh() }, [])
+  useEffect(() => { void Promise.resolve().then(refresh) }, [])
 
   const handleSyncAll = async () => { setSyncing(true); await syncAll(); await refresh(); setSyncing(false) }
 
   const pending = items.filter(i => i.sync_status === 'pending' || i.sync_status === 'failed')
-  const oldItems = pending.filter(i => Date.now() - new Date(i.created_at).getTime() > 3600000)
+  const oldItems = pending.filter(i => now - new Date(i.created_at).getTime() > 3600000)
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">

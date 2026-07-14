@@ -42,17 +42,21 @@ export default function MenuPage() {
   }, [])
 
   useEffect(() => {
-    setLoading(true)
-    const params = new URLSearchParams()
-    if (search.length >= 2) params.set('query', search)
-    if (selectedCategory) params.set('category_id', selectedCategory)
-    if (!search && !selectedCategory) { setProducts([]); setLoading(false); return }
+    void Promise.resolve().then(async () => {
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (search.length >= 2) params.set('query', search)
+      if (selectedCategory) params.set('category_id', selectedCategory)
+      if (!search && !selectedCategory) { setProducts([]); setLoading(false); return }
 
-    fetch(`/api/products/search?${params}`)
-      .then(r => r.json())
-      .then(d => setProducts(d.results ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      try {
+        const response = await fetch(`/api/products/search?${params}`)
+        const data = await response.json()
+        setProducts(data.results ?? [])
+      } finally {
+        setLoading(false)
+      }
+    })
   }, [search, selectedCategory])
 
   const handleAddToCart = (p: Product) => {

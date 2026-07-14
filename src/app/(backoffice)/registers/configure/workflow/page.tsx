@@ -54,7 +54,7 @@ export default function OrderWorkflowPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const enabledOrderTypes = (settings.enabled_order_types as string[] | undefined) ?? []
   const workflowType = (settings.workflow_type as string | undefined) ?? 'traditional'

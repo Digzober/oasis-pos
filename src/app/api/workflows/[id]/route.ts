@@ -3,6 +3,7 @@ import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import type { Json } from '@/types/database'
 
 const UpdateWorkflowSchema = z.object({
   name: z.string().min(1).max(200).optional(),
@@ -67,9 +68,15 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
 
+    const updates = {
+      ...parsed.data,
+      trigger_config: parsed.data.trigger_config as Json | undefined,
+      steps: parsed.data.steps as Json | undefined,
+    }
+
     const { data, error } = await sb
       .from('workflows')
-      .update(parsed.data)
+      .update(updates)
       .eq('id', id)
       .select()
       .single()

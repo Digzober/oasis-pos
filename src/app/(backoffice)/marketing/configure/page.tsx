@@ -17,7 +17,7 @@ export default function MarketingConfigurePage() {
 
   const fetchTags = useCallback(async () => {
     const res = await fetch('/api/marketing-tags', { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setTags(d.tags ?? d.data ?? []) }
+    if (res.ok) { const d = await res.json(); setTags(d.tags ?? []) }
   }, [])
 
   const fetchSettings = useCallback(async () => {
@@ -25,7 +25,9 @@ export default function MarketingConfigurePage() {
     if (res.ok) { const d = await res.json(); setStoreUrl((d.settings?.default_store_url as string) ?? '') }
   }, [])
 
-  useEffect(() => { fetchTags(); fetchSettings() }, [fetchTags, fetchSettings])
+  useEffect(() => {
+    void Promise.resolve().then(() => Promise.all([fetchTags(), fetchSettings()]))
+  }, [fetchTags, fetchSettings])
 
   const addTag = async () => {
     if (!newTag.trim()) return
@@ -38,7 +40,11 @@ export default function MarketingConfigurePage() {
   }
 
   const removeTag = async (id: string) => {
-    await fetch(`/api/marketing-tags/${id}`, { method: 'DELETE' })
+    await fetch('/api/marketing-tags', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
     fetchTags()
   }
 

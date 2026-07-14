@@ -162,7 +162,7 @@ export default function LocationSettingsPage() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
 
   const toggleSection = (id: string) => {
     setExpanded(e => ({ ...e, [id]: !e[id] }))

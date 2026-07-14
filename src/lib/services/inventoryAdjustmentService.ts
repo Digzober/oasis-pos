@@ -62,7 +62,7 @@ export async function adjustInventory(input: InventoryAdjustmentInput): Promise<
   const { data: loc } = await sb.from('locations').select('organization_id').eq('id', item.location_id).single()
 
   // Audit log
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await sb.from('audit_log').insert({
     organization_id: loc?.organization_id ?? '',
     location_id: item.location_id,

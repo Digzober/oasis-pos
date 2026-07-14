@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
+import type { Json } from '@/types/database'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -195,7 +196,7 @@ export async function searchCustomers(
   const { data: customers, error } = await customerQuery.order('last_name')
 
   if (error) {
-    logger.error('Customer search failed', { error: error.message, query: q })
+    logger.error('Customer search failed', { error: error.message, queryLength: q.length })
     throw new AppError('CUSTOMER_SEARCH_FAILED', 'Failed to search customers', error, 500)
   }
 
@@ -361,7 +362,7 @@ export async function createCustomer(input: CreateCustomerInput) {
       id_start_date: input.id_start_date ?? null,
       opted_into_sms: input.opted_into_sms ?? false,
       opted_into_loyalty: input.opted_into_loyalty ?? false,
-      caregiver_info: input.caregiver_info ?? null,
+      caregiver_info: (input.caregiver_info ?? null) as Json,
     })
     .select()
     .single()

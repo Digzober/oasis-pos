@@ -25,7 +25,7 @@ export default function DiscountListPage() {
     setLoading(false)
   }, [page, status, search])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
   const duplicate = async (id: string) => {
     await fetch(`/api/discounts/${id}/duplicate`, { method: 'POST' })

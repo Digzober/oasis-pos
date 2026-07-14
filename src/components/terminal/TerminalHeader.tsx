@@ -125,7 +125,7 @@ export default function TerminalHeader() {
                 <button
                   onClick={() => {
                     setMenuOpen(false)
-                    // eslint-disable-next-line no-console
+                     
                     console.log('[TerminalHeader] Close Drawer clicked')
                   }}
                   className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"
@@ -138,7 +138,7 @@ export default function TerminalHeader() {
               <button
                 onClick={() => {
                   setMenuOpen(false)
-                  // eslint-disable-next-line no-console
+                   
                   console.log('[TerminalHeader] Reprint Receipt clicked')
                 }}
                 className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/5 transition-colors"

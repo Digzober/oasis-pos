@@ -55,7 +55,7 @@ export async function runDailyReconciliation(locationId: string, employeeId: str
 
   const btMap = new Map(btItems.map((i) => [i.barcode, i]))
   const localMap = new Map<string, { barcode: string; quantity: number; name: string }>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   for (const item of localItems ?? []) {
     if (!item.biotrack_barcode) continue
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,18 +116,24 @@ export async function runDailyReconciliation(locationId: string, employeeId: str
   return report
 }
 
-export async function listReports(locationId?: string, page = 1) {
+export async function listReports(organizationId: string, locationId?: string, page = 1) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query = ((sb as any).from('reconciliation_reports') as any).select('id, location_id, run_at, items_matched, items_with_discrepancy, items_local_only, items_biotrack_only, auto_resolved, needs_review, status', { count: 'exact' })
+  let query = ((sb as any).from('reconciliation_reports') as any)
+    .select('id, location_id, run_at, items_matched, items_with_discrepancy, items_local_only, items_biotrack_only, auto_resolved, needs_review, status, locations!inner(organization_id)', { count: 'exact' })
+    .eq('locations.organization_id', organizationId)
   if (locationId) query = query.eq('location_id', locationId)
   const { data, count } = await query.order('run_at', { ascending: false }).range((page - 1) * 20, page * 20 - 1)
   return { reports: data ?? [], total: count ?? 0 }
 }
 
-export async function getReport(id: string) {
+export async function getReport(id: string, organizationId: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await ((sb as any).from('reconciliation_reports') as any).select('*').eq('id', id).single()
+  const { data } = await ((sb as any).from('reconciliation_reports') as any)
+    .select('*, locations!inner(organization_id)')
+    .eq('id', id)
+    .eq('locations.organization_id', organizationId)
+    .single()
   return data
 }

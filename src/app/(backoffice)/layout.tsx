@@ -13,7 +13,7 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
   const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
-    setCollapsed(Cookies.get('sidebar-collapsed') === 'true')
+    void Promise.resolve().then(() => setCollapsed(Cookies.get('sidebar-collapsed') === 'true'))
   }, [])
 
   const toggleSidebar = () => {

@@ -268,6 +268,7 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
 /* ------------------------------------------------------------------ */
 
 export default function CustomersPage() {
+  const [now] = useState(() => Date.now())
   /* Data */
   const [customers, setCustomers] = useState<Customer[]>([])
   const [pagination, setPagination] = useState<PaginationInfo>({ page: 1, per_page: 50, total: 0, total_pages: 0 })
@@ -341,7 +342,7 @@ export default function CustomersPage() {
     setLoading(false)
   }, [page, perPage, search, sortBy, sortDir, typeFilter, statusFilter, groupFilter, showArchived])
 
-  useEffect(() => { fetchCustomers() }, [fetchCustomers])
+  useEffect(() => { void Promise.resolve().then(fetchCustomers) }, [fetchCustomers])
 
   /* Debounced search */
   const handleSearchInput = useCallback((v: string) => {
@@ -414,7 +415,6 @@ export default function CustomersPage() {
 
   /* Summary stats */
   const stats = useMemo(() => {
-    const now = Date.now()
     const thirtyDaysAgo = now - 30 * 86400000
     return {
       total: pagination.total,

@@ -323,7 +323,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
     setLoading(false)
   }, [id, selectedLocationId])
 
-  useEffect(() => { if (hydrated) fetchPO() }, [hydrated, fetchPO])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchPO) }, [hydrated, fetchPO])
 
   useEffect(() => {
     const fetchOptions = async () => {

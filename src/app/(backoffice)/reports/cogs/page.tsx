@@ -21,7 +21,7 @@ export default function COGSPage() {
     setLoading(false)
   }, [dateFrom, dateTo, groupBy, locationId])
 
-  useEffect(() => { if (hydrated) fetch_() }, [hydrated, fetch_])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetch_) }, [hydrated, fetch_])
 
   const exportCsv = () => {
     if (!data?.items) return

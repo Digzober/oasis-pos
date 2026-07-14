@@ -20,8 +20,10 @@ interface Printer {
 
 interface PrintService {
   service_type: string
-  api_key: string
+  apiKey: string
   account_email: string
+  hasApiKey: boolean
+  apiKeyTail: string | null
 }
 
 const EMPTY_FORM = {
@@ -52,7 +54,7 @@ const CONN_COLORS: Record<string, string> = {
 
 export default function PrintersPage() {
   const [printers, setPrinters] = useState<Printer[]>([])
-  const [printService, setPrintService] = useState<PrintService>({ service_type: 'printnode', api_key: '', account_email: '' })
+  const [printService, setPrintService] = useState<PrintService>({ service_type: 'printnode', apiKey: '', account_email: '', hasApiKey: false, apiKeyTail: null })
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
@@ -72,11 +74,17 @@ export default function PrintersPage() {
     }
     if (sRes.ok) {
       const d = await sRes.json()
-      setPrintService(d.config ?? { service_type: 'printnode', api_key: '', account_email: '' })
+      setPrintService({
+        service_type: d.config?.service_type ?? 'printnode',
+        apiKey: '',
+        account_email: d.config?.account_email ?? '',
+        hasApiKey: d.config?.hasApiKey ?? false,
+        apiKeyTail: d.config?.apiKeyTail ?? null,
+      })
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
 
   const openAdd = () => {
     setEditId(null)
@@ -147,11 +155,22 @@ export default function PrintersPage() {
     const res = await fetch('/api/settings/print-service', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(printService),
+      body: JSON.stringify({
+        service_type: printService.service_type,
+        account_email: printService.account_email,
+        ...(printService.apiKey ? { apiKey: printService.apiKey } : {}),
+      }),
       cache: 'no-store',
     })
     setSavingService(false)
     if (res.ok) {
+      const data = await res.json()
+      setPrintService((current) => ({
+        ...current,
+        apiKey: '',
+        hasApiKey: data.config?.hasApiKey ?? current.hasApiKey,
+        apiKeyTail: data.config?.apiKeyTail ?? current.apiKeyTail,
+      }))
       setMsg({ type: 'ok', text: 'Print service configuration saved' })
     } else {
       setMsg({ type: 'err', text: 'Failed to save print service configuration' })
@@ -252,9 +271,9 @@ export default function PrintersPage() {
           <div>
             <label className="block text-xs text-gray-400 mb-1">API Key</label>
             <input
-              value={printService.api_key}
-              onChange={e => setPrintService(s => ({ ...s, api_key: e.target.value }))}
-              placeholder="API key"
+              value={printService.apiKey}
+              onChange={e => setPrintService(s => ({ ...s, apiKey: e.target.value }))}
+              placeholder={printService.hasApiKey ? printService.apiKeyTail ?? 'Stored key' : 'API key'}
               className={inputCls}
             />
           </div>

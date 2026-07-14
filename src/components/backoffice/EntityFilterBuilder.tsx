@@ -13,7 +13,7 @@ const WEIGHT_OPTIONS = ['0.5g', '1g', '2g', '3.5g', '7g', '14g', '28g']
 
 interface Props { value: EntityFilters; onChange: (f: EntityFilters) => void }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 type Opt = { id: string; name: string }
 
 export default function EntityFilterBuilder({ value, onChange }: Props) {

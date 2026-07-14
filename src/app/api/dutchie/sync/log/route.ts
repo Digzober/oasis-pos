@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSession } from '@/lib/auth/session'
+import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
@@ -11,7 +11,7 @@ import { logger } from '@/lib/utils/logger'
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireSession()
+    const session = await requireDutchieManager()
     const sb = await createSupabaseServerClient()
 
     const url = request.nextUrl
@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (sb as any).from('dutchie_sync_log')
-      .select('*')
+      .select('*, locations!inner(organization_id)')
+      .eq('locations.organization_id', session.organizationId)
       .order('started_at', { ascending: false })
       .limit(limit)
 
@@ -36,13 +37,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ logs: [] })
     }
 
-    return NextResponse.json({ logs: logs ?? [] })
+    const scopedLogs = (logs ?? []).map(({ locations: _locations, ...log }: Record<string, unknown>) => log)
+    return NextResponse.json({ logs: scopedLogs })
   } catch (err) {
     // If auth fails, return empty logs instead of 500
     if (err && typeof err === 'object' && 'code' in err) {
-      const appErr = err as { code: string }
-      if (appErr.code === 'UNAUTHORIZED') {
-        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      const appErr = err as { code: string; message?: string; statusCode?: number }
+      if (appErr.code === 'UNAUTHORIZED' || appErr.code === 'FORBIDDEN') {
+        return NextResponse.json({ error: appErr.message ?? 'Access denied' }, { status: appErr.statusCode ?? 403 })
       }
     }
     logger.error('Dutchie sync log error', { error: String(err) })

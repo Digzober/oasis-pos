@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
       for (const cid of audit.scope_categories ?? []) allCategoryIds.add(cid)
     }
 
-    let roomMap: Record<string, string> = {}
-    let categoryMap: Record<string, string> = {}
+    const roomMap: Record<string, string> = {}
+    const categoryMap: Record<string, string> = {}
 
     if (allRoomIds.size > 0) {
       const { data: rooms } = await sb

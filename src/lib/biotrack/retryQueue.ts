@@ -33,7 +33,7 @@ export async function processBioTrackRetryQueue(): Promise<{
       const response = await client.call(entry.biotrack_endpoint, payload)
 
       // Update sync log
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await sb
         .from('biotrack_sync_log')
         .update({

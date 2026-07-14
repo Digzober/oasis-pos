@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createHash } from 'node:crypto'
 
 // Mock Supabase
 const mockSelect = vi.fn()
@@ -120,8 +121,7 @@ describe('customerService helpers', () => {
     })
 
     it('ID number gets hashed', () => {
-      const crypto = require('crypto')
-      const hash = crypto.createHash('sha256').update('DL123456').digest('hex')
+      const hash = createHash('sha256').update('DL123456').digest('hex')
       expect(hash).toHaveLength(64)
       expect(hash).not.toBe('DL123456')
     })

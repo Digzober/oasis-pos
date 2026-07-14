@@ -75,7 +75,7 @@ export default function ReceiveHistoryPage() {
   }, [locationId])
 
   useEffect(() => {
-    if (hydrated) fetchHistory()
+    if (hydrated) void Promise.resolve().then(fetchHistory)
   }, [hydrated, fetchHistory])
 
   const filtered = search

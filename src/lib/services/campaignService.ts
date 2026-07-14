@@ -38,7 +38,7 @@ export async function updateCampaign(id: string, input: Record<string, unknown>)
 export async function scheduleCampaign(id: string, scheduledAt: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (sb.from('campaigns') as any).update({ status: 'scheduled', send_date: scheduledAt }).eq('id', id)
+  await (sb.from('campaigns') as any).update({ status: 'active', send_date: scheduledAt }).eq('id', id)
 }
 
 export async function sendCampaign(id: string, orgId: string) {
@@ -65,5 +65,5 @@ export async function sendCampaign(id: string, orgId: string) {
 export async function cancelCampaign(id: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (sb.from('campaigns') as any).update({ status: 'cancelled' }).eq('id', id)
+  await (sb.from('campaigns') as any).update({ status: 'archived' }).eq('id', id)
 }

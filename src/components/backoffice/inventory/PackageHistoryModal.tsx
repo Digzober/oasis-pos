@@ -41,7 +41,7 @@ export default function PackageHistoryModal({ itemId, onClose }: PackageHistoryM
         return
       }
       const data = await res.json()
-      setEntries(data.history ?? data.entries ?? data.data ?? [])
+      setEntries(data.entries ?? [])
       setLoading(false)
     }
     load()

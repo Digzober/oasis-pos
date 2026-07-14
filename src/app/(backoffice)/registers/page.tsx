@@ -22,7 +22,12 @@ export default function RegistersOverviewPage() {
     setLoading(false)
   }, [locationId, date])
 
-  useEffect(() => { if (!hydrated) return; fetchData(); const id = setInterval(fetchData, 30000); return () => clearInterval(id) }, [hydrated, fetchData])
+  useEffect(() => {
+    if (!hydrated) return
+    void Promise.resolve().then(fetchData)
+    const id = setInterval(fetchData, 30000)
+    return () => clearInterval(id)
+  }, [hydrated, fetchData])
 
   const statusDot = (s: string) => s === 'open' ? 'bg-emerald-400' : s === 'closed' ? 'bg-gray-500' : 'bg-gray-700 border border-gray-600'
 

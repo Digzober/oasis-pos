@@ -69,7 +69,7 @@ export async function createSaleTransaction(
   ])
 
   // 3. Build enriched items for calculations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const enrichedItems = input.items.map((item) => {
     const prod = productMap.get(item.product_id)!
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

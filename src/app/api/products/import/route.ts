@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
           if (existing) {
             isUpdate = true
             const { organization_id: _orgId, ...updateData } = productData
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             
             const { error: updateError } = await sb
               .from('products')
               .update(updateData as any)
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
 
           productData.slug = slug
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           
           const { error: insertError } = await sb
             .from('products')
             .insert(productData as any)

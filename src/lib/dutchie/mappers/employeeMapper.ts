@@ -71,7 +71,7 @@ export function mapEmployee(
 
   // Dutchie may return status:"Active" instead of isActive:true
   const statusField = (source as Record<string, unknown>).status as string | null
-  const isActive = source.isActive ?? (statusField?.toLowerCase() === 'active') ?? true
+  const isActive = source.isActive ?? (statusField ? statusField.toLowerCase() === 'active' : true)
 
   // Dutchie may return userId instead of employeeId
   const empId = source.employeeId ?? (source as Record<string, unknown>).userId as number | undefined

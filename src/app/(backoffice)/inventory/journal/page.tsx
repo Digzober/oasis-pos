@@ -40,8 +40,10 @@ export default function InventoryJournalPage() {
   const perPage = 50
 
   useEffect(() => {
-    setLocationId(selectedLocationId ?? '')
-    setPage(1)
+    void Promise.resolve().then(() => {
+      setLocationId(selectedLocationId ?? '')
+      setPage(1)
+    })
   }, [selectedLocationId])
 
   useEffect(() => {
@@ -66,7 +68,7 @@ export default function InventoryJournalPage() {
     setLoading(false)
   }, [page, dateFrom, dateTo, actionType, search, locationId])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   const handleSearch = () => {
     setSearch(searchInput)

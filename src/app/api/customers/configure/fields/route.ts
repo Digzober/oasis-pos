@@ -3,6 +3,7 @@ import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import type { Json } from '@/types/database'
 
 const UpdateSchema = z.object({
   pos: z.record(z.string(), z.string()).optional(),
@@ -55,7 +56,7 @@ export async function PATCH(request: NextRequest) {
     const { error: updateError } = await sb
       .from('location_settings')
       .upsert(
-        { location_id: session.locationId, settings, updated_at: new Date().toISOString() },
+        { location_id: session.locationId, settings: settings as Json, updated_at: new Date().toISOString() },
         { onConflict: 'location_id' }
       )
     if (updateError) throw updateError

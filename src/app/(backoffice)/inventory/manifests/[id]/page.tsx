@@ -282,10 +282,28 @@ function AddItemsModal({
     searchTimeout.current = setTimeout(async () => {
       setSearching(true)
       try {
-        const res = await fetch(`/api/manifests/${manifestId}/items/search?q=${encodeURIComponent(query)}`)
+        const res = await fetch(`/api/inventory?search=${encodeURIComponent(query)}&per_page=20`)
         if (res.ok) {
           const data = await res.json()
-          setResults(data.items ?? data ?? [])
+          setResults((data.items ?? []).map((item: {
+            id: string
+            product_id: string | null
+            products?: { name?: string; sku?: string | null; brands?: { name?: string } | null } | null
+            biotrack_barcode?: string | null
+            batch_id?: string | null
+            quantity?: number
+            cost_per_unit?: number | null
+          }) => ({
+            id: item.id,
+            product_id: item.product_id,
+            product_name: item.products?.name ?? 'Unknown product',
+            sku: item.products?.sku ?? null,
+            barcode: item.biotrack_barcode ?? null,
+            batch: item.batch_id ?? null,
+            brand_name: item.products?.brands?.name ?? null,
+            quantity_available: item.quantity ?? 0,
+            unit_cost: item.cost_per_unit ?? 0,
+          })))
         }
       } catch {
         /* Search failures are non-critical */
@@ -608,7 +626,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
       const res = await fetch(`/api/manifests/${id}/history`)
       if (res.ok) {
         const data = await res.json()
-        setHistoryEntries(data.entries ?? data ?? [])
+        setHistoryEntries(data.history ?? [])
       }
     } catch {
       /* History load failures shown as empty */

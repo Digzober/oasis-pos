@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSession } from '@/lib/auth/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { DutchieClient } from '@/lib/dutchie/client'
 import { logger } from '@/lib/utils/logger'
 
@@ -12,7 +11,7 @@ import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   try {
-    await requireSession()
+    await requireDutchieManager()
     const body = await request.json()
     const apiKey = body.api_key as string | undefined
 
@@ -38,8 +37,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) {
-      const a = err as { code: string; statusCode?: number }
-      if (a.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Auth required' }, { status: 401 })
+      const a = err as { code: string; message?: string; statusCode?: number }
+      if (a.code === 'UNAUTHORIZED' || a.code === 'FORBIDDEN') {
+        return NextResponse.json({ error: a.message ?? 'Access denied' }, { status: a.statusCode ?? 403 })
+      }
     }
     logger.error('Dutchie test-connection error', { error: String(err) })
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

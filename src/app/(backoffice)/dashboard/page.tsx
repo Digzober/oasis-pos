@@ -41,7 +41,7 @@ export default function DashboardPage() {
     setLoading(false)
   }, [date, locationId])
 
-  useEffect(() => { if (hydrated) fetchData() }, [hydrated, fetchData])
+  useEffect(() => { if (hydrated) void Promise.resolve().then(fetchData) }, [hydrated, fetchData])
 
   // Refresh every 60 seconds
   useEffect(() => {

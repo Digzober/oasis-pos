@@ -26,12 +26,20 @@ export default function LabelPrintDialog({ inventoryItemId, onClose }: LabelPrin
 
   useEffect(() => {
     if (!selectedTemplateId || !inventoryItemId) return
-    setLoading(true)
-    fetch('/api/labels/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ template_id: selectedTemplateId, inventory_item_id: inventoryItemId }),
-    }).then(r => r.json()).then(d => { setLabelHtml(d.html ?? ''); setLoading(false) }).catch(() => setLoading(false))
+    void Promise.resolve().then(async () => {
+      setLoading(true)
+      try {
+        const response = await fetch('/api/labels/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ template_id: selectedTemplateId, inventory_item_id: inventoryItemId }),
+        })
+        const data = await response.json()
+        setLabelHtml(data.html ?? '')
+      } finally {
+        setLoading(false)
+      }
+    })
   }, [selectedTemplateId, inventoryItemId])
 
   const handlePrint = () => {

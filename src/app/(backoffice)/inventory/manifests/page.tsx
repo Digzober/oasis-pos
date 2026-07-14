@@ -429,7 +429,7 @@ export default function ManifestsPage() {
     async function fetchLookups() {
       try {
         const [locRes, vendRes] = await Promise.all([
-          fetch('/api/locations'),
+          fetch('/api/auth/locations'),
           fetch('/api/vendors'),
         ])
         if (locRes.ok) {

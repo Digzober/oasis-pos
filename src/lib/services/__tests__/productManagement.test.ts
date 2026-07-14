@@ -100,7 +100,7 @@ describe('productManagementService logic', () => {
   })
 
   it('14. deactivating category with active products blocked', () => {
-    const activeProductCount = 5
+    const activeProductCount: number = 5
     const canDeactivate = activeProductCount === 0
     expect(canDeactivate).toBe(false)
   })

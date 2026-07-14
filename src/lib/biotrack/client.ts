@@ -19,9 +19,10 @@ export class BioTrackClient {
 
   async authenticate(): Promise<void> {
     try {
-      // BioTrack Trace 2.0 v3 REST API uses /v1/login with PascalCase fields
+      // rest_api_url is the versioned API base (for example, .../v1).
+      // Login is a resource beneath that base, just like the other endpoints.
       // Response contains "Session" key used as Bearer token for subsequent requests
-      const res = await fetch(`${this.config.v3Url}/v1/login`, {
+      const res = await fetch(`${this.config.v3Url.replace(/\/$/, '')}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -154,7 +155,7 @@ export class BioTrackClient {
   }): Promise<void> {
     try {
       const sb = await createSupabaseServerClient()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       await sb.from('biotrack_sync_log').insert({
         organization_id: params.organizationId,
         location_id: params.locationId,

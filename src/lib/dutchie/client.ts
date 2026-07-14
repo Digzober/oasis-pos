@@ -3,6 +3,7 @@ import type {
   DutchieEmployee, DutchieCustomer, DutchieProduct, DutchieInventoryItem,
   DutchieRoom, DutchieBrand, DutchieStrain, DutchieVendor, DutchieCategory,
   DutchieTag, DutchiePricingTier, DutchieTerminal, DutchieDiscount,
+  DutchieTransaction,
 } from './types'
 
 const BASE_URL = 'https://api.pos.dutchie.com' // NO /v1 suffix
@@ -67,15 +68,6 @@ export class DutchieClient {
   }
 
   /**
-   * Logs raw API response shape for debugging sync issues.
-   */
-  private logRawResponse(path: string, data: unknown): void {
-    const firstItem = Array.isArray(data) && data.length > 0 ? data[0] : data
-    const snippet = JSON.stringify(firstItem).slice(0, 2000)
-    logger.info('Dutchie raw response debug', { path, snippet })
-  }
-
-  /**
    * Unwraps responses that may be arrays or objects wrapping arrays.
    */
   private unwrap<T>(data: unknown): T[] {
@@ -105,7 +97,6 @@ export class DutchieClient {
 
     while (true) {
       const data = await this.get<unknown>(path, { ...params, offset, limit: pageSize })
-      if (offset === 0) this.logRawResponse(path, data)
       const items = this.unwrap<T>(data)
       if (items.length === 0) break
       for (const item of items) all.push(item)
@@ -161,8 +152,9 @@ export class DutchieClient {
 
   async fetchEmployees(): Promise<DutchieEmployee[]> {
     const data = await this.get<unknown>('/employees')
-    this.logRawResponse('/employees', data)
-    return this.unwrap<DutchieEmployee>(data)
+    const items = this.unwrap<DutchieEmployee>(data)
+    logger.info('Dutchie employees fetched', { total: items.length })
+    return items
   }
 
   async fetchCustomers(since?: Date): Promise<DutchieCustomer[]> {
@@ -203,7 +195,6 @@ export class DutchieClient {
 
     while (true) {
       const data = await this.get<unknown>('/reporting/inventory', { ...params, Skip: skip, Take: pageSize })
-      if (skip === 0) this.logRawResponse('/reporting/inventory', data)
       const items = this.unwrap<DutchieInventoryItem>(data)
       if (items.length === 0) break
       for (const item of items) all.push(item)
@@ -227,10 +218,8 @@ export class DutchieClient {
       IncludeDetail: 'true',
       IncludeTaxes: 'true',
     })
-    this.logRawResponse('/reporting/transactions', data)
     const items = this.unwrap<DutchieTransaction>(data)
     logger.info('Dutchie transactions fetch complete', { total: items.length })
-    return items
     return items
   }
 

@@ -244,7 +244,7 @@ export async function deactivateProduct(id: string, employeeId?: string) {
         organization_id: product.organization_id,
         employee_id: employeeId,
         entity_type: 'product',
-        event_type: 'deactivate',
+        event_type: 'update',
         entity_id: id,
       })
     }

@@ -86,7 +86,7 @@ export async function initiateTransfer(input: TransferInput): Promise<TransferRe
 
   // Create transfer record in audit_log
   const transferId = crypto.randomUUID()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   await sb.from('audit_log').insert({
     organization_id: orgId,
     location_id: input.source_location_id,

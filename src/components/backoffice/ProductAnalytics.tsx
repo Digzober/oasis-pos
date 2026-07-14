@@ -74,7 +74,7 @@ export default function ProductAnalytics({ productId }: { productId: string }) {
   }, [productId, days])
 
   useEffect(() => {
-    fetchAnalytics()
+    void Promise.resolve().then(fetchAnalytics)
   }, [fetchAnalytics])
 
   return (

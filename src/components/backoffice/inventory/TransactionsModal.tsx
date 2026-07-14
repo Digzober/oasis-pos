@@ -65,7 +65,7 @@ export default function TransactionsModal({ itemId, onClose }: TransactionsModal
         return
       }
       const data = await res.json()
-      setTransactions(data.transactions ?? data.data ?? [])
+      setTransactions(data.lines ?? [])
       setLoading(false)
     }
     load()

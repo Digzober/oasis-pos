@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { pullAllLocations } from '@/lib/biotrack/inventoryPull'
 import { logger } from '@/lib/utils/logger'
+import { enforceCronSecret } from '@/lib/auth/cron'
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authError = enforceCronSecret(request)
+  if (authError) return authError
 
   try {
     const count = await pullAllLocations()

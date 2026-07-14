@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireSession } from '@/lib/auth/session'
+import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DutchieClient } from '@/lib/dutchie/client'
 import { logger } from '@/lib/utils/logger'
@@ -12,13 +12,14 @@ import { logger } from '@/lib/utils/logger'
  */
 export async function POST() {
   try {
-    const session = await requireSession()
+    const session = await requireDutchieManager()
     const sb = await createSupabaseServerClient()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: row, error } = await (sb as any).from('dutchie_config')
-      .select('*')
+      .select('api_key_encrypted, locations!inner(organization_id)')
       .eq('location_id', session.locationId)
+      .eq('locations.organization_id', session.organizationId)
       .maybeSingle()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

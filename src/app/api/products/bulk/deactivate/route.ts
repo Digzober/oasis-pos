@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
           organization_id: product.organization_id,
           employee_id: session.employeeId,
           entity_type: 'product',
-          event_type: 'deactivate',
+          event_type: 'update',
           entity_id: productId,
         })
       }

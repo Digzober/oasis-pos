@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import BaseActionModal from './BaseActionModal'
 
 const inputCls =
@@ -35,16 +35,9 @@ export default function CombineModal({
     return map
   })
   const [targetId, setTargetId] = useState<string>('')
-  const [validationError, setValidationError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const names = new Set(sourceItems.map((i) => i.productName))
-    if (names.size > 1) {
-      setValidationError(
-        'All items must be the same product to combine. Selected items have different products.'
-      )
-    }
-  }, [sourceItems])
+  const validationError = new Set(sourceItems.map((item) => item.productName)).size > 1
+    ? 'All items must be the same product to combine. Selected items have different products.'
+    : null
 
   function updateQuantity(id: string, value: number) {
     const item = sourceItems.find((i) => i.id === id)

@@ -118,7 +118,7 @@ export default function BiotrackPage() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { void Promise.resolve().then(load) }, [load])
 
   const updateField = <K extends keyof BiotrackConfig>(key: K, value: BiotrackConfig[K]) => {
     setConfig(c => ({ ...c, [key]: value }))

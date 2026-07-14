@@ -61,18 +61,19 @@ export default function EnhancedSublotModal({
     fetchLookups()
   }, [])
 
-  useEffect(() => {
+  function resizePackages(count: number) {
+    setPackagesToCreate(count)
     setRows((prev) => {
-      if (packagesToCreate > prev.length) {
+      if (count > prev.length) {
         const additional = Array.from(
-          { length: packagesToCreate - prev.length },
+          { length: count - prev.length },
           () => ({ package_id: '', quantity: 0, cost: costDefault })
         )
         return [...prev, ...additional]
       }
-      return prev.slice(0, packagesToCreate)
+      return prev.slice(0, count)
     })
-  }, [packagesToCreate, costDefault])
+  }
 
   function updateRow(index: number, field: keyof SublotRow, value: string | number) {
     setRows((prev) =>
@@ -187,7 +188,7 @@ export default function EnhancedSublotModal({
                 value={packagesToCreate}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10)
-                  if (!isNaN(v) && v >= 1) setPackagesToCreate(v)
+                  if (!isNaN(v) && v >= 1) resizePackages(v)
                 }}
                 min={1}
                 className={inputCls}

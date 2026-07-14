@@ -32,14 +32,7 @@ async function checkBioTrack(): Promise<boolean> {
 export async function GET() {
   const [database, biotrack] = await Promise.all([checkDatabase(), checkBioTrack()])
 
-  const checks = {
-    status: database ? 'healthy' : 'unhealthy',
-    database,
-    biotrack,
-    timestamp: new Date().toISOString(),
-    version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
-    environment: process.env.NEXT_PUBLIC_APP_ENV ?? 'unknown',
-  }
+  const checks = { status: database && biotrack ? 'healthy' : 'unhealthy' }
 
-  return NextResponse.json(checks, { status: database ? 200 : 503 })
+  return NextResponse.json(checks, { status: database && biotrack ? 200 : 503 })
 }

@@ -72,7 +72,7 @@ export async function updateDiscount(id: string, input: { discount?: Record<stri
 export async function deactivateDiscount(id: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (sb.from('discounts') as any).update({ status: 'inactive' }).eq('id', id)
+  await (sb.from('discounts') as any).update({ status: 'disabled' }).eq('id', id)
 }
 
 export async function duplicateDiscount(id: string) {

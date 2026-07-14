@@ -299,7 +299,7 @@ export default function AuditsListPage() {
   }, [statusFilter, locationId])
 
   useEffect(() => {
-    if (hydrated) fetchAudits(1)
+    if (hydrated) void Promise.resolve().then(() => fetchAudits(1))
   }, [hydrated, fetchAudits])
 
   useEffect(() => {

@@ -71,7 +71,7 @@ export default function CategoriesTab() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { fetchCategories() }, [fetchCategories])
+  useEffect(() => { void Promise.resolve().then(fetchCategories) }, [fetchCategories])
 
   const openNew = () => {
     setEditId(null)
