@@ -67,6 +67,15 @@ export class DutchieClient {
   }
 
   /**
+   * Logs raw API response shape for debugging sync issues.
+   */
+  private logRawResponse(path: string, data: unknown): void {
+    const firstItem = Array.isArray(data) && data.length > 0 ? data[0] : data
+    const snippet = JSON.stringify(firstItem).slice(0, 2000)
+    logger.info('Dutchie raw response debug', { path, snippet })
+  }
+
+  /**
    * Unwraps responses that may be arrays or objects wrapping arrays.
    */
   private unwrap<T>(data: unknown): T[] {
@@ -76,6 +85,10 @@ export class DutchieClient {
       const arr = vals.find(v => Array.isArray(v))
       if (arr) return arr as T[]
     }
+    logger.warn('Dutchie unwrap: unexpected response shape', {
+      type: typeof data,
+      keys: typeof data === 'object' && data !== null ? Object.keys(data).slice(0, 10) : [],
+    })
     return []
   }
 
@@ -92,6 +105,7 @@ export class DutchieClient {
 
     while (true) {
       const data = await this.get<unknown>(path, { ...params, offset, limit: pageSize })
+      if (offset === 0) this.logRawResponse(path, data)
       const items = this.unwrap<T>(data)
       if (items.length === 0) break
       for (const item of items) all.push(item)
@@ -147,18 +161,18 @@ export class DutchieClient {
 
   async fetchEmployees(): Promise<DutchieEmployee[]> {
     const data = await this.get<unknown>('/employees')
+    this.logRawResponse('/employees', data)
     return this.unwrap<DutchieEmployee>(data)
   }
 
   async fetchCustomers(since?: Date): Promise<DutchieCustomer[]> {
     const params: Record<string, string> = {}
     if (since) {
-      // Subtract 60 seconds per Dutchie docs for incremental safety
       const buffered = new Date(since.getTime() - 60_000)
       params.fromLastModifiedDateUTC = buffered.toISOString()
     }
-    // Use paginated endpoint for large datasets
-    return this.fetchAllPaged<DutchieCustomer>('/customer/customers-paginated', params)
+    // Customers endpoint always paginates — must use PageNumber/PageSize
+    return this.fetchAllPaged<DutchieCustomer>('/customer/customers-paginated', params, 1000)
   }
 
   async fetchProducts(since?: Date): Promise<DutchieProduct[]> {
@@ -167,14 +181,57 @@ export class DutchieClient {
       const buffered = new Date(since.getTime() - 60_000)
       params.fromLastModifiedDateUTC = buffered.toISOString()
     }
-    return this.fetchAllOffset<DutchieProduct>('/products', params)
+    // Try single request first (the-vault pattern) — Dutchie may return all products at once
+    const data = await this.get<unknown>('/products', params)
+    const items = this.unwrap<DutchieProduct>(data)
+    if (items.length > 0) {
+      logger.info('Dutchie products fetched', { total: items.length, mode: 'single' })
+      return items
+    }
+    // Fall back to pagination if single request returned empty
+    return this.fetchAllOffset<DutchieProduct>('/products', params, 500)
   }
 
   async fetchInventory(opts?: { includeLabResults?: boolean; includeRoomQuantities?: boolean }): Promise<DutchieInventoryItem[]> {
     const params: Record<string, string | boolean> = {}
     if (opts?.includeLabResults) params.includeLabResults = true
     if (opts?.includeRoomQuantities) params.includeRoomQuantities = true
-    return this.fetchAllOffset<DutchieInventoryItem>('/inventory', params)
+    // Dutchie /reporting/inventory uses Skip/Take pagination (PascalCase), page size 5000
+    const all: DutchieInventoryItem[] = []
+    let skip = 0
+    const pageSize = 5000
+
+    while (true) {
+      const data = await this.get<unknown>('/reporting/inventory', { ...params, Skip: skip, Take: pageSize })
+      if (skip === 0) this.logRawResponse('/reporting/inventory', data)
+      const items = this.unwrap<DutchieInventoryItem>(data)
+      if (items.length === 0) break
+      for (const item of items) all.push(item)
+      if (items.length < pageSize) break
+      skip += pageSize
+    }
+
+    logger.info('Dutchie inventory fetch complete', { total: all.length })
+    return all
+  }
+
+  async fetchTransactions(opts: { startDate: string; endDate: string }): Promise<DutchieTransaction[]> {
+    // /reporting/transactions uses FromDateUTC/ToDateUTC (ISO 8601 datetime)
+    const fromDate = opts.startDate.includes('T') ? opts.startDate : `${opts.startDate.slice(0, 10)}T00:00:00Z`
+    const toDate = opts.endDate.includes('T') ? opts.endDate : `${opts.endDate.slice(0, 10)}T23:59:59Z`
+
+    // /reporting/transactions with FromDateUTC/ToDateUTC in YYYY-MM-DD format
+    const data = await this.get<unknown>('/reporting/transactions', {
+      FromDateUTC: fromDate.slice(0, 10),
+      ToDateUTC: toDate.slice(0, 10),
+      IncludeDetail: 'true',
+      IncludeTaxes: 'true',
+    })
+    this.logRawResponse('/reporting/transactions', data)
+    const items = this.unwrap<DutchieTransaction>(data)
+    logger.info('Dutchie transactions fetch complete', { total: items.length })
+    return items
+    return items
   }
 
   async fetchRooms(): Promise<DutchieRoom[]> {

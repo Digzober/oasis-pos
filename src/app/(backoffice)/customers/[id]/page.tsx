@@ -150,6 +150,7 @@ export default function CustomerDetailPage() {
   const id = params.id as string
 
   const [customer, setCustomer] = useState<Customer | null>(null)
+  const isMedical = (customer?.customer_type ?? 'recreational').startsWith('medical')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState(0)
@@ -228,17 +229,17 @@ export default function CustomerDetailPage() {
   const fetchLoyaltyHistory = useCallback(async () => {
     if (loyaltyHistory) return
     const res = await fetch(`/api/customers/${id}/loyalty/history`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setLoyaltyHistory(d.history ?? []) }
+    if (res.ok) { const d = await res.json(); setLoyaltyHistory(d.entries ?? d.history ?? []) }
   }, [id, loyaltyHistory])
 
   const fetchPurchases = useCallback(async (page: number) => {
     const res = await fetch(`/api/customers/${id}/purchase-history?page=${page}&per_page=20`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setPurchases(d.lines ?? []); setPurchaseTotal(d.total ?? 0); setPurchasePage(page) }
+    if (res.ok) { const d = await res.json(); setPurchases(d.lines ?? []); setPurchaseTotal(d.pagination?.total ?? d.total ?? 0); setPurchasePage(page) }
   }, [id])
 
   const fetchTransactions = useCallback(async (page: number) => {
     const res = await fetch(`/api/customers/${id}/transaction-history?page=${page}&per_page=20`, { cache: 'no-store' })
-    if (res.ok) { const d = await res.json(); setTransactions(d.transactions ?? []); setTxTotal(d.total ?? 0); setTxPage(page) }
+    if (res.ok) { const d = await res.json(); setTransactions(d.transactions ?? []); setTxTotal(d.pagination?.total ?? d.total ?? 0); setTxPage(page) }
   }, [id])
 
   const fetchGroups = useCallback(async () => {
@@ -248,15 +249,16 @@ export default function CustomerDetailPage() {
   }, [availableGroups.length])
 
   useEffect(() => {
-    if (tab === 3) { fetchLoyaltyHistory(); fetchGroups() }
-    if (tab === 4) fetchPurchases(1)
-    if (tab === 5) fetchTransactions(1)
-  }, [tab, fetchLoyaltyHistory, fetchPurchases, fetchTransactions, fetchGroups])
+    const tid = !isMedical && tab >= 2 ? tab + 1 : tab
+    if (tid === 3) { fetchLoyaltyHistory(); fetchGroups() }
+    if (tid === 4) fetchPurchases(1)
+    if (tid === 5) fetchTransactions(1)
+  }, [tab, isMedical, fetchLoyaltyHistory, fetchPurchases, fetchTransactions, fetchGroups])
 
   /* -- Actions ------------------------------------------------------- */
   const banCustomer = () => patchCustomer({ status: 'banned' })
   const unbanCustomer = () => patchCustomer({ status: 'active' })
-  const archiveCustomer = () => patchCustomer({ is_active: false })
+  const archiveCustomer = () => patchCustomer({ status: 'inactive' })
 
   const adjustPoints = async () => {
     const pts = parseInt(adjustPts.points, 10)
@@ -265,7 +267,7 @@ export default function CustomerDetailPage() {
     try {
       await fetch(`/api/customers/${id}/loyalty/adjust`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ points: pts, reason: adjustPts.reason || null }), cache: 'no-store',
+        body: JSON.stringify({ points: pts, reason: adjustPts.reason || 'Manual adjustment' }), cache: 'no-store',
       })
       setAdjustPts({ points: '', reason: '' })
       setLoyaltyHistory(null)
@@ -277,7 +279,7 @@ export default function CustomerDetailPage() {
   const removeGroup = async (gid: string) => {
     await fetch(`/api/customers/${id}/groups`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ remove: [gid] }), cache: 'no-store',
+      body: JSON.stringify({ remove_group_ids: [gid] }), cache: 'no-store',
     })
     await fetchCustomer()
   }
@@ -285,7 +287,7 @@ export default function CustomerDetailPage() {
   const addGroup = async (gid: string) => {
     await fetch(`/api/customers/${id}/groups`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ add: [gid] }), cache: 'no-store',
+      body: JSON.stringify({ add_group_ids: [gid] }), cache: 'no-store',
     })
     await fetchCustomer()
   }
@@ -321,7 +323,6 @@ export default function CustomerDetailPage() {
 
   if (loading || !customer) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-gray-400">Loading...</div></div>
 
-  const isMedical = customer.customer_type?.startsWith('medical')
   const medExpired = customer.medical_card_expiration ? new Date(customer.medical_card_expiration) < new Date() : false
   const TAB_LABELS = ['Details', 'ID & Address', ...(isMedical ? ['Caregiver'] : []), 'Loyalty & Groups', 'Purchase History', 'Transaction History']
   // Map visual tab index to logical tab id
@@ -331,14 +332,16 @@ export default function CustomerDetailPage() {
   }
   const activeTabId = tabId(tab)
 
-  const typeBadge = (t: string) => {
-    const cls = t === 'medical' ? 'bg-blue-900/50 text-blue-300 border-blue-700' : 'bg-emerald-900/50 text-emerald-300 border-emerald-700'
-    return <span className={`text-xs px-2 py-0.5 rounded-full border ${cls}`}>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
+  const typeBadge = (t: string | null | undefined) => {
+    const label = t || 'recreational'
+    const cls = label === 'medical' ? 'bg-blue-900/50 text-blue-300 border-blue-700' : 'bg-emerald-900/50 text-emerald-300 border-emerald-700'
+    return <span className={`text-xs px-2 py-0.5 rounded-full border ${cls}`}>{label.charAt(0).toUpperCase() + label.slice(1)}</span>
   }
 
-  const statusBadge = (s: string) => {
+  const statusBadge = (s: string | null | undefined) => {
+    const label = s || 'active'
     const m: Record<string, string> = { active: 'bg-emerald-900/50 text-emerald-300', banned: 'bg-red-900/50 text-red-300', inactive: 'bg-gray-700 text-gray-400' }
-    return <span className={`text-xs px-2 py-0.5 rounded-full ${m[s] ?? m.inactive}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</span>
+    return <span className={`text-xs px-2 py-0.5 rounded-full ${m[label] ?? m.inactive}`}>{label.charAt(0).toUpperCase() + label.slice(1)}</span>
   }
 
   /* ================================================================== */
@@ -541,7 +544,7 @@ export default function CustomerDetailPage() {
           </div>
 
           {/* Badges */}
-          <BadgesSection customerId={customerId} />
+          <BadgesSection customerId={id} />
         </div>
       )}
 

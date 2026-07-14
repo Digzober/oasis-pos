@@ -95,10 +95,9 @@ export interface MappedProductRow {
   category_id: string | null
   name: string
   slug: string
-  internal_name: string | null
+  alternate_name: string | null
   description: string | null
   sku: string | null
-  upc: string | null
   product_type: ProductType
   default_unit: DefaultUnit
   strain_type: StrainType | null
@@ -109,31 +108,31 @@ export interface MappedProductRow {
   is_active: boolean
   rec_price: number | null
   med_price: number | null
-  unit_cost: number | null
+  cost_price: number | null
   thc_percentage: number | null
   cbd_percentage: number | null
-  thc_mg: number | null
-  cbd_mg: number | null
-  thc_content_dose: number | null
-  cbd_content_dose: number | null
+  thc_content_mg: number | null
+  cbd_content_mg: number | null
+  unit_thc_dose: number | null
+  unit_cbd_dose: number | null
   flower_equivalent: number | null
   net_weight: number | null
   net_weight_unit: NetWeightUnit | null
-  gross_weight: number | null
+  gross_weight_grams: number | null
   online_title: string | null
   online_description: string | null
-  is_online: boolean
-  is_pos: boolean
+  available_online: boolean
+  available_on_pos: boolean
   is_on_sale: boolean
   sale_price: number | null
   flavor: string | null
   dosage: string | null
   instructions: string | null
   allergens: string | null
-  ingredient_list: string | null
+  ingredients: string | null
   allow_automatic_discounts: boolean
   max_per_transaction: number | null
-  image_url: string | null
+  is_taxable: boolean
   dutchie_product_id: number
 }
 
@@ -142,9 +141,9 @@ export interface MappedLocationPriceRow {
   location_id: string
   rec_price: number | null
   med_price: number | null
-  unit_cost: number | null
-  is_pos_available: boolean
-  is_online_available: boolean
+  cost_price: number | null
+  available_on_pos: boolean
+  available_online: boolean
 }
 
 export interface MappedProductResult {
@@ -177,56 +176,55 @@ export function mapProduct(
     category_id: null,
     name: source.productName,
     slug: generateSlug(source.productName, source.productId),
-    internal_name: source.internalName ?? null,
+    alternate_name: source.internalName ?? null,
     description: source.description ?? null,
     sku: source.sku ?? null,
-    upc: source.upc ?? null,
     product_type: productType,
     default_unit: defaultUnit,
     strain_type: strainType,
     brand_id: null,
     vendor_id: null,
     strain_id: null,
-    is_cannabis: source.isCannabis,
-    is_active: source.isActive,
-    rec_price: source.recPrice ?? source.price ?? null,
-    med_price: source.medPrice ?? source.price ?? null,
-    unit_cost: source.unitCost ?? null,
+    is_cannabis: source.isCannabis ?? false,
+    is_active: source.isActive ?? true,
+    rec_price: source.recPrice ?? source.price ?? 0,
+    med_price: source.medPrice ?? source.price ?? 0,
+    cost_price: source.unitCost ?? null,
     thc_percentage: thcPercentage,
     cbd_percentage: cbdPercentage,
-    thc_mg: thcMg,
-    cbd_mg: cbdMg,
-    thc_content_dose: source.unitTHCContentDose ?? null,
-    cbd_content_dose: source.unitCBDContentDose ?? null,
+    thc_content_mg: thcMg,
+    cbd_content_mg: cbdMg,
+    unit_thc_dose: source.unitTHCContentDose ?? null,
+    unit_cbd_dose: source.unitCBDContentDose ?? null,
     flower_equivalent: source.flowerEquivalent ?? null,
     net_weight: source.netWeight ?? null,
     net_weight_unit: netWeightUnit,
-    gross_weight: source.grossWeight ?? null,
+    gross_weight_grams: source.grossWeight ?? null,
     online_title: source.onlineTitle ?? null,
     online_description: source.onlineDescription ?? null,
-    is_online: source.onlineProduct,
-    is_pos: source.posProducts,
-    is_on_sale: source.isOnSale,
+    available_online: source.onlineProduct ?? false,
+    available_on_pos: source.posProducts ?? true,
+    is_on_sale: source.isOnSale ?? false,
     sale_price: source.salePrice ?? null,
     flavor: source.flavor ?? null,
     dosage: source.dosage ?? null,
     instructions: source.instructions ?? null,
     allergens: source.allergens ?? null,
-    ingredient_list: source.ingredientList ?? null,
-    allow_automatic_discounts: source.allowAutomaticDiscounts,
+    ingredients: source.ingredientList ?? null,
+    allow_automatic_discounts: source.allowAutomaticDiscounts ?? true,
     max_per_transaction: source.maxPurchaseablePerTransaction ?? null,
-    image_url: source.imageUrl ?? null,
+    is_taxable: source.isTaxable ?? true,
     dutchie_product_id: source.productId,
   }
 
   const locationPrice: MappedLocationPriceRow = {
     product_id: null,
     location_id: locationId,
-    rec_price: source.recPrice ?? source.price ?? null,
-    med_price: source.medPrice ?? source.price ?? null,
-    unit_cost: source.unitCost ?? null,
-    is_pos_available: source.posProducts,
-    is_online_available: source.onlineAvailable,
+    rec_price: source.recPrice ?? source.price ?? 0,
+    med_price: source.medPrice ?? source.price ?? 0,
+    cost_price: source.unitCost ?? null,
+    available_on_pos: source.posProducts,
+    available_online: source.onlineAvailable,
   }
 
   return { product, locationPrice }

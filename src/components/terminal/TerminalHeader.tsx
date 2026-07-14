@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from '@/hooks/useSession'
+import { usePermissions } from '@/hooks/usePermissions'
 import { useCashDrawer } from '@/hooks/useCashDrawer'
+import { PERMS } from '@/lib/constants/permissions'
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
@@ -14,7 +16,9 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function TerminalHeader() {
   const { session, logout } = useSession()
+  const { can } = usePermissions()
   const { drawer } = useCashDrawer(session?.registerId ?? '')
+  const canAccessBackoffice = can(PERMS.GENERAL.LOGIN_BACKEND)
   const [now, setNow] = useState(new Date())
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -141,6 +145,23 @@ export default function TerminalHeader() {
               >
                 Reprint Receipt
               </button>
+
+              {/* Go to Backoffice (permission-gated) */}
+              {canAccessBackoffice && (
+                <a
+                  href="/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full text-left px-3 py-2 text-sm text-emerald-400 hover:bg-emerald-400/10 transition-colors flex items-center gap-2"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="1" y="1" width="6" height="6" rx="1" />
+                    <rect x="9" y="1" width="6" height="6" rx="1" />
+                    <rect x="1" y="9" width="6" height="6" rx="1" />
+                    <rect x="9" y="9" width="6" height="6" rx="1" />
+                  </svg>
+                  Go to Backoffice
+                </a>
+              )}
 
               {/* Divider */}
               <div className="border-t border-gray-700 my-1" />

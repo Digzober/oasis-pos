@@ -7,13 +7,14 @@ import { mapCustomer } from './mappers/customerMapper'
 import { mapProduct } from './mappers/productMapper'
 import { mapInventoryItem } from './mappers/inventoryMapper'
 import { mapRoom } from './mappers/roomMapper'
+import { mapTransaction } from './mappers/transactionMapper'
 import {
   mapBrand, mapStrain, mapVendor, mapCategory,
   mapTag, mapPricingTier, mapTerminal,
 } from './mappers/referenceMapper'
-import type { SyncResult, LocationSyncResult, EntityType } from './types'
+import type { SyncResult, LocationSyncResult, EntityType, DutchieProduct, DutchieTransaction } from './types'
 
-const BATCH_SIZE = 50
+const BATCH_SIZE = 1000
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,7 +54,7 @@ async function completeSyncLog(
     records_updated: result.updated,
     records_skipped: result.skipped,
     records_errored: result.errored,
-    errors: result.errors.length > 0 ? result.errors : null,
+    error_details: result.errors.length > 0 ? result.errors : null,
     duration_ms: result.durationMs,
   }).eq('id', logId)
 }
@@ -65,8 +66,20 @@ async function batchUpsert(
   conflictColumns: string,
   result: SyncResult,
 ): Promise<void> {
-  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-    const batch = rows.slice(i, i + BATCH_SIZE)
+  // Deduplicate rows by conflict key to avoid "cannot affect row a second time"
+  const conflictKeys = conflictColumns.split(',').map(k => k.trim())
+  const seen = new Set<string>()
+  const deduped: Record<string, unknown>[] = []
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const key = conflictKeys.map(k => String(rows[i][k] ?? '')).join('|')
+    if (seen.has(key)) { result.skipped++; continue }
+    seen.add(key)
+    deduped.push(rows[i])
+  }
+  deduped.reverse()
+
+  for (let i = 0; i < deduped.length; i += BATCH_SIZE) {
+    const batch = deduped.slice(i, i + BATCH_SIZE)
     const { data, error } = await (sb as any).from(table)
       .upsert(batch, { onConflict: conflictColumns, ignoreDuplicates: false })
       .select('id')
@@ -110,9 +123,12 @@ export async function syncEmployees(locationId: string, organizationId: string):
 
     await batchUpsert(sb, 'employees', valid, 'organization_id,dutchie_employee_id', result)
     await syncEmployeeLocations(sb, locationId, organizationId, dutchieEmployees)
-    await updateSyncTimestamp(locationId, 'employees', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'employees', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -125,7 +141,7 @@ async function syncEmployeeLocations(
   sb: ReturnType<typeof Object>,
   locationId: string,
   organizationId: string,
-  dutchieEmployees: Array<{ employeeId: number; locationNames: string[] | null }>,
+  dutchieEmployees: Array<Record<string, unknown>>,
 ): Promise<void> {
   const { data: employees } = await (sb as any).from('employees')
     .select('id, dutchie_employee_id')
@@ -133,21 +149,31 @@ async function syncEmployeeLocations(
     .not('dutchie_employee_id', 'is', null)
 
   if (!employees?.length) return
-  const idMap = new Map<number, string>()
+  // dutchie_employee_id is stored as string in DB
+  const idMap = new Map<string, string>()
   for (const emp of employees) {
-    idMap.set(emp.dutchie_employee_id, emp.id)
+    idMap.set(String(emp.dutchie_employee_id), emp.id)
   }
 
   const junctionRows = dutchieEmployees
-    .filter((de) => idMap.has(de.employeeId))
-    .map((de) => ({
-      employee_id: idMap.get(de.employeeId),
-      location_id: locationId,
-    }))
+    .map((de) => {
+      const dutchieId = String(de.userId ?? de.employeeId ?? '')
+      return idMap.has(dutchieId) ? { employee_id: idMap.get(dutchieId), location_id: locationId } : null
+    })
+    .filter(Boolean)
 
-  if (junctionRows.length > 0) {
+  // Deduplicate by employee_id (Dutchie returns same employee multiple times)
+  const seen = new Set<string>()
+  const uniqueRows = junctionRows.filter((r) => {
+    const eid = (r as { employee_id: string }).employee_id
+    if (seen.has(eid)) return false
+    seen.add(eid)
+    return true
+  })
+
+  if (uniqueRows.length > 0) {
     await (sb as any).from('employee_locations')
-      .upsert(junctionRows, { onConflict: 'employee_id,location_id', ignoreDuplicates: true })
+      .upsert(uniqueRows, { onConflict: 'employee_id,location_id', ignoreDuplicates: true })
   }
 }
 
@@ -175,9 +201,12 @@ export async function syncCustomers(locationId: string, organizationId: string):
     const valid = filterValid(mapped, 'dutchie_customer_id', result)
 
     await dedupAndUpsertCustomers(sb, organizationId, valid, result)
-    await updateSyncTimestamp(locationId, 'customers', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'customers', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -256,20 +285,21 @@ export async function syncProducts(locationId: string, organizationId: string): 
     const dutchieProducts = await client.fetchProducts(since)
     result.fetched = dutchieProducts.length
 
-    // Phase 1: resolve FK lookups
+    // Phase 1: resolve FK lookups + pre-create missing FKs in bulk
     const fkCache = await buildProductFkCache(sb, organizationId)
+    await bulkResolveNewFks(sb, fkCache, dutchieProducts, organizationId)
 
-    // Phase 2: map and resolve FKs
+    // Phase 2: map products (all FK lookups are now in-memory)
     const productRows: Record<string, unknown>[] = []
     const priceRows: Array<{ dutchie_product_id: number; row: Record<string, unknown> }> = []
 
     for (const dp of dutchieProducts) {
       try {
         const { product, locationPrice } = mapProduct(dp, organizationId, locationId)
-        product.brand_id = await resolveFk(sb, fkCache, 'brands', dp.brandName, dp.brandId, organizationId)
-        product.vendor_id = await resolveFk(sb, fkCache, 'vendors', dp.vendorName, dp.vendorId, organizationId)
-        product.strain_id = await resolveFk(sb, fkCache, 'strains', dp.strain, dp.strainId, organizationId)
-        product.category_id = await resolveCategoryFk(sb, fkCache, dp.category, dp.categoryId, organizationId)
+        product.brand_id = resolveFkSync(fkCache, 'brands', dp.brandName, dp.brandId)
+        product.vendor_id = resolveFkSync(fkCache, 'vendors', dp.vendorName, dp.vendorId)
+        product.strain_id = resolveFkSync(fkCache, 'strains', dp.strain, dp.strainId)
+        product.category_id = resolveCategoryFkSync(fkCache, dp.category, dp.categoryId)
         productRows.push(product as unknown as Record<string, unknown>)
         priceRows.push({ dutchie_product_id: dp.productId, row: locationPrice as unknown as Record<string, unknown> })
       } catch (err) {
@@ -283,9 +313,13 @@ export async function syncProducts(locationId: string, organizationId: string): 
 
     // Phase 3: upsert location_product_prices
     await upsertLocationPrices(sb, organizationId, locationId, priceRows, result)
-    await updateSyncTimestamp(locationId, 'products', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  // Always save timestamp so next sync is incremental (even if some batches errored)
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'products', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -305,10 +339,10 @@ async function buildProductFkCache(sb: ReturnType<typeof Object>, orgId: string)
   const cache: FkCache = { brands: new Map(), vendors: new Map(), strains: new Map(), categories: new Map() }
 
   const [brands, vendors, strains, categories] = await Promise.all([
-    (sb as any).from('brands').select('id, name, external_id').eq('organization_id', orgId),
-    (sb as any).from('vendors').select('id, name, external_id').eq('organization_id', orgId),
-    (sb as any).from('strains').select('id, name, external_id').eq('organization_id', orgId),
-    (sb as any).from('product_categories').select('id, name, external_id').eq('organization_id', orgId),
+    (sb as any).from('brands').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
+    (sb as any).from('vendors').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
+    (sb as any).from('strains').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
+    (sb as any).from('product_categories').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
   ])
 
   for (const b of brands.data ?? []) {
@@ -329,6 +363,113 @@ async function buildProductFkCache(sb: ReturnType<typeof Object>, orgId: string)
   }
 
   return cache
+}
+
+/**
+ * Pre-creates all missing brands, vendors, strains, and categories in bulk
+ * so the per-product mapping loop needs zero DB calls.
+ */
+async function bulkResolveNewFks(
+  sb: ReturnType<typeof Object>,
+  cache: FkCache,
+  products: DutchieProduct[],
+  orgId: string,
+): Promise<void> {
+  // Collect unique names not in cache
+  const missing: Record<'brands' | 'vendors' | 'strains', Map<string, { name: string; externalId: string | null }>> = {
+    brands: new Map(), vendors: new Map(), strains: new Map(),
+  }
+  const missingCategories = new Map<string, { name: string; externalId: string | null }>()
+
+  for (const dp of products) {
+    for (const [table, nameVal, extId] of [
+      ['brands', dp.brandName, dp.brandId],
+      ['vendors', dp.vendorName, dp.vendorId],
+      ['strains', dp.strain, dp.strainId],
+    ] as const) {
+      if (!nameVal) continue
+      const key = nameVal.toLowerCase()
+      if (cache[table].has(key) || (extId && cache[table].has(`ext:${extId}`))) continue
+      missing[table].set(key, { name: nameVal, externalId: extId ? String(extId) : null })
+    }
+    const catName = dp.category || 'Uncategorized'
+    const catKey = catName.toLowerCase()
+    if (!cache.categories.has(catKey) && !(dp.categoryId && cache.categories.has(`ext:${dp.categoryId}`))) {
+      missingCategories.set(catKey, { name: catName, externalId: dp.categoryId ? String(dp.categoryId) : null })
+    }
+  }
+
+  // Bulk upsert each FK table
+  for (const table of ['brands', 'vendors', 'strains'] as const) {
+    const rows = [...missing[table].values()]
+    if (rows.length === 0) continue
+    const upsertRows = rows.map(r => ({ organization_id: orgId, name: r.name, external_id: r.externalId }))
+    for (let i = 0; i < upsertRows.length; i += BATCH_SIZE) {
+      const batch = upsertRows.slice(i, i + BATCH_SIZE)
+      const { data } = await (sb as any).from(table)
+        .upsert(batch, { onConflict: 'organization_id,name', ignoreDuplicates: false })
+        .select('id, name, external_id')
+      for (const row of data ?? []) {
+        cache[table].set(row.name?.toLowerCase(), row.id)
+        if (row.external_id) cache[table].set(`ext:${row.external_id}`, row.id)
+      }
+    }
+  }
+
+  // Bulk upsert categories
+  if (missingCategories.size > 0) {
+    const catRows = [...missingCategories.values()].map(r => {
+      const slug = r.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      return {
+        organization_id: orgId,
+        name: r.name,
+        slug: r.externalId ? `${slug}-d${r.externalId}` : slug,
+        available_for: 'all',
+        external_id: r.externalId,
+      }
+    })
+    for (let i = 0; i < catRows.length; i += BATCH_SIZE) {
+      const batch = catRows.slice(i, i + BATCH_SIZE)
+      const { data } = await (sb as any).from('product_categories')
+        .upsert(batch, { onConflict: 'organization_id,slug', ignoreDuplicates: false })
+        .select('id, name, external_id')
+      for (const row of data ?? []) {
+        cache.categories.set(row.name?.toLowerCase(), row.id)
+        if (row.external_id) cache.categories.set(`ext:${row.external_id}`, row.id)
+      }
+    }
+  }
+}
+
+function resolveFkSync(
+  cache: FkCache,
+  table: 'brands' | 'vendors' | 'strains',
+  name: string | null,
+  externalId: number | null,
+): string | null {
+  if (!name && !externalId) return null
+  if (externalId) {
+    const cached = cache[table].get(`ext:${externalId}`)
+    if (cached) return cached
+  }
+  if (name) {
+    const cached = cache[table].get(name.toLowerCase())
+    if (cached) return cached
+  }
+  return null
+}
+
+function resolveCategoryFkSync(
+  cache: FkCache,
+  name: string | null,
+  externalId: number | null,
+): string | null {
+  const categoryName = name || 'Uncategorized'
+  if (externalId) {
+    const cached = cache.categories.get(`ext:${externalId}`)
+    if (cached) return cached
+  }
+  return cache.categories.get(categoryName.toLowerCase()) ?? null
 }
 
 async function resolveFk(
@@ -426,17 +567,8 @@ async function upsertLocationPrices(
   priceRows: Array<{ dutchie_product_id: number; row: Record<string, unknown> }>,
   result: SyncResult,
 ): Promise<void> {
-  // Resolve product_id from dutchie_product_id
-  const dutchieIds = priceRows.map((p) => p.dutchie_product_id)
-  const { data: products } = await (sb as any).from('products')
-    .select('id, dutchie_product_id')
-    .eq('organization_id', orgId)
-    .in('dutchie_product_id', dutchieIds)
-
-  const productMap = new Map<number, string>()
-  for (const p of products ?? []) {
-    productMap.set(p.dutchie_product_id, p.id)
-  }
+  // Reuse the paginated product map instead of a massive .in() query
+  const productMap = await buildDutchieProductMap(sb, orgId)
 
   const rows: Record<string, unknown>[] = []
   for (const pr of priceRows) {
@@ -466,11 +598,12 @@ export async function syncInventory(locationId: string, organizationId: string):
   const logId = await createSyncLog(sb, locationId, 'inventory', 'full')
 
   try {
-    const dutchieItems = await client.fetchInventory({ includeLabResults: true })
+    const dutchieItems = await client.fetchInventory({ includeLabResults: true, includeRoomQuantities: true })
     result.fetched = dutchieItems.length
 
     // Build product_id lookup from dutchie_product_id
     const productIdMap = await buildDutchieProductMap(sb, organizationId)
+    logger.info('Inventory product map built', { orgId: organizationId, mapSize: productIdMap.size, sampleKeys: [...productIdMap.keys()].slice(0, 5) })
 
     // Build room lookup by name
     const roomMap = await buildRoomMap(sb, locationId)
@@ -481,8 +614,14 @@ export async function syncInventory(locationId: string, organizationId: string):
       try {
         const item = mapInventoryItem(di, locationId)
         item.product_id = productIdMap.get(di.productId) ?? null
-        item.room_id = di.room ? (roomMap.get(di.room.toLowerCase()) ?? null) : null
-        mapped.push(item as Record<string, unknown> & { external_package_id: string | null })
+        // Room: try di.room first, then extract from roomQuantities array
+        const roomName = di.room
+          ?? (Array.isArray((di as Record<string, unknown>).roomQuantities)
+            ? ((di as Record<string, unknown>).roomQuantities as Array<Record<string, unknown>>)[0]?.room as string | null
+            : null)
+        item.room_id = roomName ? (roomMap.get(roomName.toLowerCase()) ?? null) : null
+        const row = { ...item, organization_id: organizationId } as Record<string, unknown> & { external_package_id: string | null }
+        mapped.push(row)
       } catch (err) {
         result.errored++
         result.errors.push(`Inventory ${di.inventoryId}: ${err instanceof Error ? err.message : String(err)}`)
@@ -494,6 +633,7 @@ export async function syncInventory(locationId: string, organizationId: string):
       .select('id, external_package_id')
       .eq('location_id', locationId)
       .eq('is_active', true)
+      .limit(50000)
 
     const existingMap = new Map<string, string>()
     for (const row of existing ?? []) {
@@ -506,6 +646,7 @@ export async function syncInventory(locationId: string, organizationId: string):
 
     for (const item of mapped) {
       if (item.external_package_id) incomingIds.add(item.external_package_id)
+      if (!item.product_id) { result.skipped++; continue }
       toUpsert.push({ ...item, is_active: true })
     }
 
@@ -521,9 +662,12 @@ export async function syncInventory(locationId: string, organizationId: string):
       result.updated += toDeactivate.length
     }
 
-    await updateSyncTimestamp(locationId, 'inventory', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'inventory', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -533,13 +677,22 @@ export async function syncInventory(locationId: string, organizationId: string):
 }
 
 async function buildDutchieProductMap(sb: ReturnType<typeof Object>, orgId: string): Promise<Map<number, string>> {
-  const { data } = await (sb as any).from('products')
-    .select('id, dutchie_product_id')
-    .eq('organization_id', orgId)
-    .not('dutchie_product_id', 'is', null)
-
+  // Paginate in chunks of 1000 (Supabase max-rows default)
   const map = new Map<number, string>()
-  for (const p of data ?? []) map.set(p.dutchie_product_id, p.id)
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    const { data } = await (sb as any).from('products')
+      .select('id, dutchie_product_id')
+      .eq('organization_id', orgId)
+      .not('dutchie_product_id', 'is', null)
+      .order('dutchie_product_id', { ascending: true })
+      .range(offset, offset + pageSize - 1)
+    if (!data?.length) break
+    for (const p of data) map.set(p.dutchie_product_id, p.id)
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
   return map
 }
 
@@ -668,9 +821,12 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
       result.updated += toDeactivate.length
     }
 
-    await updateSyncTimestamp(locationId, 'rooms', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'rooms', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -701,9 +857,12 @@ export async function syncReferenceData(locationId: string, organizationId: stri
     await syncTags(sb, client, organizationId, result)
     await syncPricingTiers(sb, client, organizationId, result)
     await syncTerminals(sb, client, locationId, result)
-    await updateSyncTimestamp(locationId, 'reference', new Date(start))
   } catch (err) {
     handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'reference', new Date(start))
   }
 
   result.durationMs = Date.now() - start
@@ -782,7 +941,7 @@ async function syncTerminals(sb: ReturnType<typeof Object>, client: DutchieClien
     } else {
       // Upsert by external_id
       const { error } = await (sb as any).from('registers')
-        .upsert(mapped, { onConflict: 'location_id,external_id', ignoreDuplicates: false })
+        .upsert(mapped, { onConflict: 'location_id,name', ignoreDuplicates: false })
       if (error) {
         result.errored++
         result.errors.push(`Terminal ${t.terminalId}: ${error.message}`)
@@ -794,10 +953,156 @@ async function syncTerminals(sb: ReturnType<typeof Object>, client: DutchieClien
 }
 
 // ---------------------------------------------------------------------------
+// syncTransactions
+// ---------------------------------------------------------------------------
+
+export async function syncTransactions(locationId: string, organizationId: string): Promise<SyncResult> {
+  const start = Date.now()
+  const setup = await getClient(locationId)
+  if (!setup) return { ...emptySyncResult('transactions', 'full'), durationMs: Date.now() - start }
+  const { client, config } = setup
+
+  const result = emptySyncResult('transactions', 'full')
+  const sb = await createSupabaseServerClient()
+  const logId = await createSyncLog(sb, locationId, 'transactions', 'full')
+
+  try {
+    // Fetch from last sync or last 90 days
+    const startMs = (config.lastSyncedTransactionsAt ?? new Date(Date.now() - 730 * 24 * 60 * 60 * 1000)).getTime()
+    const endMs = Date.now()
+    const maxWindowMs = 55 * 24 * 60 * 60 * 1000 // 55 days per chunk (under 1440hr limit)
+
+    // Chunk into windows if range exceeds max
+    const dutchieTransactions: DutchieTransaction[] = []
+    let windowStart = startMs
+    while (windowStart < endMs) {
+      const windowEnd = Math.min(windowStart + maxWindowMs, endMs)
+      const startDate = new Date(windowStart).toISOString()
+      const endDate = new Date(windowEnd).toISOString()
+      logger.info('syncTransactions date range', { startDate: startDate.slice(0, 10), endDate: endDate.slice(0, 10) })
+      const chunk = await client.fetchTransactions({ startDate, endDate })
+      for (const t of chunk) dutchieTransactions.push(t)
+      windowStart = windowEnd
+    }
+    result.fetched = dutchieTransactions.length
+
+    if (dutchieTransactions.length === 0) {
+      result.durationMs = Date.now() - start
+      await completeSyncLog(sb, logId, result)
+      return result
+    }
+
+    // Build FK lookup maps (paginated to avoid 1000-row cap)
+    const customerMap = await buildPaginatedMap(sb, 'customers', 'dutchie_customer_id', 'id', { organization_id: organizationId })
+    const employeeMap = await buildPaginatedMap(sb, 'employees', 'dutchie_employee_id', 'id', { organization_id: organizationId })
+
+    // Map all transactions
+    const txRows: Record<string, unknown>[] = []
+    const paymentRows: Array<{ dutchie_txn_id: string; payments: Array<{ payment_method: string; amount: number }> }> = []
+
+    for (const dt of dutchieTransactions) {
+      try {
+        const { transaction, payments } = mapTransaction(dt, locationId)
+        // Resolve FKs
+        if (dt.customerId) {
+          transaction.customer_id = customerMap.get(String(dt.customerId)) ?? null
+        }
+        if (dt.employeeId) {
+          transaction.employee_id = employeeMap.get(String(dt.employeeId)) ?? null
+        }
+        txRows.push(transaction as unknown as Record<string, unknown>)
+        paymentRows.push({ dutchie_txn_id: String(dt.transactionId), payments })
+      } catch (err) {
+        result.errored++
+        result.errors.push(`Txn ${dt.transactionId}: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
+
+    // Batch upsert transactions
+    await batchUpsert(sb, 'transactions', txRows, 'location_id,dutchie_transaction_id', result)
+
+    // Upsert payments — need to resolve transaction IDs first
+    const txIdMap = await buildPaginatedMap(sb, 'transactions', 'dutchie_transaction_id', 'id', { location_id: locationId })
+
+    const allPayments: Record<string, unknown>[] = []
+    for (const pr of paymentRows) {
+      const txId = txIdMap.get(pr.dutchie_txn_id)
+      if (!txId) continue
+      for (const p of pr.payments) {
+        allPayments.push({ transaction_id: txId, ...p })
+      }
+    }
+
+    if (allPayments.length > 0) {
+      // Delete existing payments for these transactions and re-insert
+      const txIds = [...new Set(allPayments.map(p => p.transaction_id as string))]
+      for (let i = 0; i < txIds.length; i += BATCH_SIZE) {
+        const batch = txIds.slice(i, i + BATCH_SIZE)
+        await (sb as any).from('transaction_payments').delete().in('transaction_id', batch)
+      }
+      // Insert fresh payments
+      for (let i = 0; i < allPayments.length; i += BATCH_SIZE) {
+        const batch = allPayments.slice(i, i + BATCH_SIZE)
+        await (sb as any).from('transaction_payments').insert(batch)
+      }
+    }
+
+    // Update customer aggregates (lifetime_spend, visit_count, last_visit_at)
+    await updateCustomerAggregates(sb, organizationId)
+  } catch (err) {
+    handleSyncError(err, result)
+  }
+
+  if (result.fetched > 0) {
+    await updateSyncTimestamp(locationId, 'transactions', new Date(start))
+  }
+
+  result.durationMs = Date.now() - start
+  await completeSyncLog(sb, logId, result)
+  logger.info('syncTransactions complete', { locationId, ...result })
+  return result
+}
+
+async function buildPaginatedMap(
+  sb: ReturnType<typeof Object>,
+  table: string,
+  keyCol: string,
+  valueCol: string,
+  filters: Record<string, string>,
+): Promise<Map<string, string>> {
+  const map = new Map<string, string>()
+  let offset = 0
+  const pageSize = 1000
+  while (true) {
+    let query = (sb as any).from(table).select(`${valueCol}, ${keyCol}`).not(keyCol, 'is', null)
+    for (const [k, v] of Object.entries(filters)) query = query.eq(k, v)
+    const { data } = await query.order(keyCol, { ascending: true }).range(offset, offset + pageSize - 1)
+    if (!data?.length) break
+    for (const row of data) map.set(String(row[keyCol]), row[valueCol])
+    if (data.length < pageSize) break
+    offset += pageSize
+  }
+  return map
+}
+
+async function updateCustomerAggregates(sb: ReturnType<typeof Object>, orgId: string): Promise<void> {
+  // Use a single SQL call to update all customer aggregates from transactions
+  try {
+    const { error } = await (sb as any).rpc('update_customer_aggregates_from_transactions', { org_id: orgId })
+    if (error) logger.warn('Customer aggregate update skipped', { error: error.message })
+  } catch {
+    logger.warn('update_customer_aggregates_from_transactions RPC not found, skipping')
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Orchestrators
 // ---------------------------------------------------------------------------
 
-const SYNC_ORDER: EntityType[] = ['reference', 'rooms', 'employees', 'products', 'customers', 'inventory']
+const SYNC_ORDER: EntityType[] = ['reference', 'rooms', 'employees', 'products', 'customers', 'inventory', 'transactions']
+
+// Org-wide entities only need to sync once across all locations (same catalog)
+const ORG_WIDE_ENTITIES: Set<EntityType> = new Set(['reference', 'employees', 'products', 'customers'])
 
 const SYNC_FN_MAP: Record<EntityType, (locationId: string, organizationId: string) => Promise<SyncResult>> = {
   reference: syncReferenceData,
@@ -806,6 +1111,7 @@ const SYNC_FN_MAP: Record<EntityType, (locationId: string, organizationId: strin
   products: syncProducts,
   customers: syncCustomers,
   inventory: syncInventory,
+  transactions: syncTransactions,
 }
 
 const ENTITY_ENABLED_KEY: Record<EntityType, string> = {
@@ -815,6 +1121,7 @@ const ENTITY_ENABLED_KEY: Record<EntityType, string> = {
   products: 'syncProducts',
   customers: 'syncCustomers',
   inventory: 'syncInventory',
+  transactions: 'syncInventory',
 }
 
 export async function syncLocation(
@@ -861,9 +1168,24 @@ export async function syncAllLocations(organizationId: string): Promise<Location
   }
 
   const results: LocationSyncResult[] = []
+
+  // Sync org-wide entities once using the first location's API key
+  const orgWideTypes = SYNC_ORDER.filter(t => ORG_WIDE_ENTITIES.has(t))
+  const perLocationTypes = SYNC_ORDER.filter(t => !ORG_WIDE_ENTITIES.has(t))
+
+  if (orgWideTypes.length > 0) {
+    try {
+      const orgResult = await syncLocation(configs[0].location_id, organizationId, orgWideTypes)
+      results.push(orgResult)
+    } catch (err) {
+      logger.error('Org-wide sync failed', { error: String(err) })
+    }
+  }
+
+  // Then sync per-location entities (rooms, inventory) for each location
   for (const config of configs) {
     try {
-      const locationResult = await syncLocation(config.location_id, organizationId)
+      const locationResult = await syncLocation(config.location_id, organizationId, perLocationTypes)
       results.push(locationResult)
     } catch (err) {
       logger.error('syncLocation failed', {

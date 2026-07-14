@@ -231,6 +231,23 @@ export interface DutchieDiscount {
   [key: string]: unknown
 }
 
+export interface DutchieTransaction {
+  transactionId: number | string
+  receiptNumber: string | number | null
+  transactionDate: string | null
+  total: number | null
+  subTotal: number | null
+  taxAmount: number | null
+  discountAmount: number | null
+  customerId: number | null
+  customerName: string | null
+  employeeId: number | null
+  employeeName: string | null
+  transactionType: string | null
+  paymentMethod: string | null
+  [key: string]: unknown
+}
+
 // Sync result tracking
 export interface SyncResult {
   entityType: string
@@ -251,4 +268,4 @@ export interface LocationSyncResult {
   totalDurationMs: number
 }
 
-export type EntityType = 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference'
+export type EntityType = 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'transactions'

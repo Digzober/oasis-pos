@@ -11,7 +11,6 @@ export interface MappedRoom {
 export interface MappedSubroom {
   room_id: string | null
   name: string
-  external_id: string
   is_active: boolean
 }
 
@@ -39,7 +38,7 @@ export function mapRoom(
   locationId: string,
 ): MappedRoomResult {
   const normalizedType = source.roomType?.toLowerCase().trim() ?? ''
-  const resolvedType = ROOM_TYPE_MAP[normalizedType] ?? normalizedType || 'storage'
+  const resolvedType = ROOM_TYPE_MAP[normalizedType] ?? (normalizedType || 'storage')
 
   const room: MappedRoom = {
     location_id: locationId,
@@ -52,7 +51,6 @@ export function mapRoom(
   const subrooms: MappedSubroom[] = (source.subRooms ?? []).map((sub) => ({
     room_id: null,
     name: sub.subRoomName,
-    external_id: String(sub.subRoomId),
     is_active: true,
   }))
 

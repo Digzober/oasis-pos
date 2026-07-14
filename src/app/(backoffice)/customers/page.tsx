@@ -112,22 +112,22 @@ function relDate(d: string | null) {
   return `${Math.floor(days / 365)} years ago`
 }
 
-function typeBadge(t: string): { label: string; cls: string } {
+function typeBadge(t: string | null | undefined): { label: string; cls: string } {
   switch (t) {
     case 'medical': return { label: 'MED', cls: 'bg-blue-900/50 text-blue-300 border-blue-700' }
     case 'medical_out_of_state': return { label: 'MED-OOS', cls: 'bg-blue-900/50 text-blue-300 border-blue-700' }
     case 'medical_tax_exempt': return { label: 'MED-TE', cls: 'bg-purple-900/50 text-purple-300 border-purple-700' }
     case 'recreational': return { label: 'REC', cls: 'bg-emerald-900/50 text-emerald-300 border-emerald-700' }
-    default: return { label: t.toUpperCase().slice(0, 4), cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
+    default: return { label: (t || 'REC').toUpperCase().slice(0, 4), cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
   }
 }
 
-function statusBadge(s: string): { label: string; cls: string } {
+function statusBadge(s: string | null | undefined): { label: string; cls: string } {
   switch (s) {
     case 'active': return { label: 'Active', cls: 'bg-emerald-900/50 text-emerald-400 border-emerald-700' }
     case 'banned': return { label: 'Banned', cls: 'bg-red-900/50 text-red-400 border-red-700' }
     case 'inactive': return { label: 'Inactive', cls: 'bg-gray-700/50 text-gray-400 border-gray-600' }
-    default: return { label: s, cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
+    default: return { label: s || 'Unknown', cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
   }
 }
 
@@ -419,7 +419,7 @@ export default function CustomersPage() {
     return {
       total: pagination.total,
       active: customers.filter(c => c.status === 'active').length,
-      medical: customers.filter(c => c.customer_type.startsWith('medical')).length,
+      medical: customers.filter(c => (c.customer_type ?? '').startsWith('medical')).length,
       banned: customers.filter(c => c.status === 'banned').length,
       newThisMonth: customers.filter(c => new Date(c.created_at).getTime() > thirtyDaysAgo).length,
     }

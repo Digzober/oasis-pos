@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import Cookies from 'js-cookie'
 import { useSession } from '@/hooks/useSession'
+import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 import Sidebar from '@/components/backoffice/Sidebar'
 import BackofficeHeader from '@/components/backoffice/BackofficeHeader'
 
 export default function BackofficeLayout({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useSession()
+  const { locationId } = useSelectedLocation()
   const [collapsed, setCollapsed] = useState(false)
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
       <BackofficeHeader onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 min-h-0">
         <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main key={locationId ?? 'all'} className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   )

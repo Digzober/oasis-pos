@@ -6,25 +6,30 @@ import Link from 'next/link'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Emp = any
 const ROLES = ['budtender', 'shift_lead', 'manager', 'admin', 'owner']
+const PER_PAGE = 25
 
 export default function EmployeeListPage() {
   const [employees, setEmployees] = useState<Emp[]>([])
   const [total, setTotal] = useState(0)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState('')
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
 
   const fetch_ = useCallback(async () => {
     setLoading(true)
-    const params = new URLSearchParams({ status: 'active' })
+    const params = new URLSearchParams({ status: 'active', page: String(page), per_page: String(PER_PAGE) })
     if (search) params.set('search', search)
     if (role) params.set('role', role)
     const res = await fetch(`/api/employees?${params}`)
     if (res.ok) { const d = await res.json(); setEmployees(d.employees ?? []); setTotal(d.total ?? 0) }
     setLoading(false)
-  }, [search, role])
+  }, [search, role, page])
 
   useEffect(() => { fetch_() }, [fetch_])
+  useEffect(() => { setPage(1) }, [search, role])
 
   return (
     <div>
@@ -43,6 +48,7 @@ export default function EmployeeListPage() {
           <option value="">All Roles</option>
           {ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
         </select>
+        <span className="ml-auto text-sm text-gray-500 self-center">{total} employee{total !== 1 ? 's' : ''}</span>
       </div>
 
       <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
@@ -73,6 +79,18 @@ export default function EmployeeListPage() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4 text-sm text-gray-400">
+          <span>Page {page} of {totalPages}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
+              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600">Prev</button>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
+              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600">Next</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

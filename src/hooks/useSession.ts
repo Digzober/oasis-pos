@@ -1,20 +1,41 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import type { SessionPayload } from '@/lib/auth/session'
+
+const SESSION_TIMEOUT_MS = 8_000
 
 export function useSession() {
   const [session, setSession] = useState<SessionPayload | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    fetch('/api/auth/me')
+    const controller = new AbortController()
+    abortRef.current = controller
+
+    const timeout = setTimeout(() => controller.abort(), SESSION_TIMEOUT_MS)
+
+    fetch('/api/auth/me', { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setSession(data?.session ?? null))
-      .catch(() => setSession(null))
-      .finally(() => setIsLoading(false))
+      .then((data) => {
+        setSession(data?.session ?? null)
+      })
+      .catch(() => {
+        setSession(null)
+      })
+      .finally(() => {
+        clearTimeout(timeout)
+        setIsLoading(false)
+      })
+
+    return () => {
+      controller.abort()
+      clearTimeout(timeout)
+      setIsLoading(false)
+    }
   }, [])
 
   const logout = useCallback(async () => {

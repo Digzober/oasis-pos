@@ -13,10 +13,12 @@ interface LocationState {
   requireLocation: () => string
 }
 
+const isBrowser = typeof window !== 'undefined'
+
 export const useLocationStore = create<LocationState>((set, get) => ({
-  locationId: null,
-  locationName: 'All Locations',
-  _hydrated: false,
+  locationId: isBrowser ? (Cookies.get(COOKIE_KEY) ?? null) : null,
+  locationName: isBrowser ? (Cookies.get(NAME_KEY) ?? 'All Locations') : 'All Locations',
+  _hydrated: isBrowser,
 
   hydrate: () => {
     if (get()._hydrated) return

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oasis-pos-v2'
+const CACHE_NAME = 'oasis-pos-v3'
 const STATIC_ASSETS = ['/', '/login', '/checkout', '/manifest.json']
 const API_CACHE = 'oasis-api-v1'
 
@@ -22,7 +22,6 @@ self.addEventListener('fetch', (event) => {
 
   // API requests: network first, cache fallback
   if (url.pathname.startsWith('/api/')) {
-    // Cache GET API responses for offline use
     if (request.method === 'GET') {
       event.respondWith(
         fetch(request).then((response) => {
@@ -35,7 +34,20 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Static assets: cache first, network fallback
+  // Navigation requests (page loads/refreshes): always network first
+  // Prevents stale cached HTML from causing stuck loading states
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).then((response) => {
+        const clone = response.clone()
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+        return response
+      }).catch(() => caches.match(request).then((cached) => cached || caches.match('/')))
+    )
+    return
+  }
+
+  // Static assets (JS, CSS, images): cache first, network fallback
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached
@@ -45,11 +57,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
         }
         return response
-      }).catch(() => {
-        // Offline fallback for navigation
-        if (request.mode === 'navigate') return caches.match('/')
-        return new Response('Offline', { status: 503 })
-      })
+      }).catch(() => new Response('Offline', { status: 503 }))
     })
   )
 })

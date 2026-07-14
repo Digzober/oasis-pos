@@ -394,6 +394,7 @@ export type Database = {
       brands: {
         Row: {
           created_at: string
+          external_id: string | null
           id: string
           is_active: boolean
           logo_url: string | null
@@ -403,6 +404,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           logo_url?: string | null
@@ -412,6 +414,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           logo_url?: string | null
@@ -1900,6 +1903,80 @@ export type Database = {
           },
         ]
       }
+      dutchie_config: {
+        Row: {
+          api_key_encrypted: string | null
+          created_at: string
+          dutchie_location_id: string | null
+          dutchie_location_name: string | null
+          id: string
+          is_enabled: boolean
+          last_synced_customers_at: string | null
+          last_synced_employees_at: string | null
+          last_synced_inventory_at: string | null
+          last_synced_products_at: string | null
+          last_synced_reference_at: string | null
+          last_synced_rooms_at: string | null
+          location_id: string
+          sync_customers: boolean
+          sync_employees: boolean
+          sync_inventory: boolean
+          sync_products: boolean
+          sync_rooms: boolean
+          updated_at: string
+        }
+        Insert: {
+          api_key_encrypted?: string | null
+          created_at?: string
+          dutchie_location_id?: string | null
+          dutchie_location_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          last_synced_customers_at?: string | null
+          last_synced_employees_at?: string | null
+          last_synced_inventory_at?: string | null
+          last_synced_products_at?: string | null
+          last_synced_reference_at?: string | null
+          last_synced_rooms_at?: string | null
+          location_id: string
+          sync_customers?: boolean
+          sync_employees?: boolean
+          sync_inventory?: boolean
+          sync_products?: boolean
+          sync_rooms?: boolean
+          updated_at?: string
+        }
+        Update: {
+          api_key_encrypted?: string | null
+          created_at?: string
+          dutchie_location_id?: string | null
+          dutchie_location_name?: string | null
+          id?: string
+          is_enabled?: boolean
+          last_synced_customers_at?: string | null
+          last_synced_employees_at?: string | null
+          last_synced_inventory_at?: string | null
+          last_synced_products_at?: string | null
+          last_synced_reference_at?: string | null
+          last_synced_rooms_at?: string | null
+          location_id?: string
+          sync_customers?: boolean
+          sync_employees?: boolean
+          sync_inventory?: boolean
+          sync_products?: boolean
+          sync_rooms?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dutchie_config_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: true
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dutchie_locations: {
         Row: {
           api_key: string
@@ -2027,6 +2104,65 @@ export type Database = {
           },
         ]
       }
+      dutchie_sync_log: {
+        Row: {
+          completed_at: string | null
+          duration_ms: number | null
+          entity_type: string
+          error_details: string[] | null
+          id: string
+          location_id: string
+          records_created: number | null
+          records_errored: number | null
+          records_fetched: number | null
+          records_skipped: number | null
+          records_updated: number | null
+          started_at: string
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          entity_type: string
+          error_details?: string[] | null
+          id?: string
+          location_id: string
+          records_created?: number | null
+          records_errored?: number | null
+          records_fetched?: number | null
+          records_skipped?: number | null
+          records_updated?: number | null
+          started_at?: string
+          status?: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          entity_type?: string
+          error_details?: string[] | null
+          id?: string
+          location_id?: string
+          records_created?: number | null
+          records_errored?: number | null
+          records_fetched?: number | null
+          records_skipped?: number | null
+          records_updated?: number | null
+          started_at?: string
+          status?: string
+          sync_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dutchie_sync_log_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_locations: {
         Row: {
           created_at: string
@@ -2071,6 +2207,7 @@ export type Database = {
           auth_user_id: string | null
           biotrack_employee_id: string | null
           created_at: string
+          dutchie_employee_id: string | null
           email: string | null
           first_name: string
           hire_date: string
@@ -2090,6 +2227,7 @@ export type Database = {
           auth_user_id?: string | null
           biotrack_employee_id?: string | null
           created_at?: string
+          dutchie_employee_id?: string | null
           email?: string | null
           first_name: string
           hire_date?: string
@@ -2109,6 +2247,7 @@ export type Database = {
           auth_user_id?: string | null
           biotrack_employee_id?: string | null
           created_at?: string
+          dutchie_employee_id?: string | null
           email?: string | null
           first_name?: string
           hire_date?: string
@@ -3995,6 +4134,7 @@ export type Database = {
       pricing_tiers: {
         Row: {
           created_at: string
+          external_id: string | null
           group_id: string | null
           id: string
           is_active: boolean
@@ -4005,6 +4145,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_id?: string | null
           group_id?: string | null
           id?: string
           is_active?: boolean
@@ -4015,6 +4156,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_id?: string | null
           group_id?: string | null
           id?: string
           is_active?: boolean
@@ -4238,6 +4380,7 @@ export type Database = {
           created_at: string
           default_flower_equivalent: number | null
           description: string | null
+          external_id: string | null
           icon_url: string | null
           id: string
           is_active: boolean
@@ -4257,6 +4400,7 @@ export type Database = {
           created_at?: string
           default_flower_equivalent?: number | null
           description?: string | null
+          external_id?: string | null
           icon_url?: string | null
           id?: string
           is_active?: boolean
@@ -4276,6 +4420,7 @@ export type Database = {
           created_at?: string
           default_flower_equivalent?: number | null
           description?: string | null
+          external_id?: string | null
           icon_url?: string | null
           id?: string
           is_active?: boolean
@@ -5251,6 +5396,7 @@ export type Database = {
           auto_print_labels: boolean
           auto_print_receipts: boolean
           created_at: string
+          external_id: string | null
           hide_from_pos: boolean
           id: string
           is_active: boolean
@@ -5264,6 +5410,7 @@ export type Database = {
           auto_print_labels?: boolean
           auto_print_receipts?: boolean
           created_at?: string
+          external_id?: string | null
           hide_from_pos?: boolean
           id?: string
           is_active?: boolean
@@ -5277,6 +5424,7 @@ export type Database = {
           auto_print_labels?: boolean
           auto_print_receipts?: boolean
           created_at?: string
+          external_id?: string | null
           hide_from_pos?: boolean
           id?: string
           is_active?: boolean
@@ -5528,6 +5676,7 @@ export type Database = {
           abbreviation: string | null
           created_at: string
           description: string | null
+          external_id: string | null
           id: string
           is_active: boolean
           name: string
@@ -5539,6 +5688,7 @@ export type Database = {
           abbreviation?: string | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -5550,6 +5700,7 @@ export type Database = {
           abbreviation?: string | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -5603,6 +5754,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          external_id: string | null
           id: string
           is_active: boolean
           name: string
@@ -5612,6 +5764,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -5621,6 +5774,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -6286,6 +6440,7 @@ export type Database = {
           contact_name: string | null
           created_at: string
           email: string | null
+          external_id: string | null
           id: string
           is_active: boolean
           license_number: string | null
@@ -6307,6 +6462,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           id?: string
           is_active?: boolean
           license_number?: string | null
@@ -6328,6 +6484,7 @@ export type Database = {
           contact_name?: string | null
           created_at?: string
           email?: string | null
+          external_id?: string | null
           id?: string
           is_active?: boolean
           license_number?: string | null

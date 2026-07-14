@@ -46,7 +46,7 @@ export function mapBrand(
 ): MappedBrand {
   return {
     organization_id: organizationId,
-    name: source.brandName,
+    name: source.brandName || 'Unknown Brand',
     external_id: String(source.brandId),
   }
 }
@@ -69,7 +69,7 @@ export function mapStrain(
 
   return {
     organization_id: organizationId,
-    name: source.strainName,
+    name: source.strainName || 'Unknown Strain',
     strain_type: strainType,
     external_id: String(source.strainId),
   }
@@ -80,13 +80,13 @@ export function mapStrain(
 export interface MappedVendor {
   organization_id: string
   name: string
-  license: string | null
+  license_number: string | null
   phone: string | null
   email: string | null
   address_line1: string | null
   city: string | null
   state: string | null
-  postal_code: string | null
+  zip: string | null
   external_id: string
 }
 
@@ -96,14 +96,14 @@ export function mapVendor(
 ): MappedVendor {
   return {
     organization_id: organizationId,
-    name: source.vendorName,
-    license: source.license ?? null,
+    name: source.vendorName || 'Unknown Vendor',
+    license_number: source.license ?? null,
     phone: source.phone ?? null,
     email: source.email ?? null,
     address_line1: source.address ?? null,
     city: source.city ?? null,
     state: source.state ?? null,
-    postal_code: source.zip ?? null,
+    zip: source.zip ?? null,
     external_id: String(source.vendorId),
   }
 }
@@ -122,10 +122,11 @@ export function mapCategory(
   source: DutchieCategory,
   organizationId: string,
 ): MappedCategory {
+  const name = source.categoryName || 'Uncategorized'
   return {
     organization_id: organizationId,
-    name: source.categoryName,
-    slug: generateSlug(source.categoryName, source.categoryId),
+    name,
+    slug: generateSlug(name, source.categoryId),
     available_for: 'all',
     external_id: String(source.categoryId),
   }

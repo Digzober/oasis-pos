@@ -45,28 +45,28 @@ export interface MappedCustomer {
   first_name: string | null
   last_name: string | null
   middle_name: string | null
-  name_prefix: string | null
-  name_suffix: string | null
+  prefix: string | null
+  suffix: string | null
   email: string | null
   phone: string | null
-  cell_phone: string | null
+  mobile_phone: string | null
   address_line1: string | null
   address_line2: string | null
   city: string | null
   state: string | null
-  postal_code: string | null
+  zip: string | null
   customer_type: CustomerType
   status: CustomerStatus
   date_of_birth: string | null
   gender: string | null
   medical_card_number: string | null
-  medical_card_expiry: string | null
+  medical_card_expiration: string | null
   notes: string | null
-  is_loyalty_member: boolean
+  opted_into_loyalty: boolean
   is_anonymous: boolean
   referral_source: string | null
-  drivers_license_hash: string | null
-  last_transaction_at: string | null
+  drivers_license: string | null
+  last_visit_at: string | null
   dutchie_customer_id: number
 }
 
@@ -85,28 +85,28 @@ export function mapCustomer(
     first_name: source.firstName ?? null,
     last_name: source.lastName ?? null,
     middle_name: source.middleName ?? null,
-    name_prefix: source.namePrefix ?? null,
-    name_suffix: source.nameSuffix ?? null,
+    prefix: source.namePrefix ?? null,
+    suffix: source.nameSuffix ?? null,
     email: source.emailAddress ?? null,
     phone: source.phone ?? null,
-    cell_phone: source.cellPhone ?? null,
+    mobile_phone: source.cellPhone ?? null,
     address_line1: source.address1 ?? null,
     address_line2: source.address2 ?? null,
     city: source.city ?? null,
     state: source.state ?? null,
-    postal_code: source.postalCode ?? null,
+    zip: source.postalCode ?? null,
     customer_type: customerType,
     status,
     date_of_birth: source.dateOfBirth ?? null,
     gender: source.gender ?? null,
     medical_card_number: source.mmjidNumber ?? null,
-    medical_card_expiry: source.mmjidExpirationDate ?? null,
+    medical_card_expiration: source.mmjidExpirationDate ?? null,
     notes: source.notes ?? null,
-    is_loyalty_member: source.isLoyaltyMember,
-    is_anonymous: source.isAnonymous,
+    opted_into_loyalty: source.isLoyaltyMember ?? false,
+    is_anonymous: source.isAnonymous ?? false,
     referral_source: source.referralSource ?? null,
-    drivers_license_hash: source.driversLicenseHash ?? null,
-    last_transaction_at: source.lastTransactionDate ?? null,
+    drivers_license: source.driversLicenseHash ?? null,
+    last_visit_at: source.lastTransactionDate ?? null,
     dutchie_customer_id: source.customerId,
   }
 }

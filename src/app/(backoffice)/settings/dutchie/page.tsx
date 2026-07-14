@@ -15,12 +15,14 @@ interface DutchieConfig {
   syncProducts: boolean
   syncInventory: boolean
   syncRooms: boolean
+  syncTransactions: boolean
   lastSyncedEmployeesAt: string | null
   lastSyncedCustomersAt: string | null
   lastSyncedProductsAt: string | null
   lastSyncedInventoryAt: string | null
   lastSyncedRoomsAt: string | null
   lastSyncedReferenceAt: string | null
+  lastSyncedTransactionsAt: string | null
 }
 
 interface SyncEntityResult {
@@ -60,12 +62,14 @@ const DEFAULT_CONFIG: DutchieConfig = {
   syncProducts: true,
   syncInventory: true,
   syncRooms: true,
+  syncTransactions: true,
   lastSyncedEmployeesAt: null,
   lastSyncedCustomersAt: null,
   lastSyncedProductsAt: null,
   lastSyncedInventoryAt: null,
   lastSyncedRoomsAt: null,
   lastSyncedReferenceAt: null,
+  lastSyncedTransactionsAt: null,
 }
 
 const ENTITY_TYPES = [
@@ -74,6 +78,7 @@ const ENTITY_TYPES = [
   { key: 'products' as const, label: 'Products', configKey: 'syncProducts' as const, tsKey: 'lastSyncedProductsAt' as const },
   { key: 'inventory' as const, label: 'Inventory', configKey: 'syncInventory' as const, tsKey: 'lastSyncedInventoryAt' as const },
   { key: 'rooms' as const, label: 'Rooms', configKey: 'syncRooms' as const, tsKey: 'lastSyncedRoomsAt' as const },
+  { key: 'transactions' as const, label: 'Transactions', configKey: 'syncTransactions' as const, tsKey: 'lastSyncedTransactionsAt' as const },
 ] as const
 
 function sanitizeConfig(raw: Record<string, unknown>): DutchieConfig {
@@ -198,6 +203,7 @@ export default function DutchieSettingsPage() {
           syncProducts: config.syncProducts,
           syncInventory: config.syncInventory,
           syncRooms: config.syncRooms,
+          syncTransactions: config.syncTransactions,
         }),
         cache: 'no-store',
       })

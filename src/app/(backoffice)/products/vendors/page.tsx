@@ -15,7 +15,7 @@ export default function VendorsPage() {
       { key: 'address', label: 'Address' },
       { key: 'city', label: 'City' },
       { key: 'state', label: 'State' },
-      { key: 'postal_code', label: 'Postal Code' },
+      { key: 'zip', label: 'Postal Code' },
       { key: 'abbreviation', label: 'Abbreviation' },
     ]}
   />

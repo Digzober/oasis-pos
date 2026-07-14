@@ -17,6 +17,7 @@ export interface DutchieLocationConfig {
   lastSyncedInventoryAt: Date | null
   lastSyncedRoomsAt: Date | null
   lastSyncedReferenceAt: Date | null
+  lastSyncedTransactionsAt: Date | null
 }
 
 const cache = new Map<string, { config: DutchieLocationConfig; timestamp: number }>()
@@ -51,6 +52,7 @@ export async function loadDutchieConfig(locationId: string): Promise<DutchieLoca
     lastSyncedInventoryAt: data.last_synced_inventory_at ? new Date(data.last_synced_inventory_at) : null,
     lastSyncedRoomsAt: data.last_synced_rooms_at ? new Date(data.last_synced_rooms_at) : null,
     lastSyncedReferenceAt: data.last_synced_reference_at ? new Date(data.last_synced_reference_at) : null,
+    lastSyncedTransactionsAt: data.last_synced_transactions_at ? new Date(data.last_synced_transactions_at) : null,
   }
 
   cache.set(locationId, { config, timestamp: Date.now() })
@@ -64,7 +66,7 @@ export function clearDutchieConfigCache(locationId?: string): void {
 
 export async function updateSyncTimestamp(
   locationId: string,
-  entityType: 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference',
+  entityType: 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'transactions',
   timestamp: Date,
 ): Promise<void> {
   const sb = await createSupabaseServerClient()

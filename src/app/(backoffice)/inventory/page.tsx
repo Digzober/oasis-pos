@@ -1120,9 +1120,9 @@ export default function InventoryListPage() {
       case 'med_price':
         return <span className="text-gray-300 text-sm tabular-nums">{fmt(item.products?.med_price)}</span>
       case 'thc_pct':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.products?.thc_percentage)}</span>
+        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.thc_percentage ?? item.products?.thc_percentage)}</span>
       case 'cbd_pct':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.products?.cbd_percentage)}</span>
+        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.cbd_percentage ?? item.products?.cbd_percentage)}</span>
       case 'thc_mg':
         return <span className="text-gray-300 text-sm tabular-nums">{item.products?.thc_content_mg != null ? `${item.products.thc_content_mg}mg` : '\u2014'}</span>
       case 'category':
