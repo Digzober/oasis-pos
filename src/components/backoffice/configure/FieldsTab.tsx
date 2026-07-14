@@ -104,7 +104,7 @@ export default function FieldsTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400 text-sm">Loading field configuration...</div>
+        <div className="text-secondary text-sm">Loading field configuration...</div>
       </div>
     )
   }
@@ -113,8 +113,8 @@ export default function FieldsTab() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-gray-50">Product Field Configuration</h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <h2 className="text-lg font-semibold text-primary">Product Field Configuration</h2>
+          <p className="text-sm text-secondary mt-1">
             Control which fields are required, visible, or hidden when creating and editing products.
           </p>
         </div>
@@ -122,14 +122,14 @@ export default function FieldsTab() {
           <button
             onClick={handleReset}
             disabled={saving}
-            className="text-sm px-3 py-1.5 text-gray-300 border border-gray-600 rounded-lg hover:bg-gray-700 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 text-secondary border border-edge-strong rounded-lg hover:bg-raised disabled:opacity-50"
           >
             Reset to Defaults
           </button>
           <button
             onClick={handleSave}
             disabled={saving || !hasChanges}
-            className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
+            className="text-sm px-4 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -139,17 +139,17 @@ export default function FieldsTab() {
       {feedback && (
         <div className={`mb-4 px-4 py-2.5 rounded-lg text-sm ${
           feedback.type === 'success'
-            ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-300'
-            : 'bg-red-900/50 border border-red-700 text-red-300'
+            ? 'bg-accent/50 border border-accent text-accent'
+            : 'bg-danger/50 border border-danger text-danger'
         }`}>
           {feedback.message}
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3 w-1/3">Field</th>
               <th className="text-center px-4 py-3">Required</th>
               <th className="text-center px-4 py-3">Show</th>
@@ -162,11 +162,11 @@ export default function FieldsTab() {
               const isLocked = field.lockRequired
 
               return (
-                <tr key={field.key} className="border-b border-gray-700/50 hover:bg-gray-700/20">
+                <tr key={field.key} className="border-b border-edge/50 hover:bg-raised/20">
                   <td className="px-4 py-3">
-                    <span className="text-gray-50">{field.label}</span>
+                    <span className="text-primary">{field.label}</span>
                     {isLocked && (
-                      <span className="ml-2 text-xs text-amber-400" title="This field cannot be hidden">
+                      <span className="ml-2 text-xs text-warning" title="This field cannot be hidden">
                         (core field)
                       </span>
                     )}
@@ -187,7 +187,7 @@ export default function FieldsTab() {
                             checked={isChecked}
                             disabled={isDisabled}
                             onChange={() => handleChange(field.key, option.value)}
-                            className="w-4 h-4 text-emerald-500 bg-gray-900 border-gray-600 focus:ring-emerald-500 focus:ring-offset-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="w-4 h-4 text-accent bg-bg border-edge-strong focus:ring-accent focus:ring-offset-gray-800 disabled:opacity-30 disabled:cursor-not-allowed"
                           />
                         </label>
                       </td>
@@ -200,11 +200,11 @@ export default function FieldsTab() {
         </table>
       </div>
 
-      <div className="mt-4 text-xs text-gray-500 space-y-1">
-        <p><span className="text-gray-400 font-medium">Required</span> -- Field must be filled when creating/editing a product.</p>
-        <p><span className="text-gray-400 font-medium">Show</span> -- Field is visible but optional.</p>
-        <p><span className="text-gray-400 font-medium">Hide</span> -- Field is not displayed in the product form.</p>
-        <p className="text-amber-500/70">Core fields (Product Name, Category, Rec Price) cannot be hidden.</p>
+      <div className="mt-4 text-xs text-muted space-y-1">
+        <p><span className="text-secondary font-medium">Required</span> -- Field must be filled when creating/editing a product.</p>
+        <p><span className="text-secondary font-medium">Show</span> -- Field is visible but optional.</p>
+        <p><span className="text-secondary font-medium">Hide</span> -- Field is not displayed in the product form.</p>
+        <p className="text-warning/70">Core fields (Product Name, Category, Rec Price) cannot be hidden.</p>
       </div>
     </div>
   )

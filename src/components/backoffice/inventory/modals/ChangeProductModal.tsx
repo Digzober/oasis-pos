@@ -96,22 +96,22 @@ export default function ChangeProductModal({
       wide
     >
       <div className="space-y-4">
-        <div className="rounded-lg bg-amber-900/30 border border-amber-700/50 p-3">
-          <p className="text-sm text-amber-300">
+        <div className="rounded-lg bg-warning/30 border border-warning/50 p-3">
+          <p className="text-sm text-warning">
             Changing the product assignment will update pricing, category, and
             compliance data for this inventory item. This cannot be undone.
           </p>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Current Product
           </label>
-          <div className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 opacity-60">
+          <div className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary opacity-60">
             {currentProduct ? (
               <div className="space-y-0.5">
                 <p className="font-medium">{currentProduct.name}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-secondary">
                   {[
                     currentProduct.sku && `SKU: ${currentProduct.sku}`,
                     currentProduct.brand && `Brand: ${currentProduct.brand}`,
@@ -123,13 +123,13 @@ export default function ChangeProductModal({
                 </p>
               </div>
             ) : (
-              <span className="text-gray-500">No product assigned</span>
+              <span className="text-muted">No product assigned</span>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Search New Product
           </label>
           <input
@@ -141,22 +141,22 @@ export default function ChangeProductModal({
               setConfirmed(false)
             }}
             placeholder="Search by name or SKU..."
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
           {loading && (
-            <p className="mt-1 text-xs text-gray-500">Searching...</p>
+            <p className="mt-1 text-xs text-muted">Searching...</p>
           )}
           {!loading && products.length > 0 && !selectedProductId && (
-            <div className="mt-1 bg-gray-800 border border-gray-700 rounded-lg max-h-48 overflow-y-auto">
+            <div className="mt-1 bg-surface border border-edge rounded-lg max-h-48 overflow-y-auto">
               {products.map((p) => (
                 <button
                   key={p.id}
                   type="button"
                   onClick={() => setSelectedProductId(p.id)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-700 text-gray-300"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-raised text-secondary"
                 >
-                  <span className="font-medium text-gray-50">{p.name}</span>
-                  <span className="text-xs text-gray-500 ml-2">
+                  <span className="font-medium text-primary">{p.name}</span>
+                  <span className="text-xs text-muted ml-2">
                     {[p.sku && `SKU: ${p.sku}`, p.brand && p.brand]
                       .filter(Boolean)
                       .join(' | ')}
@@ -166,10 +166,10 @@ export default function ChangeProductModal({
             </div>
           )}
           {selectedProduct && (
-            <div className="mt-2 px-3 py-2 bg-emerald-900/20 border border-emerald-700/40 rounded-lg text-sm text-emerald-300">
+            <div className="mt-2 px-3 py-2 bg-accent/20 border border-accent/40 rounded-lg text-sm text-accent">
               Selected: {selectedProduct.name}
               {selectedProduct.sku && (
-                <span className="text-xs text-emerald-400/70 ml-2">
+                <span className="text-xs text-accent/70 ml-2">
                   SKU: {selectedProduct.sku}
                 </span>
               )}
@@ -182,9 +182,9 @@ export default function ChangeProductModal({
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-0.5 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500"
+            className="mt-0.5 rounded border-edge-strong bg-bg text-accent focus:ring-accent"
           />
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-secondary">
             I understand this changes the product assignment for this package
           </span>
         </label>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface Printer {
   id: string
@@ -39,14 +39,14 @@ const EMPTY_FORM = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  esc_pos: 'bg-blue-900/50 text-blue-300 border-blue-700',
-  zpl: 'bg-purple-900/50 text-purple-300 border-purple-700',
-  brother: 'bg-amber-900/50 text-amber-300 border-amber-700',
-  pdf: 'bg-gray-700 text-gray-300 border-gray-600',
+  esc_pos: 'bg-info/50 text-info border-info',
+  zpl: 'bg-info/50 text-info border-info',
+  brother: 'bg-warning/50 text-warning border-warning',
+  pdf: 'bg-raised text-secondary border-edge-strong',
 }
 
 const CONN_COLORS: Record<string, string> = {
-  usb: 'bg-emerald-900/50 text-emerald-300 border-emerald-700',
+  usb: 'bg-accent/50 text-accent border-accent',
   network: 'bg-cyan-900/50 text-cyan-300 border-cyan-700',
   bluetooth: 'bg-indigo-900/50 text-indigo-300 border-indigo-700',
   serial: 'bg-orange-900/50 text-orange-300 border-orange-700',
@@ -181,24 +181,24 @@ export default function PrintersPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Printers</h1>
-        <button onClick={openAdd} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">
+        <h1 className="text-xl font-bold text-primary">Printers</h1>
+        <button onClick={openAdd} className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">
           + Add Printer
         </button>
       </div>
 
       {/* Status message */}
       {msg && (
-        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700' : 'bg-red-900/50 text-red-300 border border-red-700'}`}>
+        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-accent/50 text-accent border border-accent' : 'bg-danger/50 text-danger border border-danger'}`}>
           {msg.text}
         </div>
       )}
 
       {/* Printers Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden mb-8">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden mb-8">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Type</th>
               <th className="text-left px-4 py-3">Computer</th>
@@ -211,40 +211,40 @@ export default function PrintersPage() {
           </thead>
           <tbody>
             {printers.length === 0 && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-500">No printers configured</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-muted">No printers configured</td></tr>
             )}
             {printers.map(p => (
-              <tr key={p.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                <td className="px-4 py-2.5 text-gray-50 font-medium">{p.name}</td>
+              <tr key={p.id} className="border-b border-edge/50 hover:bg-raised/30">
+                <td className="px-4 py-2.5 text-primary font-medium">{p.name}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs border ${TYPE_COLORS[p.printer_type] ?? 'bg-gray-700 text-gray-300 border-gray-600'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs border ${TYPE_COLORS[p.printer_type] ?? 'bg-raised text-secondary border-edge-strong'}`}>
                     {p.printer_type}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-gray-300">{p.computer_name}</td>
+                <td className="px-4 py-2.5 text-secondary">{p.computer_name}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs border ${CONN_COLORS[p.connection_type] ?? 'bg-gray-700 text-gray-300 border-gray-600'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs border ${CONN_COLORS[p.connection_type] ?? 'bg-raised text-secondary border-edge-strong'}`}>
                     {p.connection_type}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-center">
                   {p.supports_labels
-                    ? <span className="text-emerald-400">&#10003;</span>
-                    : <span className="text-gray-600">&#10005;</span>}
+                    ? <span className="text-accent">&#10003;</span>
+                    : <span className="text-muted">&#10005;</span>}
                 </td>
                 <td className="px-4 py-2.5 text-center">
                   {p.supports_receipts
-                    ? <span className="text-emerald-400">&#10003;</span>
-                    : <span className="text-gray-600">&#10005;</span>}
+                    ? <span className="text-accent">&#10003;</span>
+                    : <span className="text-muted">&#10005;</span>}
                 </td>
                 <td className="px-4 py-2.5 text-center">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs ${p.is_active ? 'bg-emerald-900/50 text-emerald-300' : 'bg-red-900/50 text-red-300'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs ${p.is_active ? 'bg-accent/50 text-accent' : 'bg-danger/50 text-danger'}`}>
                     {p.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 <td className="px-4 py-2.5 text-right space-x-2">
-                  <button onClick={() => openEdit(p)} className="text-xs text-emerald-400 hover:text-emerald-300">Edit</button>
-                  <button onClick={() => setDeleteId(p.id)} className="text-xs text-red-400 hover:text-red-300">Delete</button>
+                  <button onClick={() => openEdit(p)} className="text-xs text-accent hover:text-accent">Edit</button>
+                  <button onClick={() => setDeleteId(p.id)} className="text-xs text-danger hover:text-danger">Delete</button>
                 </td>
               </tr>
             ))}
@@ -253,11 +253,11 @@ export default function PrintersPage() {
       </div>
 
       {/* Print Service Configuration */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Print Service Configuration</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Print Service Configuration</h2>
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Service Type</label>
+            <label className="block text-xs text-secondary mb-1">Service Type</label>
             <select
               value={printService.service_type}
               onChange={e => setPrintService(s => ({ ...s, service_type: e.target.value }))}
@@ -269,7 +269,7 @@ export default function PrintersPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">API Key</label>
+            <label className="block text-xs text-secondary mb-1">API Key</label>
             <input
               value={printService.apiKey}
               onChange={e => setPrintService(s => ({ ...s, apiKey: e.target.value }))}
@@ -278,7 +278,7 @@ export default function PrintersPage() {
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Account Email</label>
+            <label className="block text-xs text-secondary mb-1">Account Email</label>
             <input
               value={printService.account_email}
               onChange={e => setPrintService(s => ({ ...s, account_email: e.target.value }))}
@@ -287,28 +287,28 @@ export default function PrintersPage() {
             />
           </div>
         </div>
-        <button onClick={savePrintService} disabled={savingService} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500 disabled:opacity-50">
+        <button onClick={savePrintService} disabled={savingService} className="px-4 py-2 bg-accent text-primary rounded-lg text-sm hover:bg-accent disabled:opacity-50">
           {savingService ? 'Saving...' : 'Save'}
         </button>
       </div>
 
       {/* Add/Edit Printer Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-lg">
-            <h2 className="text-lg font-semibold text-gray-50 mb-4">{editId ? 'Edit Printer' : 'Add Printer'}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface rounded-xl border border-edge p-6 w-full max-w-lg">
+            <h2 className="text-lg font-semibold text-primary mb-4">{editId ? 'Edit Printer' : 'Add Printer'}</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Name</label>
+                <label className="block text-xs text-secondary mb-1">Name</label>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Front Register Printer" className={inputCls} />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Printer ID</label>
+                <label className="block text-xs text-secondary mb-1">Printer ID</label>
                 <input value={form.printer_id} onChange={e => setForm(f => ({ ...f, printer_id: e.target.value }))} placeholder="Printer identifier" className={inputCls} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Printer Type</label>
+                  <label className="block text-xs text-secondary mb-1">Printer Type</label>
                   <select value={form.printer_type} onChange={e => setForm(f => ({ ...f, printer_type: e.target.value }))} className={inputCls}>
                     <option value="esc_pos">ESC/POS</option>
                     <option value="zpl">ZPL</option>
@@ -317,12 +317,12 @@ export default function PrintersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Computer Name</label>
+                  <label className="block text-xs text-secondary mb-1">Computer Name</label>
                   <input value={form.computer_name} onChange={e => setForm(f => ({ ...f, computer_name: e.target.value }))} placeholder="POS-01" className={inputCls} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Connection Type</label>
+                <label className="block text-xs text-secondary mb-1">Connection Type</label>
                 <select value={form.connection_type} onChange={e => setForm(f => ({ ...f, connection_type: e.target.value }))} className={inputCls}>
                   <option value="usb">USB</option>
                   <option value="network">Network</option>
@@ -332,30 +332,30 @@ export default function PrintersPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">IP Address</label>
+                  <label className="block text-xs text-secondary mb-1">IP Address</label>
                   <input value={form.ip_address} onChange={e => setForm(f => ({ ...f, ip_address: e.target.value }))} placeholder="192.168.1.100" className={inputCls} />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Port</label>
+                  <label className="block text-xs text-secondary mb-1">Port</label>
                   <input value={form.port} onChange={e => setForm(f => ({ ...f, port: e.target.value }))} placeholder="9100" className={inputCls} />
                 </div>
               </div>
               <div className="flex gap-6 pt-1">
-                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer">
                   <input type="checkbox" checked={form.supports_labels} onChange={e => setForm(f => ({ ...f, supports_labels: e.target.checked }))}
-                    className="w-4 h-4 rounded bg-gray-900 border-gray-600 text-emerald-500 focus:ring-emerald-500" />
+                    className="w-4 h-4 rounded bg-bg border-edge-strong text-accent focus:ring-accent" />
                   Supports Labels
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer">
                   <input type="checkbox" checked={form.supports_receipts} onChange={e => setForm(f => ({ ...f, supports_receipts: e.target.checked }))}
-                    className="w-4 h-4 rounded bg-gray-900 border-gray-600 text-emerald-500 focus:ring-emerald-500" />
+                    className="w-4 h-4 rounded bg-bg border-edge-strong text-accent focus:ring-accent" />
                   Supports Receipts
                 </label>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-              <button onClick={savePrinter} disabled={saving || !form.name} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500 disabled:opacity-50">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+              <button onClick={savePrinter} disabled={saving || !form.name} className="px-4 py-2 bg-accent text-primary rounded-lg text-sm hover:bg-accent disabled:opacity-50">
                 {saving ? 'Saving...' : editId ? 'Update' : 'Add Printer'}
               </button>
             </div>
@@ -365,13 +365,13 @@ export default function PrintersPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 w-full max-w-sm">
-            <h2 className="text-lg font-semibold text-gray-50 mb-2">Delete Printer</h2>
-            <p className="text-sm text-gray-400 mb-6">Are you sure you want to remove this printer? This action will deactivate the printer.</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface rounded-xl border border-edge p-6 w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-primary mb-2">Delete Printer</h2>
+            <p className="text-sm text-secondary mb-6">Are you sure you want to remove this printer? This action will deactivate the printer.</p>
             <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-              <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-500">Delete</button>
+              <button onClick={() => setDeleteId(null)} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+              <button onClick={confirmDelete} className="px-4 py-2 bg-danger text-primary rounded-lg text-sm hover:bg-danger">Delete</button>
             </div>
           </div>
         </div>

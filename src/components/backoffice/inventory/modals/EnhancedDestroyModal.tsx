@@ -4,10 +4,10 @@ import { useState } from 'react'
 import BaseActionModal from './BaseActionModal'
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 const selectCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 const DESTROY_REASONS = [
   'Expired',
@@ -71,28 +71,28 @@ export default function EnhancedDestroyModal({
     >
       <div className="space-y-4">
         {/* Warning banner */}
-        <div className="bg-red-900/30 border border-red-700 rounded-lg p-3">
-          <p className="text-sm text-red-400">
+        <div className="bg-danger/30 border border-danger rounded-lg p-3">
+          <p className="text-sm text-danger">
             This will permanently mark this package as destroyed. This action
             syncs with BioTrack and cannot be undone.
           </p>
         </div>
 
         {/* Source info */}
-        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-2">
+        <div className="bg-bg/50 border border-edge rounded-lg p-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Product</span>
-            <span className="text-gray-200">{productName}</span>
+            <span className="text-secondary">Product</span>
+            <span className="text-primary">{productName}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Package ID</span>
-            <span className="text-gray-200 font-mono text-xs">
+            <span className="text-secondary">Package ID</span>
+            <span className="text-primary font-mono text-xs">
               {packageId ?? 'N/A'}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Current Quantity</span>
-            <span className="text-gray-200">{currentQty}</span>
+            <span className="text-secondary">Current Quantity</span>
+            <span className="text-primary">{currentQty}</span>
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function EnhancedDestroyModal({
             step="any"
             className={inputCls}
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             Max: {currentQty}
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function EnhancedDestroyModal({
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
             placeholder="Describe the reason for destruction..."
-            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
           />
         </div>
 
@@ -151,9 +151,9 @@ export default function EnhancedDestroyModal({
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-gray-600 bg-gray-900 text-red-600 focus:ring-red-500"
+            className="mt-0.5 h-4 w-4 rounded border-edge-strong bg-bg text-danger focus:ring-danger"
           />
-          <span className="text-sm text-gray-300">
+          <span className="text-sm text-secondary">
             I confirm this package should be destroyed
           </span>
         </label>

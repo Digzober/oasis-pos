@@ -155,19 +155,19 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
   if (userRole && !ALLOWED_ROLES.includes(userRole)) {
     return (
       <>
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose} />
+        <div className="fixed inset-0 bg-bg/70 backdrop-blur-sm z-50" onClick={onClose} />
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-8 text-center">
-            <div className="w-16 h-16 bg-amber-600/20 border border-amber-600/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-md p-8 text-center">
+            <div className="w-16 h-16 bg-warning/20 border border-warning/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-50 mb-2">Permission Required</h2>
-            <p className="text-gray-400 mb-6">Ask your shift lead to close the drawer.</p>
+            <h2 className="text-xl font-bold text-primary mb-2">Permission Required</h2>
+            <p className="text-secondary mb-6">Ask your shift lead to close the drawer.</p>
             <button
               onClick={onClose}
-              className="px-8 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+              className="px-8 py-2.5 bg-raised hover:bg-raised text-secondary rounded-lg text-sm font-medium transition-colors"
             >
               Close
             </button>
@@ -179,26 +179,26 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
 
   const varianceColor = (v: number) => {
     const abs = Math.abs(v)
-    if (abs < 5) return 'text-emerald-400'
-    if (abs <= 20) return 'text-amber-400'
-    return 'text-red-400'
+    if (abs < 5) return 'text-accent'
+    if (abs <= 20) return 'text-warning'
+    return 'text-danger'
   }
 
   const varianceBg = (v: number) => {
     const abs = Math.abs(v)
-    if (abs < 5) return 'bg-emerald-900/20 border-emerald-700/30'
-    if (abs <= 20) return 'bg-amber-900/20 border-amber-700/30'
-    return 'bg-red-900/20 border-red-700/30'
+    if (abs < 5) return 'bg-accent/20 border-accent/30'
+    if (abs <= 20) return 'bg-warning/20 border-warning/30'
+    return 'bg-danger/20 border-danger/30'
   }
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-bg/70 backdrop-blur-sm z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl">
+        <div className="bg-surface border border-edge rounded-2xl w-full max-w-lg shadow-2xl">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-            <h2 className="text-lg font-bold text-gray-50">Close Drawer</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+            <h2 className="text-lg font-bold text-primary">Close Drawer</h2>
             <div className="flex items-center gap-3">
               {step !== 'success' && (
                 <div className="flex gap-1">
@@ -207,8 +207,8 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                       key={s}
                       className={`w-2 h-2 rounded-full ${
                         ['count', 'review', 'confirm'].indexOf(step) >= i
-                          ? 'bg-emerald-500'
-                          : 'bg-gray-600'
+                          ? 'bg-accent'
+                          : 'bg-raised'
                       }`}
                     />
                   ))}
@@ -217,7 +217,7 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
               {step !== 'success' && (
                 <button
                   onClick={onClose}
-                  className="text-gray-500 hover:text-gray-300 transition-colors"
+                  className="text-muted hover:text-secondary transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -231,25 +231,25 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
             {/* Step 1: Count */}
             {step === 'count' && (
               <div>
-                <p className="text-sm text-gray-400 mb-4">Count the cash in your drawer.</p>
+                <p className="text-sm text-secondary mb-4">Count the cash in your drawer.</p>
 
                 {/* Running total */}
-                <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-5 text-center">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Counted Cash</p>
-                  <p className="text-4xl font-bold text-gray-50 tabular-nums">{fmt(countedCash)}</p>
+                <div className="bg-bg border border-edge rounded-xl p-4 mb-5 text-center">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Counted Cash</p>
+                  <p className="text-4xl font-bold text-primary tabular-nums">{fmt(countedCash)}</p>
                 </div>
 
                 {/* Toggle */}
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-400">Manual Entry</span>
+                  <span className="text-sm text-secondary">Manual Entry</span>
                   <button
                     onClick={() => setManualEntry(!manualEntry)}
                     className={`w-10 h-5 rounded-full transition-colors relative ${
-                      manualEntry ? 'bg-emerald-600' : 'bg-gray-600'
+                      manualEntry ? 'bg-accent' : 'bg-raised'
                     }`}
                   >
                     <span
-                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-surface transition-transform ${
                         manualEntry ? 'translate-x-5' : 'translate-x-0.5'
                       }`}
                     />
@@ -259,7 +259,7 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                 {manualEntry ? (
                   <div className="flex gap-2 mb-5">
                     <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">$</span>
                       <input
                         type="number"
                         step="0.01"
@@ -267,12 +267,12 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                         value={manualValue}
                         onChange={e => setManualValue(e.target.value)}
                         placeholder="0.00"
-                        className="w-full h-12 pl-7 pr-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-lg tabular-nums focus:outline-none focus:border-emerald-500"
+                        className="w-full h-12 pl-7 pr-3 bg-bg border border-edge-strong rounded-lg text-primary text-lg tabular-nums focus:outline-none focus:border-accent"
                       />
                     </div>
                     <button
                       onClick={handleManualSet}
-                      className="px-5 h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="px-5 h-12 bg-accent hover:bg-accent text-primary rounded-lg text-sm font-medium transition-colors"
                     >
                       Set
                     </button>
@@ -283,7 +283,7 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                       <button
                         key={d.label}
                         onClick={() => addDenomination(d.value)}
-                        className="h-12 bg-gray-900 hover:bg-gray-700 border border-gray-600 hover:border-gray-500 rounded-lg text-gray-50 text-sm font-medium transition-colors"
+                        className="h-12 bg-bg hover:bg-raised border border-edge-strong hover:border-edge-strong rounded-lg text-primary text-sm font-medium transition-colors"
                       >
                         {d.label}
                       </button>
@@ -294,7 +294,7 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                 {!manualEntry && countedCash > 0 && (
                   <button
                     onClick={() => setCountedCash(0)}
-                    className="text-xs text-gray-500 hover:text-gray-400 transition-colors mb-4"
+                    className="text-xs text-muted hover:text-secondary transition-colors mb-4"
                   >
                     Reset count
                   </button>
@@ -303,13 +303,13 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={onClose}
-                    className="flex-1 h-11 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 h-11 bg-raised hover:bg-raised text-secondary rounded-lg text-sm font-medium transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => setStep('review')}
-                    className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 h-11 bg-accent hover:bg-accent text-primary rounded-lg text-sm font-medium transition-colors"
                   >
                     Review
                   </button>
@@ -320,15 +320,15 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
             {/* Step 2: Review */}
             {step === 'review' && (
               <div>
-                <p className="text-sm text-gray-400 mb-5">Review the drawer summary before closing.</p>
+                <p className="text-sm text-secondary mb-5">Review the drawer summary before closing.</p>
 
                 <div className="space-y-3 mb-5">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Counted Cash</span>
-                    <span className="text-gray-50 font-semibold text-lg tabular-nums">{fmt(countedCash)}</span>
+                    <span className="text-secondary">Counted Cash</span>
+                    <span className="text-primary font-semibold text-lg tabular-nums">{fmt(countedCash)}</span>
                   </div>
-                  <div className="border-t border-gray-700" />
-                  <p className="text-xs text-gray-500">
+                  <div className="border-t border-edge" />
+                  <p className="text-xs text-muted">
                     The expected amount and variance will be calculated when you confirm.
                   </p>
                 </div>
@@ -336,13 +336,13 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                 <div className="flex gap-2">
                   <button
                     onClick={() => setStep('count')}
-                    className="flex-1 h-11 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 h-11 bg-raised hover:bg-raised text-secondary rounded-lg text-sm font-medium transition-colors"
                   >
                     Back
                   </button>
                   <button
                     onClick={() => setStep('confirm')}
-                    className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 h-11 bg-accent hover:bg-accent text-primary rounded-lg text-sm font-medium transition-colors"
                   >
                     Continue
                   </button>
@@ -353,41 +353,41 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
             {/* Step 3: Confirm */}
             {step === 'confirm' && (
               <div>
-                <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-3 mb-5">
-                  <p className="text-sm text-amber-300 font-medium">Confirm Drawer Close</p>
-                  <p className="text-xs text-amber-400 mt-1">
+                <div className="bg-warning/20 border border-warning/30 rounded-lg p-3 mb-5">
+                  <p className="text-sm text-warning font-medium">Confirm Drawer Close</p>
+                  <p className="text-xs text-warning mt-1">
                     This will close the drawer with {fmt(countedCash)} counted. This action cannot be undone.
                   </p>
                 </div>
 
                 <label className="block mb-4">
-                  <span className="text-xs text-gray-400 mb-1 block">Notes (optional)</span>
+                  <span className="text-xs text-secondary mb-1 block">Notes (optional)</span>
                   <textarea
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     placeholder="Explain any variance..."
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm resize-none focus:outline-none focus:border-emerald-500 placeholder-gray-600"
+                    className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-primary text-sm resize-none focus:outline-none focus:border-accent placeholder:text-muted"
                   />
                 </label>
 
                 {error && (
-                  <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-3 mb-4">
-                    <p className="text-sm text-red-400">{error}</p>
+                  <div className="bg-danger/20 border border-danger/30 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-danger">{error}</p>
                   </div>
                 )}
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setStep('review'); setError('') }}
-                    className="flex-1 h-11 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                    className="flex-1 h-11 bg-raised hover:bg-raised text-secondary rounded-lg text-sm font-medium transition-colors"
                   >
                     Back
                   </button>
                   <button
                     onClick={handleClose}
                     disabled={submitting}
-                    className="flex-1 h-11 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 h-11 bg-accent hover:bg-accent text-primary rounded-lg text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? 'Closing...' : 'Close Drawer'}
                   </button>
@@ -398,44 +398,44 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
             {/* Step 4: Success */}
             {step === 'success' && summary && (
               <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-gray-50 mb-1">Drawer Closed</h3>
-                <p className="text-sm text-gray-400 mb-6">
+                <h3 className="text-xl font-bold text-primary mb-1">Drawer Closed</h3>
+                <p className="text-sm text-secondary mb-6">
                   {summary.transaction_count} transaction{summary.transaction_count !== 1 ? 's' : ''} over {fmtHours(summary.drawer_duration_hours)}
                 </p>
 
-                <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-4 text-left space-y-2">
+                <div className="bg-bg border border-edge rounded-xl p-4 mb-4 text-left space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Opening Amount</span>
-                    <span className="text-gray-50 tabular-nums">{fmt(summary.opening_amount)}</span>
+                    <span className="text-secondary">Opening Amount</span>
+                    <span className="text-primary tabular-nums">{fmt(summary.opening_amount)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Cash Sales</span>
-                    <span className="text-emerald-400 tabular-nums">+{fmt(summary.total_sales)}</span>
+                    <span className="text-secondary">Cash Sales</span>
+                    <span className="text-accent tabular-nums">+{fmt(summary.total_sales)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Cash Refunds</span>
-                    <span className="text-red-400 tabular-nums">-{fmt(summary.total_refunds)}</span>
+                    <span className="text-secondary">Cash Refunds</span>
+                    <span className="text-danger tabular-nums">-{fmt(summary.total_refunds)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Safe Drops</span>
-                    <span className="text-amber-400 tabular-nums">-{fmt(summary.total_drops)}</span>
+                    <span className="text-secondary">Safe Drops</span>
+                    <span className="text-warning tabular-nums">-{fmt(summary.total_drops)}</span>
                   </div>
-                  <div className="border-t border-gray-700 pt-2 flex justify-between text-sm">
-                    <span className="text-gray-400">Expected Cash</span>
-                    <span className="text-gray-50 font-semibold tabular-nums">{fmt(summary.expected_cash)}</span>
+                  <div className="border-t border-edge pt-2 flex justify-between text-sm">
+                    <span className="text-secondary">Expected Cash</span>
+                    <span className="text-primary font-semibold tabular-nums">{fmt(summary.expected_cash)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Actual Cash</span>
-                    <span className="text-gray-50 font-semibold tabular-nums">{fmt(summary.actual_cash)}</span>
+                    <span className="text-secondary">Actual Cash</span>
+                    <span className="text-primary font-semibold tabular-nums">{fmt(summary.actual_cash)}</span>
                   </div>
                   <div className={`border rounded-lg p-2 mt-1 ${varianceBg(summary.variance)}`}>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Variance</span>
+                      <span className="text-secondary">Variance</span>
                       <span className={`font-bold tabular-nums ${varianceColor(summary.variance)}`}>
                         {summary.variance >= 0 ? '+' : ''}{fmt(summary.variance)}
                       </span>
@@ -443,12 +443,12 @@ export default function DrawerCloseModal({ isOpen, onClose, cashDrawerId, onSucc
                   </div>
                 </div>
 
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-muted mb-4">
                   Returning to login in {autoCloseTimer}s...
                 </p>
                 <button
                   onClick={() => { onSuccess?.(); onClose() }}
-                  className="px-8 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                  className="px-8 py-2.5 bg-raised hover:bg-raised text-secondary rounded-lg text-sm font-medium transition-colors"
                 >
                   Done
                 </button>

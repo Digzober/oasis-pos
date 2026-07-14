@@ -78,9 +78,9 @@ export default function ProductAnalytics({ productId }: { productId: string }) {
   }, [fetchAnalytics])
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+    <div className="bg-surface rounded-xl border border-edge p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+        <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider">
           Sales Analytics
         </h3>
         <div className="flex gap-1">
@@ -91,8 +91,8 @@ export default function ProductAnalytics({ productId }: { productId: string }) {
               onClick={() => setDays(opt.value)}
               className={`px-3 py-1 text-xs rounded-lg transition-colors ${
                 days === opt.value
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-600'
+                  ? 'bg-accent text-primary'
+                  : 'bg-raised text-secondary hover:text-primary hover:bg-raised'
               }`}
             >
               {opt.label}
@@ -103,16 +103,16 @@ export default function ProductAnalytics({ productId }: { productId: string }) {
 
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-gray-600 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-edge-strong border-t-emerald-500 rounded-full animate-spin" />
         </div>
       )}
 
       {error && (
-        <p className="text-red-400 text-sm py-4">{error}</p>
+        <p className="text-danger text-sm py-4">{error}</p>
       )}
 
       {!loading && !error && data && isAllZeros(data) && (
-        <p className="text-gray-500 text-sm py-6 text-center">
+        <p className="text-muted text-sm py-6 text-center">
           No sales data yet for the last {days} days.
         </p>
       )}
@@ -131,7 +131,7 @@ export default function ProductAnalytics({ productId }: { productId: string }) {
             label="Gross Margin"
             value={formatCurrency(data.gross_margin)}
             subValue={`${data.margin_percentage.toFixed(1)}%`}
-            subColor={data.margin_percentage >= 0 ? 'text-emerald-400' : 'text-red-400'}
+            subColor={data.margin_percentage >= 0 ? 'text-accent' : 'text-danger'}
           />
           <StatCard
             label="Avg Sale Price"
@@ -166,13 +166,13 @@ function StatCard({
   small?: boolean
 }) {
   return (
-    <div className="bg-gray-900 rounded-lg border border-gray-700 p-3">
-      <p className="text-xs text-gray-400 mb-1">{label}</p>
-      <p className={`font-semibold text-gray-50 ${small ? 'text-sm' : 'text-lg'}`}>
+    <div className="bg-bg rounded-lg border border-edge p-3">
+      <p className="text-xs text-secondary mb-1">{label}</p>
+      <p className={`font-semibold text-primary ${small ? 'text-sm' : 'text-lg'}`}>
         {value}
       </p>
       {subValue && (
-        <p className={`text-xs mt-0.5 ${subColor ?? 'text-gray-400'}`}>
+        <p className={`text-xs mt-0.5 ${subColor ?? 'text-secondary'}`}>
           {subValue}
         </p>
       )}

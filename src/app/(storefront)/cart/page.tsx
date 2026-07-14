@@ -14,8 +14,8 @@ export default function CartPage() {
 
       {items.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">Your cart is empty</p>
-          <Link href="/menu" className="text-emerald-600 hover:text-emerald-500 font-medium">Browse Menu</Link>
+          <p className="text-muted mb-4">Your cart is empty</p>
+          <Link href="/menu" className="text-accent hover:text-accent font-medium">Browse Menu</Link>
         </div>
       ) : (
         <>
@@ -24,7 +24,7 @@ export default function CartPage() {
               <div key={item.product_id} className="flex items-center gap-4 border-b pb-4">
                 <div className="flex-1">
                   <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-500">{fmt(item.price)} each</p>
+                  <p className="text-sm text-muted">{fmt(item.price)} each</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => updateQuantity(item.product_id, item.quantity - 1)} className="w-8 h-8 border rounded flex items-center justify-center">−</button>
@@ -32,18 +32,18 @@ export default function CartPage() {
                   <button onClick={() => updateQuantity(item.product_id, item.quantity + 1)} className="w-8 h-8 border rounded flex items-center justify-center">+</button>
                 </div>
                 <p className="w-20 text-right font-medium tabular-nums">{fmt(item.price * item.quantity)}</p>
-                <button onClick={() => removeItem(item.product_id)} className="text-red-500 text-sm">Remove</button>
+                <button onClick={() => removeItem(item.product_id)} className="text-danger text-sm">Remove</button>
               </div>
             ))}
           </div>
 
           <div className="border-t pt-4 space-y-2">
             <div className="flex justify-between text-sm"><span>Subtotal</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
-            <div className="flex justify-between text-sm text-gray-500"><span>Estimated Tax</span><span className="tabular-nums">{fmt(estimatedTax)}</span></div>
+            <div className="flex justify-between text-sm text-muted"><span>Estimated Tax</span><span className="tabular-nums">{fmt(estimatedTax)}</span></div>
             <div className="flex justify-between text-lg font-bold"><span>Estimated Total</span><span className="tabular-nums">{fmt(estimatedTotal)}</span></div>
           </div>
 
-          <Link href="/order/checkout" className="block w-full mt-6 py-3 bg-emerald-600 text-white text-center rounded-lg font-medium hover:bg-emerald-500 transition-colors">
+          <Link href="/order/checkout" className="block w-full mt-6 py-3 bg-accent text-primary text-center rounded-lg font-medium hover:bg-accent transition-colors">
             Continue to Checkout
           </Link>
         </>

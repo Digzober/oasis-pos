@@ -13,12 +13,12 @@ export default function CustomerBadge({ onViewProfile }: { onViewProfile?: () =>
   const isMedical = customerType === 'medical'
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700/50 rounded-lg">
+    <div className="flex items-center gap-2 px-3 py-1.5 bg-raised/50 rounded-lg">
       <button onClick={onViewProfile} className="flex items-center gap-2 min-w-0">
-        <span className="text-sm text-gray-50 truncate">{customerName}</span>
+        <span className="text-sm text-primary truncate">{customerName}</span>
         <span
           className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-            isMedical ? 'bg-blue-600 text-white' : 'bg-gray-600 text-gray-300'
+            isMedical ? 'bg-info text-primary' : 'bg-raised text-secondary'
           }`}
         >
           {isMedical ? 'MED' : 'REC'}
@@ -26,7 +26,7 @@ export default function CustomerBadge({ onViewProfile }: { onViewProfile?: () =>
       </button>
       <button
         onClick={() => setCustomer(null)}
-        className="w-5 h-5 flex items-center justify-center text-gray-400 hover:text-red-400 transition-colors shrink-0"
+        className="w-5 h-5 flex items-center justify-center text-secondary hover:text-danger transition-colors shrink-0"
         aria-label="Remove customer"
       >
         ✕

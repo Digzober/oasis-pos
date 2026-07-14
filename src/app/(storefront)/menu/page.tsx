@@ -71,7 +71,7 @@ export default function MenuPage() {
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
+        <div className="fixed top-4 right-4 bg-accent text-primary px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
           {toast}
         </div>
       )}
@@ -79,10 +79,10 @@ export default function MenuPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Menu</h1>
-        <Link href="/cart" className="relative px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 text-sm font-medium">
+        <Link href="/cart" className="relative px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent text-sm font-medium">
           Cart
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>
+            <span className="absolute -top-2 -right-2 bg-danger text-primary text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center">{cartCount}</span>
           )}
         </Link>
       </div>
@@ -92,50 +92,50 @@ export default function MenuPage() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder="Search products..."
-        className="w-full h-10 px-4 border rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="w-full h-10 px-4 border rounded-lg text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-accent"
       />
 
       {/* Categories */}
       <div className="flex gap-2 flex-wrap mb-6">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={`px-3 py-1.5 text-sm rounded-full transition-colors ${!selectedCategory ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+          className={`px-3 py-1.5 text-sm rounded-full transition-colors ${!selectedCategory ? 'bg-accent text-primary' : 'bg-overlay text-muted hover:bg-overlay'}`}
         >All</button>
         {categories.map(cat => (
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className={`px-3 py-1.5 text-sm rounded-full transition-colors ${selectedCategory === cat.id ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            className={`px-3 py-1.5 text-sm rounded-full transition-colors ${selectedCategory === cat.id ? 'bg-accent text-primary' : 'bg-overlay text-muted hover:bg-overlay'}`}
           >{cat.name}</button>
         ))}
       </div>
 
       {/* Products */}
       {!search && !selectedCategory ? (
-        <p className="text-center text-gray-500 py-12">Select a category or search to browse products</p>
+        <p className="text-center text-muted py-12">Select a category or search to browse products</p>
       ) : loading ? (
-        <p className="text-center text-gray-500 py-8">Loading...</p>
+        <p className="text-center text-muted py-8">Loading...</p>
       ) : products.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">No products found</p>
+        <p className="text-center text-muted py-8">No products found</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map(p => (
             <div key={p.id} className="border rounded-xl p-4 flex flex-col">
               <h3 className="font-medium mb-1">{p.name}</h3>
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-xs text-muted mb-2">
                 {[p.brand_name, p.category_name, p.strain_name].filter(Boolean).join(' · ')}
               </p>
               {p.thc_percentage != null && (
-                <p className="text-xs text-gray-400 mb-2">THC: {p.thc_percentage}%</p>
+                <p className="text-xs text-secondary mb-2">THC: {p.thc_percentage}%</p>
               )}
               <div className="mt-auto flex items-center justify-between pt-2">
                 <span className="text-lg font-bold">{fmt(p.rec_price)}</span>
                 {p.quantity_available > 0 ? (
-                  <button onClick={() => handleAddToCart(p)} className="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-500">
+                  <button onClick={() => handleAddToCart(p)} className="px-3 py-1.5 bg-accent text-primary text-sm rounded-lg hover:bg-accent">
                     Add to Cart
                   </button>
                 ) : (
-                  <span className="text-sm text-red-500">Out of Stock</span>
+                  <span className="text-sm text-danger">Out of Stock</span>
                 )}
               </div>
             </div>

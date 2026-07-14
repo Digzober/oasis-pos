@@ -37,11 +37,11 @@ interface LocationOption { id: string; name: string }
 interface ProductOption { id: string; name: string; sku: string }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-600/20 text-gray-300',
-  submitted: 'bg-blue-600/20 text-blue-400',
-  partial: 'bg-amber-600/20 text-amber-400',
-  received: 'bg-emerald-600/20 text-emerald-400',
-  cancelled: 'bg-red-600/20 text-red-400',
+  draft: 'bg-raised/20 text-secondary',
+  submitted: 'bg-info/20 text-info',
+  partial: 'bg-warning/20 text-warning',
+  received: 'bg-accent/20 text-accent',
+  cancelled: 'bg-danger/20 text-danger',
 }
 
 function ReceiveModal({ lines, onClose, onReceive }: {
@@ -69,16 +69,16 @@ function ReceiveModal({ lines, onClose, onReceive }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-bold text-gray-50">Receive Items</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">&times;</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+      <div className="bg-surface border border-edge rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-bold text-primary">Receive Items</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary text-lg">&times;</button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
+              <tr className="text-secondary text-xs uppercase border-b border-edge">
                 <th className="text-left py-2">Product</th>
                 <th className="text-right py-2">Ordered</th>
                 <th className="text-right py-2">Previously Received</th>
@@ -89,13 +89,13 @@ function ReceiveModal({ lines, onClose, onReceive }: {
               {lines.map(line => {
                 const remaining = line.quantity_ordered - (line.quantity_received ?? 0)
                 return (
-                  <tr key={line.id} className="border-b border-gray-700/50">
+                  <tr key={line.id} className="border-b border-edge/50">
                     <td className="py-3">
-                      <div className="text-gray-50">{line.products?.name ?? 'Unknown'}</div>
-                      <div className="text-xs text-gray-500">{line.products?.sku ?? ''}</div>
+                      <div className="text-primary">{line.products?.name ?? 'Unknown'}</div>
+                      <div className="text-xs text-muted">{line.products?.sku ?? ''}</div>
                     </td>
-                    <td className="text-right text-gray-300 tabular-nums">{line.quantity_ordered}</td>
-                    <td className="text-right text-gray-400 tabular-nums">{line.quantity_received ?? 0}</td>
+                    <td className="text-right text-secondary tabular-nums">{line.quantity_ordered}</td>
+                    <td className="text-right text-secondary tabular-nums">{line.quantity_received ?? 0}</td>
                     <td className="text-right">
                       <input
                         type="number"
@@ -106,7 +106,7 @@ function ReceiveModal({ lines, onClose, onReceive }: {
                           ...prev,
                           [line.id]: Math.min(remaining, Math.max(0, Number(e.target.value) || 0)),
                         }))}
-                        className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-50 text-right tabular-nums"
+                        className="w-20 bg-bg border border-edge-strong rounded px-2 py-1 text-sm text-primary text-right tabular-nums"
                       />
                     </td>
                   </tr>
@@ -115,12 +115,12 @@ function ReceiveModal({ lines, onClose, onReceive }: {
             </tbody>
           </table>
         </div>
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-edge">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
           <button
             onClick={handleReceive}
             disabled={submitting}
-            className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
+            className="px-4 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50"
           >
             {submitting ? 'Receiving...' : 'Confirm Receive'}
           </button>
@@ -191,16 +191,16 @@ function AddLineForm({ poId, onAdded }: { poId: string; onAdded: () => void }) {
   }
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-      <h3 className="text-sm font-semibold text-gray-300 mb-3">Add Line Item</h3>
+    <div className="bg-bg rounded-lg p-4 border border-edge">
+      <h3 className="text-sm font-semibold text-secondary mb-3">Add Line Item</h3>
       <div className="grid grid-cols-12 gap-3 items-end">
         {/* Product search */}
         <div className="col-span-4 relative">
-          <label className="block text-xs text-gray-400 mb-1">Product</label>
+          <label className="block text-xs text-secondary mb-1">Product</label>
           {selectedProduct ? (
-            <div className="flex items-center gap-2 h-10 px-3 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-50">
+            <div className="flex items-center gap-2 h-10 px-3 bg-surface border border-edge-strong rounded-lg text-sm text-primary">
               <span className="flex-1 truncate">{selectedProduct.name}</span>
-              <button onClick={() => { setSelectedProduct(null); setProductSearch('') }} className="text-gray-500 hover:text-gray-300 text-xs">
+              <button onClick={() => { setSelectedProduct(null); setProductSearch('') }} className="text-muted hover:text-secondary text-xs">
                 &times;
               </button>
             </div>
@@ -212,20 +212,20 @@ function AddLineForm({ poId, onAdded }: { poId: string; onAdded: () => void }) {
                 onChange={e => handleProductSearchChange(e.target.value)}
                 onFocus={() => products.length > 0 && setShowDropdown(true)}
                 placeholder="Search products..."
-                className="w-full h-10 px-3 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-50 placeholder-gray-500"
+                className="w-full h-10 px-3 bg-surface border border-edge-strong rounded-lg text-sm text-primary placeholder:text-muted"
               />
               {showDropdown && products.length > 0 && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-edge rounded-lg shadow-xl z-50 max-h-48 overflow-y-auto">
                     {products.map(p => (
                       <button
                         key={p.id}
                         onClick={() => { setSelectedProduct(p); setProductSearch(p.name); setShowDropdown(false) }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                        className="w-full text-left px-3 py-2 text-sm text-secondary hover:bg-raised"
                       >
                         <div>{p.name}</div>
-                        <div className="text-xs text-gray-500">{p.sku}</div>
+                        <div className="text-xs text-muted">{p.sku}</div>
                       </button>
                     ))}
                   </div>
@@ -237,19 +237,19 @@ function AddLineForm({ poId, onAdded }: { poId: string; onAdded: () => void }) {
 
         {/* Quantity */}
         <div className="col-span-2">
-          <label className="block text-xs text-gray-400 mb-1">Qty Ordered</label>
+          <label className="block text-xs text-secondary mb-1">Qty Ordered</label>
           <input
             type="number"
             min={1}
             value={qtyOrdered}
             onChange={e => setQtyOrdered(Math.max(1, Number(e.target.value) || 1))}
-            className="w-full h-10 px-3 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-50 tabular-nums"
+            className="w-full h-10 px-3 bg-surface border border-edge-strong rounded-lg text-sm text-primary tabular-nums"
           />
         </div>
 
         {/* Unit Cost */}
         <div className="col-span-2">
-          <label className="block text-xs text-gray-400 mb-1">Unit Cost ($)</label>
+          <label className="block text-xs text-secondary mb-1">Unit Cost ($)</label>
           <input
             type="number"
             step="0.01"
@@ -257,19 +257,19 @@ function AddLineForm({ poId, onAdded }: { poId: string; onAdded: () => void }) {
             value={unitCost}
             onChange={e => setUnitCost(e.target.value)}
             placeholder="0.00"
-            className="w-full h-10 px-3 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-50 tabular-nums"
+            className="w-full h-10 px-3 bg-surface border border-edge-strong rounded-lg text-sm text-primary tabular-nums"
           />
         </div>
 
         {/* Notes */}
         <div className="col-span-2">
-          <label className="block text-xs text-gray-400 mb-1">Notes</label>
+          <label className="block text-xs text-secondary mb-1">Notes</label>
           <input
             type="text"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             placeholder="Optional"
-            className="w-full h-10 px-3 bg-gray-800 border border-gray-600 rounded-lg text-sm text-gray-50 placeholder-gray-500"
+            className="w-full h-10 px-3 bg-surface border border-edge-strong rounded-lg text-sm text-primary placeholder:text-muted"
           />
         </div>
 
@@ -278,7 +278,7 @@ function AddLineForm({ poId, onAdded }: { poId: string; onAdded: () => void }) {
           <button
             onClick={handleAdd}
             disabled={!selectedProduct || submitting}
-            className="w-full h-10 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
+            className="w-full h-10 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50"
           >
             {submitting ? 'Adding...' : 'Add Line'}
           </button>
@@ -398,11 +398,11 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center py-20 text-gray-500">Loading purchase order...</div>
+    return <div className="flex items-center justify-center py-20 text-muted">Loading purchase order...</div>
   }
 
   if (!po) {
-    return <div className="flex items-center justify-center py-20 text-gray-500">Purchase order not found</div>
+    return <div className="flex items-center justify-center py-20 text-muted">Purchase order not found</div>
   }
 
   const isDraft = po.status === 'draft'
@@ -416,12 +416,12 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push('/inventory/purchase-orders')}
-            className="text-gray-400 hover:text-gray-200 text-sm"
+            className="text-secondary hover:text-primary text-sm"
           >
             &larr; Back
           </button>
-          <h1 className="text-xl font-bold text-gray-50">{po.po_number}</h1>
-          <span className={`text-xs font-medium px-2.5 py-1 rounded capitalize ${STATUS_COLORS[po.status] ?? 'bg-gray-700 text-gray-300'}`}>
+          <h1 className="text-xl font-bold text-primary">{po.po_number}</h1>
+          <span className={`text-xs font-medium px-2.5 py-1 rounded capitalize ${STATUS_COLORS[po.status] ?? 'bg-raised text-secondary'}`}>
             {po.status}
           </span>
         </div>
@@ -431,21 +431,21 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
               <button
                 onClick={saveHeader}
                 disabled={saving}
-                className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 disabled:opacity-50"
+                className="px-4 py-2 bg-raised text-secondary rounded-lg text-sm hover:bg-raised disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>
               <button
                 onClick={() => performAction('submit')}
                 disabled={actionLoading === 'submit'}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50"
+                className="px-4 py-2 bg-info text-primary rounded-lg text-sm font-medium hover:bg-info disabled:opacity-50"
               >
                 {actionLoading === 'submit' ? 'Submitting...' : 'Submit'}
               </button>
               <button
                 onClick={() => performAction('cancel')}
                 disabled={actionLoading === 'cancel'}
-                className="px-4 py-2 bg-red-600/20 text-red-400 rounded-lg text-sm hover:bg-red-600/30 disabled:opacity-50"
+                className="px-4 py-2 bg-danger/20 text-danger rounded-lg text-sm hover:bg-danger/30 disabled:opacity-50"
               >
                 Cancel PO
               </button>
@@ -455,14 +455,14 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             <>
               <button
                 onClick={() => setShowReceiveModal(true)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500"
+                className="px-4 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent"
               >
                 Mark Received
               </button>
               <button
                 onClick={() => performAction('cancel')}
                 disabled={actionLoading === 'cancel'}
-                className="px-4 py-2 bg-red-600/20 text-red-400 rounded-lg text-sm hover:bg-red-600/30 disabled:opacity-50"
+                className="px-4 py-2 bg-danger/20 text-danger rounded-lg text-sm hover:bg-danger/30 disabled:opacity-50"
               >
                 Cancel PO
               </button>
@@ -472,14 +472,14 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
             <>
               <button
                 onClick={() => setShowReceiveModal(true)}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500"
+                className="px-4 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent"
               >
                 Receive More
               </button>
               <button
                 onClick={() => performAction('complete_receiving')}
                 disabled={actionLoading === 'complete_receiving'}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50"
+                className="px-4 py-2 bg-info text-primary rounded-lg text-sm font-medium hover:bg-info disabled:opacity-50"
               >
                 {actionLoading === 'complete_receiving' ? 'Completing...' : 'Complete Receiving'}
               </button>
@@ -489,75 +489,75 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
       </div>
 
       {/* PO Header Fields */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
         <div className="grid grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Vendor</label>
+            <label className="block text-xs text-secondary mb-1">Vendor</label>
             {isDraft ? (
               <select
                 value={vendorId}
                 onChange={e => setVendorId(e.target.value)}
-                className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50"
+                className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary"
               >
                 <option value="">Select vendor...</option>
                 {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
               </select>
             ) : (
-              <div className="h-10 px-3 flex items-center text-sm text-gray-300">{po.vendors?.name ?? '\u2014'}</div>
+              <div className="h-10 px-3 flex items-center text-sm text-secondary">{po.vendors?.name ?? '\u2014'}</div>
             )}
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Location</label>
+            <label className="block text-xs text-secondary mb-1">Location</label>
             {isDraft ? (
               <select
                 value={locationId}
                 onChange={e => setLocationId(e.target.value)}
-                className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50"
+                className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary"
               >
                 <option value="">Select location...</option>
                 {locations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
             ) : (
-              <div className="h-10 px-3 flex items-center text-sm text-gray-300">{po.locations?.name ?? '\u2014'}</div>
+              <div className="h-10 px-3 flex items-center text-sm text-secondary">{po.locations?.name ?? '\u2014'}</div>
             )}
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Expected Delivery</label>
+            <label className="block text-xs text-secondary mb-1">Expected Delivery</label>
             {isDraft ? (
               <input
                 type="date"
                 value={expectedDate}
                 onChange={e => setExpectedDate(e.target.value)}
-                className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50"
+                className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary"
               />
             ) : (
-              <div className="h-10 px-3 flex items-center text-sm text-gray-300">
+              <div className="h-10 px-3 flex items-center text-sm text-secondary">
                 {po.expected_delivery_date ? new Date(po.expected_delivery_date).toLocaleDateString() : '\u2014'}
               </div>
             )}
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Total Cost</label>
-            <div className="h-10 px-3 flex items-center text-sm text-gray-50 font-medium tabular-nums">
+            <label className="block text-xs text-secondary mb-1">Total Cost</label>
+            <div className="h-10 px-3 flex items-center text-sm text-primary font-medium tabular-nums">
               {formatMoney(po.total_cost)}
             </div>
           </div>
         </div>
         <div className="mt-4">
-          <label className="block text-xs text-gray-400 mb-1">Notes</label>
+          <label className="block text-xs text-secondary mb-1">Notes</label>
           {isDraft ? (
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={2}
               placeholder="Order notes..."
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 placeholder-gray-500 resize-none"
+              className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary placeholder:text-muted resize-none"
             />
           ) : (
-            <div className="px-3 py-2 text-sm text-gray-300">{po.notes || '\u2014'}</div>
+            <div className="px-3 py-2 text-sm text-secondary">{po.notes || '\u2014'}</div>
           )}
         </div>
-        <div className="flex gap-6 mt-3 text-xs text-gray-500">
+        <div className="flex gap-6 mt-3 text-xs text-muted">
           <span>Created by: {po.employees ? `${po.employees.first_name} ${po.employees.last_name}` : '\u2014'}</span>
           <span>Created: {po.created_at ? new Date(po.created_at).toLocaleString() : '\u2014'}</span>
           {po.submitted_at && <span>Submitted: {new Date(po.submitted_at).toLocaleString()}</span>}
@@ -572,15 +572,15 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
       )}
 
       {/* Line Items Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="px-4 py-3 border-b border-edge">
+          <h2 className="text-sm font-semibold text-secondary uppercase">
             Line Items ({po.purchase_order_lines?.length ?? 0})
           </h2>
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Product</th>
               <th className="text-left px-4 py-3">SKU</th>
               <th className="text-right px-4 py-3">Qty Ordered</th>
@@ -592,21 +592,21 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
           </thead>
           <tbody>
             {(po.purchase_order_lines ?? []).length === 0 ? (
-              <tr><td colSpan={isDraft ? 7 : 6} className="text-center py-8 text-gray-500">No line items yet</td></tr>
+              <tr><td colSpan={isDraft ? 7 : 6} className="text-center py-8 text-muted">No line items yet</td></tr>
             ) : (po.purchase_order_lines ?? []).map(line => (
-              <tr key={line.id} className="border-b border-gray-700/50">
-                <td className="px-4 py-2.5 text-gray-50">{line.products?.name ?? 'Unknown'}</td>
-                <td className="px-4 py-2.5 text-gray-400 text-xs">{line.products?.sku ?? '\u2014'}</td>
-                <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{line.quantity_ordered}</td>
-                <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{formatMoney(line.unit_cost)}</td>
-                <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{formatMoney(line.total_cost)}</td>
+              <tr key={line.id} className="border-b border-edge/50">
+                <td className="px-4 py-2.5 text-primary">{line.products?.name ?? 'Unknown'}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{line.products?.sku ?? '\u2014'}</td>
+                <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{line.quantity_ordered}</td>
+                <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatMoney(line.unit_cost)}</td>
+                <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatMoney(line.total_cost)}</td>
                 <td className="px-4 py-2.5 text-right tabular-nums">
                   <span className={
                     (line.quantity_received ?? 0) >= line.quantity_ordered
-                      ? 'text-emerald-400'
+                      ? 'text-accent'
                       : (line.quantity_received ?? 0) > 0
-                        ? 'text-amber-400'
-                        : 'text-gray-500'
+                        ? 'text-warning'
+                        : 'text-muted'
                   }>
                     {line.quantity_received ?? 0}
                   </span>
@@ -615,7 +615,7 @@ export default function PurchaseOrderDetailPage({ params }: { params: Promise<{ 
                   <td className="px-4 py-2.5 text-right">
                     <button
                       onClick={() => removeLine(line.id)}
-                      className="text-xs text-red-400 hover:text-red-300"
+                      className="text-xs text-danger hover:text-danger"
                     >
                       Remove
                     </button>

@@ -618,10 +618,10 @@ export default function ManifestReceivingPage() {
   if (error && !manifest) {
     return (
       <div className="py-12 text-center">
-        <p className="text-red-400 mb-4">{error}</p>
+        <p className="text-danger mb-4">{error}</p>
         <button
           onClick={() => router.push('/inventory/receive')}
-          className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600"
+          className="px-4 py-2 bg-raised text-secondary rounded-lg text-sm hover:bg-raised"
         >
           Back to Receive Inventory
         </button>
@@ -633,21 +633,21 @@ export default function ManifestReceivingPage() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-50">Receive Manifest</h1>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h1 className="text-xl font-bold text-primary">Receive Manifest</h1>
+          <p className="text-xs text-muted mt-0.5">
             {manifest?.sender_name} &mdash; {manifest?.manifest_id} &mdash; {manifest?.items.length} items
           </p>
         </div>
         <button
           onClick={() => router.push('/inventory/receive')}
-          className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+          className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised"
         >
           Back
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-300">
+        <div className="mb-4 px-4 py-3 bg-danger/30 border border-danger rounded-lg text-sm text-danger">
           {error}
         </div>
       )}
@@ -674,8 +674,8 @@ export default function ManifestReceivingPage() {
       />
 
       {!canReceive && items.length > 0 && (
-        <div className="mt-3 px-4 py-2 bg-amber-900/20 border border-amber-700/30 rounded-lg">
-          <p className="text-xs text-amber-400">
+        <div className="mt-3 px-4 py-2 bg-warning/20 border border-warning/30 rounded-lg">
+          <p className="text-xs text-warning">
             {items.filter((i) => !i.is_complete).length} item(s) need attention before receiving.
             Items need a catalog product, room, and quantity.
           </p>

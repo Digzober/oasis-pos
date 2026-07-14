@@ -11,15 +11,15 @@ export default function SalesTrendChart({ data }: Props) {
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis dataKey="date" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-          <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--edge)" />
+          <XAxis dataKey="date" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+          <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-            labelStyle={{ color: '#F9FAFB' }}
+            contentStyle={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--edge)', borderRadius: 8 }}
+            labelStyle={{ color: 'var(--text-primary)' }}
             formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Sales']}
           />
-          <Line type="monotone" dataKey="total" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} />
+          <Line type="monotone" dataKey="total" stroke="var(--chart-1)" strokeWidth={2} dot={{ fill: 'var(--chart-1)', r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

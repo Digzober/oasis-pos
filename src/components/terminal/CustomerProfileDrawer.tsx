@@ -51,34 +51,34 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 w-96 bg-gray-800 border-l border-gray-700 z-50 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 bg-bg/50 z-50" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 w-96 bg-surface border-l border-edge z-50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="h-14 border-b border-gray-700 flex items-center justify-between px-4 shrink-0">
-          <h2 className="text-gray-50 font-semibold">Customer Profile</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200">✕</button>
+        <div className="h-14 border-b border-edge flex items-center justify-between px-4 shrink-0">
+          <h2 className="text-primary font-semibold">Customer Profile</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary">✕</button>
         </div>
 
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">Loading...</div>
+          <div className="flex-1 flex items-center justify-center text-muted text-sm">Loading...</div>
         ) : !profile ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">Customer not found</div>
+          <div className="flex-1 flex items-center justify-center text-muted text-sm">Customer not found</div>
         ) : (
           <div className="flex-1 overflow-y-auto">
             {/* Name + badges */}
-            <div className="px-4 py-4 border-b border-gray-700">
+            <div className="px-4 py-4 border-b border-edge">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg text-gray-50 font-bold">
+                <h3 className="text-lg text-primary font-bold">
                   {profile.first_name} {profile.last_name}
                 </h3>
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                  profile.is_medical ? 'bg-blue-600 text-white' : 'bg-gray-600 text-gray-300'
+                  profile.is_medical ? 'bg-info text-primary' : 'bg-raised text-secondary'
                 }`}>
                   {profile.is_medical ? 'MED' : 'REC'}
                 </span>
               </div>
               {profile.is_first_visit && (
-                <p className="text-emerald-400 text-xs mt-1 font-medium">First visit!</p>
+                <p className="text-accent text-xs mt-1 font-medium">First visit!</p>
               )}
             </div>
 
@@ -94,7 +94,7 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
               {profile.has_id_on_file ? (
                 <Row label="ID Type" value={profile.id_type?.replace('_', ' ')} />
               ) : (
-                <p className="text-amber-400 text-xs">No ID on file — verify ID</p>
+                <p className="text-warning text-xs">No ID on file — verify ID</p>
               )}
             </Section>
 
@@ -104,7 +104,7 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
                 <Row label="Card #" value={profile.medical_card_number} />
                 <Row label="Expires" value={profile.medical_card_expiration ? new Date(profile.medical_card_expiration).toLocaleDateString() : null} />
                 {profile.medical_card_expired && (
-                  <p className="text-red-400 text-xs font-medium mt-1">Card expired — sale will process as recreational</p>
+                  <p className="text-danger text-xs font-medium mt-1">Card expired — sale will process as recreational</p>
                 )}
               </Section>
             )}
@@ -122,7 +122,7 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
               <Section title="Groups">
                 <div className="flex flex-wrap gap-1">
                   {profile.groups.map((g) => (
-                    <span key={g.id} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                    <span key={g.id} className="text-xs bg-raised text-secondary px-2 py-0.5 rounded">
                       {g.name}
                     </span>
                   ))}
@@ -133,18 +133,18 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
             {/* Recent Transactions */}
             <Section title="Recent Purchases">
               {profile.recent_transactions.length === 0 ? (
-                <p className="text-gray-500 text-xs">No purchase history</p>
+                <p className="text-muted text-xs">No purchase history</p>
               ) : (
                 <div className="space-y-2">
                   {profile.recent_transactions.map((tx) => (
                     <div key={tx.id} className="flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-gray-300">
+                        <span className="text-secondary">
                           {new Date(tx.created_at).toLocaleDateString()}
                         </span>
-                        <span className="text-gray-500 ml-2">{tx.item_count} items</span>
+                        <span className="text-muted ml-2">{tx.item_count} items</span>
                       </div>
-                      <span className="text-gray-50 tabular-nums">${tx.total.toFixed(2)}</span>
+                      <span className="text-primary tabular-nums">${tx.total.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -159,8 +159,8 @@ export default function CustomerProfileDrawer({ customerId, onClose }: Props) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="px-4 py-3 border-b border-gray-700">
-      <h4 className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-2">{title}</h4>
+    <div className="px-4 py-3 border-b border-edge">
+      <h4 className="text-xs text-secondary font-semibold uppercase tracking-wider mb-2">{title}</h4>
       {children}
     </div>
   )
@@ -169,8 +169,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex justify-between text-sm py-0.5">
-      <span className="text-gray-400">{label}</span>
-      <span className="text-gray-50">{value ?? '—'}</span>
+      <span className="text-secondary">{label}</span>
+      <span className="text-primary">{value ?? '—'}</span>
     </div>
   )
 }

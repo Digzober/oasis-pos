@@ -114,20 +114,20 @@ function relDate(d: string | null) {
 
 function typeBadge(t: string | null | undefined): { label: string; cls: string } {
   switch (t) {
-    case 'medical': return { label: 'MED', cls: 'bg-blue-900/50 text-blue-300 border-blue-700' }
-    case 'medical_out_of_state': return { label: 'MED-OOS', cls: 'bg-blue-900/50 text-blue-300 border-blue-700' }
-    case 'medical_tax_exempt': return { label: 'MED-TE', cls: 'bg-purple-900/50 text-purple-300 border-purple-700' }
-    case 'recreational': return { label: 'REC', cls: 'bg-emerald-900/50 text-emerald-300 border-emerald-700' }
-    default: return { label: (t || 'REC').toUpperCase().slice(0, 4), cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
+    case 'medical': return { label: 'MED', cls: 'bg-info/50 text-info border-info' }
+    case 'medical_out_of_state': return { label: 'MED-OOS', cls: 'bg-info/50 text-info border-info' }
+    case 'medical_tax_exempt': return { label: 'MED-TE', cls: 'bg-info/50 text-info border-info' }
+    case 'recreational': return { label: 'REC', cls: 'bg-accent/50 text-accent border-accent' }
+    default: return { label: (t || 'REC').toUpperCase().slice(0, 4), cls: 'bg-raised/50 text-secondary border-edge-strong' }
   }
 }
 
 function statusBadge(s: string | null | undefined): { label: string; cls: string } {
   switch (s) {
-    case 'active': return { label: 'Active', cls: 'bg-emerald-900/50 text-emerald-400 border-emerald-700' }
-    case 'banned': return { label: 'Banned', cls: 'bg-red-900/50 text-red-400 border-red-700' }
-    case 'inactive': return { label: 'Inactive', cls: 'bg-gray-700/50 text-gray-400 border-gray-600' }
-    default: return { label: s || 'Unknown', cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
+    case 'active': return { label: 'Active', cls: 'bg-accent/50 text-accent border-accent' }
+    case 'banned': return { label: 'Banned', cls: 'bg-danger/50 text-danger border-danger' }
+    case 'inactive': return { label: 'Inactive', cls: 'bg-raised/50 text-secondary border-edge-strong' }
+    default: return { label: s || 'Unknown', cls: 'bg-raised/50 text-secondary border-edge-strong' }
   }
 }
 
@@ -165,11 +165,11 @@ function IconWarning() { return <svg className="w-3.5 h-3.5" fill="none" viewBox
 
 function SummaryCard({ label, value, color, icon }: { label: string; value: string; color?: string; icon: React.ReactNode }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-gray-700/50 text-gray-400 shrink-0">{icon}</div>
+    <div className="bg-surface rounded-xl border border-edge p-4 flex items-start gap-3">
+      <div className="p-2 rounded-lg bg-raised/50 text-secondary shrink-0">{icon}</div>
       <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
-        <p className={`text-2xl font-bold mt-0.5 tabular-nums ${color ?? 'text-gray-50'}`}>{value}</p>
+        <p className="text-xs text-secondary uppercase tracking-wide">{label}</p>
+        <p className={`text-2xl font-bold mt-0.5 tabular-nums ${color ?? 'text-primary'}`}>{value}</p>
       </div>
     </div>
   )
@@ -208,18 +208,18 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
     setSaving(false)
   }
 
-  const iCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500'
-  const lCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  const iCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent'
+  const lCls = 'block text-xs font-medium text-secondary uppercase mb-1'
   const isMed = customerType.startsWith('medical')
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-bg/60 z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-50">Add Customer</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-200"><IconX /></button>
+        <div className="bg-surface border border-edge rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+            <h2 className="text-lg font-semibold text-primary">Add Customer</h2>
+            <button onClick={onClose} className="text-secondary hover:text-primary"><IconX /></button>
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -249,11 +249,11 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
                 <div><label className={lCls}>Med Card Expiration</label><input type="date" value={medCardExp} onChange={e => setMedCardExp(e.target.value)} className={iCls} /></div>
               </div>
             )}
-            {error && <p className="text-sm text-red-400">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
           </div>
-          <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-700">
-            <button onClick={onClose} className="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Cancel</button>
-            <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+          <div className="flex justify-end gap-2 px-6 py-4 border-t border-edge">
+            <button onClick={onClose} className="px-4 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised">Cancel</button>
+            <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
               {saving ? 'Creating...' : 'Create Customer'}
             </button>
           </div>
@@ -447,49 +447,49 @@ export default function CustomersPage() {
   const renderCell = useCallback((col: ColumnDef, c: Customer) => {
     const loyalty = getLoyalty(c)
     switch (col.key) {
-      case 'full_name': return <Link href={`/customers/${c.id}`} className="text-gray-50 hover:text-emerald-400">{[c.first_name, c.middle_name, c.last_name].filter(Boolean).join(' ') || '\u2014'}</Link>
-      case 'first_name': return <span className="text-gray-200 text-sm">{c.first_name ?? '\u2014'}</span>
-      case 'last_name': return <span className="text-gray-200 text-sm">{c.last_name ?? '\u2014'}</span>
-      case 'phone': return <span className="text-gray-300 text-sm">{c.phone ?? '\u2014'}</span>
-      case 'email': return <span className="text-gray-400 text-xs">{c.email ?? '\u2014'}</span>
+      case 'full_name': return <Link href={`/customers/${c.id}`} className="text-primary hover:text-accent">{[c.first_name, c.middle_name, c.last_name].filter(Boolean).join(' ') || '\u2014'}</Link>
+      case 'first_name': return <span className="text-primary text-sm">{c.first_name ?? '\u2014'}</span>
+      case 'last_name': return <span className="text-primary text-sm">{c.last_name ?? '\u2014'}</span>
+      case 'phone': return <span className="text-secondary text-sm">{c.phone ?? '\u2014'}</span>
+      case 'email': return <span className="text-secondary text-xs">{c.email ?? '\u2014'}</span>
       case 'type': { const b = typeBadge(c.customer_type); return <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border ${b.cls}`}>{b.label}</span> }
       case 'status': { const b = statusBadge(c.status); return <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${b.cls}`}>{b.label}</span> }
-      case 'city': return <span className="text-gray-300 text-sm">{c.city ?? '\u2014'}</span>
-      case 'state': return <span className="text-gray-300 text-sm">{c.state ?? '\u2014'}</span>
-      case 'zip': return <span className="text-gray-300 text-sm">{c.zip ?? '\u2014'}</span>
-      case 'mj_state_id': return <span className="text-gray-400 text-xs font-mono">{c.medical_card_number ?? '\u2014'}</span>
+      case 'city': return <span className="text-secondary text-sm">{c.city ?? '\u2014'}</span>
+      case 'state': return <span className="text-secondary text-sm">{c.state ?? '\u2014'}</span>
+      case 'zip': return <span className="text-secondary text-sm">{c.zip ?? '\u2014'}</span>
+      case 'mj_state_id': return <span className="text-secondary text-xs font-mono">{c.medical_card_number ?? '\u2014'}</span>
       case 'id_expiration': {
         const exp = isExpiringSoon(c.id_expiration)
-        return <span className={`text-sm flex items-center gap-1 ${exp === 'expired' ? 'text-red-400' : exp === 'warning' ? 'text-amber-400' : 'text-gray-300'}`}>{fmtDate(c.id_expiration)}{exp !== 'ok' && <IconWarning />}</span>
+        return <span className={`text-sm flex items-center gap-1 ${exp === 'expired' ? 'text-danger' : exp === 'warning' ? 'text-warning' : 'text-secondary'}`}>{fmtDate(c.id_expiration)}{exp !== 'ok' && <IconWarning />}</span>
       }
       case 'med_card_exp': {
         const exp = isExpiringSoon(c.medical_card_expiration)
-        return <span className={`text-sm flex items-center gap-1 ${exp === 'expired' ? 'text-red-400' : exp === 'warning' ? 'text-amber-400' : 'text-gray-300'}`}>{fmtDate(c.medical_card_expiration)}{exp !== 'ok' && <IconWarning />}</span>
+        return <span className={`text-sm flex items-center gap-1 ${exp === 'expired' ? 'text-danger' : exp === 'warning' ? 'text-warning' : 'text-secondary'}`}>{fmtDate(c.medical_card_expiration)}{exp !== 'ok' && <IconWarning />}</span>
       }
-      case 'loyalty_points': return <span className="text-gray-200 text-sm tabular-nums">{loyalty.points.toLocaleString()}</span>
-      case 'loyalty_tier': return loyalty.tier ? <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300">{loyalty.tier}</span> : <span className="text-gray-500">\u2014</span>
-      case 'lifetime_spend': return <span className="text-gray-200 text-sm tabular-nums">{fmt(c.lifetime_spend)}</span>
-      case 'visit_count': return <span className="text-gray-200 text-sm tabular-nums">{c.visit_count}</span>
-      case 'last_visit': return <span className="text-gray-300 text-sm">{relDate(c.last_visit_at)}</span>
-      case 'groups': return <span className="text-gray-500 text-xs">\u2014</span>
-      case 'opted_email': return c.opted_into_marketing ? <span className="text-emerald-400 text-xs">Yes</span> : <span className="text-gray-500 text-xs">No</span>
-      case 'opted_sms': return c.opted_into_sms ? <span className="text-emerald-400 text-xs">Yes</span> : <span className="text-gray-500 text-xs">No</span>
-      case 'notes': return <span className="text-gray-400 text-xs truncate max-w-[150px] block">{c.notes ? c.notes.slice(0, 50) : '\u2014'}</span>
-      case 'created': return <span className="text-gray-300 text-sm">{fmtDate(c.created_at)}</span>
+      case 'loyalty_points': return <span className="text-primary text-sm tabular-nums">{loyalty.points.toLocaleString()}</span>
+      case 'loyalty_tier': return loyalty.tier ? <span className="text-xs px-2 py-0.5 rounded bg-raised text-secondary">{loyalty.tier}</span> : <span className="text-muted">\u2014</span>
+      case 'lifetime_spend': return <span className="text-primary text-sm tabular-nums">{fmt(c.lifetime_spend)}</span>
+      case 'visit_count': return <span className="text-primary text-sm tabular-nums">{c.visit_count}</span>
+      case 'last_visit': return <span className="text-secondary text-sm">{relDate(c.last_visit_at)}</span>
+      case 'groups': return <span className="text-muted text-xs">\u2014</span>
+      case 'opted_email': return c.opted_into_marketing ? <span className="text-accent text-xs">Yes</span> : <span className="text-muted text-xs">No</span>
+      case 'opted_sms': return c.opted_into_sms ? <span className="text-accent text-xs">Yes</span> : <span className="text-muted text-xs">No</span>
+      case 'notes': return <span className="text-secondary text-xs truncate max-w-[150px] block">{c.notes ? c.notes.slice(0, 50) : '\u2014'}</span>
+      case 'created': return <span className="text-secondary text-sm">{fmtDate(c.created_at)}</span>
       case 'actions': return (
         <div className="relative" data-row-menu>
-          <button onClick={e => { e.stopPropagation(); setOpenRowMenu(openRowMenu === c.id ? null : c.id) }} className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"><IconDots /></button>
+          <button onClick={e => { e.stopPropagation(); setOpenRowMenu(openRowMenu === c.id ? null : c.id) }} className="p-1 rounded hover:bg-raised text-secondary hover:text-primary"><IconDots /></button>
           {openRowMenu === c.id && (
-            <div className="absolute right-0 top-full mt-1 w-44 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-30 py-1">
-              <Link href={`/customers/${c.id}`} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">View Profile</Link>
-              <Link href={`/customers/${c.id}`} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Edit</Link>
-              <hr className="border-gray-700 my-1" />
+            <div className="absolute right-0 top-full mt-1 w-44 bg-surface border border-edge rounded-lg shadow-xl z-30 py-1">
+              <Link href={`/customers/${c.id}`} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">View Profile</Link>
+              <Link href={`/customers/${c.id}`} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Edit</Link>
+              <hr className="border-edge my-1" />
               {c.status === 'banned' ? (
-                <button onClick={() => { setOpenRowMenu(null); handleBulkAction('change_status', { status: 'active' }).then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-emerald-400 hover:bg-gray-700">Unban</button>
+                <button onClick={() => { setOpenRowMenu(null); handleBulkAction('change_status', { status: 'active' }).then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-accent hover:bg-raised">Unban</button>
               ) : (
-                <button onClick={() => { setOpenRowMenu(null); handleBulkAction('change_status', { status: 'banned', reason: 'Banned from list page' }).then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-700">Ban</button>
+                <button onClick={() => { setOpenRowMenu(null); handleBulkAction('change_status', { status: 'banned', reason: 'Banned from list page' }).then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-raised">Ban</button>
               )}
-              <button onClick={() => { setOpenRowMenu(null); handleBulkAction('archive').then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-700">Archive</button>
+              <button onClick={() => { setOpenRowMenu(null); handleBulkAction('archive').then(() => { setSelectedIds(new Set([c.id])); fetchCustomers() }) }} className="block w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-raised">Archive</button>
             </div>
           )}
         </div>
@@ -502,39 +502,39 @@ export default function CustomersPage() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-50">Customers</h1>
+        <h1 className="text-xl font-bold text-primary">Customers</h1>
         <div className="flex items-center gap-2">
-          <Link href="/customers/segments" className="text-sm px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Segments</Link>
-          <Link href="/customers/groups" className="text-sm px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Groups</Link>
+          <Link href="/customers/segments" className="text-sm px-3 py-2 bg-raised text-secondary rounded-lg hover:bg-raised">Segments</Link>
+          <Link href="/customers/groups" className="text-sm px-3 py-2 bg-raised text-secondary rounded-lg hover:bg-raised">Groups</Link>
           <div className="relative" ref={actionsDropRef}>
-            <button onClick={() => setShowActionsDropdown(!showActionsDropdown)} className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 border border-gray-600">Actions <IconChevronDown /></button>
+            <button onClick={() => setShowActionsDropdown(!showActionsDropdown)} className="flex items-center gap-1.5 px-3 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised border border-edge-strong">Actions <IconChevronDown /></button>
             {showActionsDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 py-1">
-                <button onClick={() => { exportCSV(); setShowActionsDropdown(false) }} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700">Export CSV</button>
+              <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl z-20 py-1">
+                <button onClick={() => { exportCSV(); setShowActionsDropdown(false) }} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised">Export CSV</button>
               </div>
             )}
           </div>
-          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">+ Add Customer</button>
+          <button onClick={() => setShowAddModal(true)} className="px-4 py-2 text-sm bg-accent hover:bg-accent text-primary rounded-lg font-medium">+ Add Customer</button>
         </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <SummaryCard label="Total Customers" value={stats.total.toLocaleString()} icon={<IconUsers />} />
-        <SummaryCard label="Active" value={String(stats.active)} color="text-emerald-400" icon={<IconUsers />} />
-        <SummaryCard label="Medical" value={String(stats.medical)} color="text-blue-400" icon={<IconUsers />} />
-        <SummaryCard label="Banned" value={String(stats.banned)} color={stats.banned > 0 ? 'text-red-400' : 'text-gray-50'} icon={<IconUsers />} />
+        <SummaryCard label="Active" value={String(stats.active)} color="text-accent" icon={<IconUsers />} />
+        <SummaryCard label="Medical" value={String(stats.medical)} color="text-info" icon={<IconUsers />} />
+        <SummaryCard label="Banned" value={String(stats.banned)} color={stats.banned > 0 ? 'text-danger' : 'text-primary'} icon={<IconUsers />} />
         <SummaryCard label="New (30 days)" value={String(stats.newThisMonth)} icon={<IconUsers />} />
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[240px]">
-            <div className="absolute inset-y-0 left-3 flex items-center text-gray-500"><IconSearch /></div>
-            <input value={searchInput} onChange={e => handleSearchInput(e.target.value)} placeholder="Search by name, phone, email, medical card, or ID" className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500" />
+            <div className="absolute inset-y-0 left-3 flex items-center text-muted"><IconSearch /></div>
+            <input value={searchInput} onChange={e => handleSearchInput(e.target.value)} placeholder="Search by name, phone, email, medical card, or ID" className="w-full bg-bg border border-edge rounded-lg pl-9 pr-3 py-2 text-sm text-primary placeholder:text-muted focus:ring-accent focus:border-accent" />
           </div>
-          <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 min-w-[140px]">
+          <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1) }} className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 min-w-[140px]">
             <option value="">All Types</option>
             <option value="recreational">Recreational</option>
             <option value="medical">Medical</option>
@@ -542,31 +542,31 @@ export default function CustomersPage() {
             <option value="medical_tax_exempt">Med (Tax Exempt)</option>
             <option value="non_cannabis">Non-Cannabis</option>
           </select>
-          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 min-w-[120px]">
+          <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }} className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 min-w-[120px]">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="banned">Banned</option>
             <option value="inactive">Inactive</option>
           </select>
           {groups.length > 0 && (
-            <select value={groupFilter} onChange={e => { setGroupFilter(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 min-w-[140px]">
+            <select value={groupFilter} onChange={e => { setGroupFilter(e.target.value); setPage(1) }} className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 min-w-[140px]">
               <option value="">All Groups</option>
               {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           )}
-          <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
-            <input type="checkbox" checked={showArchived} onChange={e => { setShowArchived(e.target.checked); setPage(1) }} className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500" />
+          <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer select-none">
+            <input type="checkbox" checked={showArchived} onChange={e => { setShowArchived(e.target.checked); setPage(1) }} className="rounded border-edge-strong bg-bg text-accent focus:ring-accent" />
             Show archived
           </label>
           <div className="relative" ref={colConfigRef}>
-            <button onClick={() => setShowColConfig(!showColConfig)} className="p-2 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700" title="Configure columns"><IconGear /></button>
+            <button onClick={() => setShowColConfig(!showColConfig)} className="p-2 rounded-lg border border-edge text-secondary hover:text-primary hover:bg-raised" title="Configure columns"><IconGear /></button>
             {showColConfig && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 py-2 px-3 max-h-80 overflow-y-auto">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Visible Columns</p>
+              <div className="absolute right-0 top-full mt-1 w-56 bg-surface border border-edge rounded-lg shadow-xl z-20 py-2 px-3 max-h-80 overflow-y-auto">
+                <p className="text-xs text-muted uppercase tracking-wide mb-2">Visible Columns</p>
                 {ALL_COLUMNS.filter(c => c.key !== 'actions').map(col => (
                   <label key={col.key} className="flex items-center gap-2 py-1 cursor-pointer">
-                    <input type="checkbox" checked={colVis[col.key] !== false} onChange={() => toggleCol(col.key)} className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500" />
-                    <span className="text-sm text-gray-300">{col.label}</span>
+                    <input type="checkbox" checked={colVis[col.key] !== false} onChange={() => toggleCol(col.key)} className="rounded border-edge-strong bg-bg text-accent focus:ring-accent" />
+                    <span className="text-sm text-secondary">{col.label}</span>
                   </label>
                 ))}
               </div>
@@ -577,40 +577,40 @@ export default function CustomersPage() {
 
       {/* Bulk Actions */}
       {selectedIds.size > 0 && (
-        <div className="bg-emerald-900/30 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-emerald-300 font-medium">{selectedIds.size} customer{selectedIds.size > 1 ? 's' : ''} selected</span>
+        <div className="bg-accent/30 border border-accent rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-accent font-medium">{selectedIds.size} customer{selectedIds.size > 1 ? 's' : ''} selected</span>
           <div className="flex items-center gap-2">
-            <button onClick={() => handleBulkAction('change_status', { status: 'active' })} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Set Active</button>
-            <button onClick={() => handleBulkAction('change_status', { status: 'banned', reason: 'Bulk ban' })} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Ban</button>
-            <button onClick={() => exportCSV(customers.filter(c => selectedIds.has(c.id)))} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Export Selected</button>
-            <button onClick={() => handleBulkAction('archive')} className="px-3 py-1.5 text-xs bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900/70 border border-red-800">Archive</button>
-            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-300">Clear</button>
+            <button onClick={() => handleBulkAction('change_status', { status: 'active' })} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Set Active</button>
+            <button onClick={() => handleBulkAction('change_status', { status: 'banned', reason: 'Bulk ban' })} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Ban</button>
+            <button onClick={() => exportCSV(customers.filter(c => selectedIds.has(c.id)))} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Export Selected</button>
+            <button onClick={() => handleBulkAction('archive')} className="px-3 py-1.5 text-xs bg-danger/50 text-danger rounded-lg hover:bg-danger/70 border border-danger">Archive</button>
+            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 text-xs text-muted hover:text-secondary">Clear</button>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-gray-700 bg-gray-800/80">
-                <th className="w-10 px-3 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500" /></th>
+              <tr className="border-b border-edge bg-surface/80">
+                <th className="w-10 px-3 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-edge-strong bg-bg text-accent focus:ring-accent" /></th>
                 {visibleColumns.map(col => (
-                  <th key={col.key} className={`px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.sortable ? 'cursor-pointer select-none hover:text-gray-200' : ''}`} onClick={() => col.sortable && handleSort(col.key)}>
+                  <th key={col.key} className={`px-3 py-3 text-xs font-medium text-secondary uppercase tracking-wide whitespace-nowrap ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.sortable ? 'cursor-pointer select-none hover:text-primary' : ''}`} onClick={() => col.sortable && handleSort(col.key)}>
                     <span className="inline-flex items-center gap-1">{col.label}{col.sortable && col.sortKey === sortBy && (sortDir === 'asc' ? <IconChevronUp /> : <IconChevronDown />)}</span>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700/50">
+            <tbody className="divide-y divide-edge/50">
               {loading && customers.length === 0 ? (
-                <tr><td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="text-sm">Loading customers...</span></div></td></tr>
+                <tr><td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-muted"><div className="flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" /><span className="text-sm">Loading customers...</span></div></td></tr>
               ) : customers.length === 0 ? (
-                <tr><td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-gray-500"><div className="flex flex-col items-center gap-2"><IconUsers /><span className="text-sm">No customers found</span></div></td></tr>
+                <tr><td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-muted"><div className="flex flex-col items-center gap-2"><IconUsers /><span className="text-sm">No customers found</span></div></td></tr>
               ) : customers.map(c => (
-                <tr key={c.id} className={`transition-colors hover:bg-gray-700/30 ${c.status === 'banned' ? 'bg-red-900/10' : ''} ${selectedIds.has(c.id) ? 'bg-emerald-900/15' : ''}`}>
-                  <td className="w-10 px-3 py-2.5"><input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleOne(c.id)} className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500" /></td>
+                <tr key={c.id} className={`transition-colors hover:bg-raised/30 ${c.status === 'banned' ? 'bg-danger/10' : ''} ${selectedIds.has(c.id) ? 'bg-accent/15' : ''}`}>
+                  <td className="w-10 px-3 py-2.5"><input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleOne(c.id)} className="rounded border-edge-strong bg-bg text-accent focus:ring-accent" /></td>
                   {visibleColumns.map(col => (
                     <td key={col.key} className={`px-3 py-2.5 ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}>{renderCell(col, c)}</td>
                   ))}
@@ -622,23 +622,23 @@ export default function CustomersPage() {
 
         {/* Pagination */}
         {pagination.total > 0 && (
-          <div className="border-t border-gray-700 px-4 py-3 flex items-center justify-between">
+          <div className="border-t border-edge px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">Showing {showingFrom}-{showingTo} of {pagination.total.toLocaleString()}</span>
-              <select value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1) }} className="bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-lg px-2 py-1">
+              <span className="text-sm text-secondary">Showing {showingFrom}-{showingTo} of {pagination.total.toLocaleString()}</span>
+              <select value={perPage} onChange={e => { setPerPage(Number(e.target.value)); setPage(1) }} className="bg-bg border border-edge text-secondary text-xs rounded-lg px-2 py-1">
                 <option value={25}>25 / page</option>
                 <option value={50}>50 / page</option>
                 <option value={100}>100 / page</option>
               </select>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30">Prev</button>
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="px-2 py-1 text-xs rounded border border-edge text-secondary hover:text-primary hover:bg-raised disabled:opacity-30">Prev</button>
               {pageButtons.map((p, idx) => typeof p === 'string' ? (
-                <span key={`e-${idx}`} className="px-2 py-1 text-xs text-gray-500">...</span>
+                <span key={`e-${idx}`} className="px-2 py-1 text-xs text-muted">...</span>
               ) : (
-                <button key={p} onClick={() => setPage(p)} className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700'}`}>{p}</button>
+                <button key={p} onClick={() => setPage(p)} className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-accent border-accent text-primary' : 'border-edge text-secondary hover:text-primary hover:bg-raised'}`}>{p}</button>
               ))}
-              <button onClick={() => setPage(p => Math.min(pagination.total_pages, p + 1))} disabled={page >= pagination.total_pages} className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30">Next</button>
+              <button onClick={() => setPage(p => Math.min(pagination.total_pages, p + 1))} disabled={page >= pagination.total_pages} className="px-2 py-1 text-xs rounded border border-edge text-secondary hover:text-primary hover:bg-raised disabled:opacity-30">Next</button>
             </div>
           </div>
         )}

@@ -27,16 +27,16 @@ export function DateRangePicker({ startDate, endDate, onChange, presets = DEFAUL
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <input type="date" value={startDate ?? ''} onChange={(e) => onChange(e.target.value, endDate)}
-        className="h-9 px-3 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-50" />
-      <span className="text-gray-500 text-xs">to</span>
+        className="h-9 px-3 bg-surface border border-edge rounded-lg text-sm text-primary" />
+      <span className="text-muted text-xs">to</span>
       <input type="date" value={endDate ?? ''} onChange={(e) => {
         const end = e.target.value
         if (startDate && end < startDate) onChange(end, startDate) // swap if end < start
         else onChange(startDate, end)
-      }} className="h-9 px-3 bg-gray-800 border border-gray-700 rounded-lg text-sm text-gray-50" />
+      }} className="h-9 px-3 bg-surface border border-edge rounded-lg text-sm text-primary" />
       {(presets ?? []).map((p) => (
         <button key={p.label} onClick={() => { const [s, e] = p.getRange(); onChange(s, e) }}
-          className="h-9 px-3 bg-gray-700 text-gray-300 rounded-lg text-xs hover:bg-gray-600 transition-colors">{p.label}</button>
+          className="h-9 px-3 bg-raised text-secondary rounded-lg text-xs hover:bg-raised transition-colors">{p.label}</button>
       ))}
     </div>
   )

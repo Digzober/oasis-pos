@@ -63,7 +63,7 @@ export default function CheckoutPage() {
     setSubmitting(false)
   }
 
-  const inputCls = "w-full h-11 px-4 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-11 px-4 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div className="max-w-lg mx-auto px-4 py-8">
@@ -98,15 +98,15 @@ export default function CheckoutPage() {
 
         <div className="border-t pt-4 space-y-1 text-sm">
           <div className="flex justify-between"><span>{items.length} items</span><span className="tabular-nums">{fmt(subtotal)}</span></div>
-          <div className="flex justify-between text-gray-500"><span>Est. Tax</span><span className="tabular-nums">{fmt(estimatedTax)}</span></div>
+          <div className="flex justify-between text-muted"><span>Est. Tax</span><span className="tabular-nums">{fmt(estimatedTax)}</span></div>
           <div className="flex justify-between font-bold text-lg"><span>Est. Total</span><span className="tabular-nums">{fmt(estimatedTotal)}</span></div>
-          <p className="text-xs text-gray-500 mt-1">Payment is collected at pickup. Final total may vary.</p>
+          <p className="text-xs text-muted mt-1">Payment is collected at pickup. Final total may vary.</p>
         </div>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-danger text-sm">{error}</p>}
 
         <button type="submit" disabled={submitting || items.length === 0}
-          className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+          className="w-full py-3 bg-accent text-primary rounded-lg font-medium hover:bg-accent disabled:opacity-50 transition-colors">
           {submitting ? 'Placing Order...' : 'Place Order'}
         </button>
       </form>

@@ -370,3 +370,51 @@ Cron auth (src/lib/auth/cron.ts): fail-closed — missing CRON_SECRET → 500, w
 Cron full incremental live-run deferred: first real run does Apr→Jul catch-up; requires CRON_SECRET env var (currently unset). Incremental logic covered by unit tests.
 
 Result: AC-B1, B11, B15 live-proven on real data. AC-B12 verified. AC-B8 (consecutive incremental) unit-tested; live run flagged for controlled first execution.
+
+## Phase C — Universal theme system
+
+### Findings and implementation ledger
+
+| ID | File:line | Class | Fix / decision |
+|---|---|---|---|
+| C-001 | `src/app/globals.css:1` | Token architecture | Replaced the browser-preference two-color stylesheet with three explicit semantic themes. `:root` and `oasis-dark` are the default near-black/emerald presentation; `oasis-light` uses warm neutral surfaces; `oasis-contrast` raises text/edge separation. Surface, edge, text, brand, status/soft, chart, ring, radius, and shadow groups are mapped into Tailwind v4 through `@theme inline`. |
+| C-002 | `src/lib/theme/registry.ts:1` | Extensibility | Added `THEMES` as the sole TypeScript theme inventory plus derived `ThemeId`, default, persistence keys, and validation. Provider and picker import this registry; neither contains per-theme branching. |
+| C-003 | `src/lib/theme/bootstrap.tsx:1`; `src/app/layout.tsx:1` | No FOUC | Added an inline parser-blocking head script before `<body>`. It validates localStorage/cookie values against registry-derived IDs and sets `document.documentElement.dataset.theme` before paint. Blocked storage access falls through to cookie/default without delaying paint. The root defaults to `oasis-dark` and suppresses only the expected hydration attribute difference. |
+| C-004 | `src/lib/theme/ThemeProvider.tsx:1` | Persistence | Added a registry-validated external-store provider. Theme changes update the root dataset, localStorage when available, a one-year SameSite=Lax cookie, and an in-page subscription event; storage events synchronize valid selections across tabs. |
+| C-005 | `src/components/theme/ThemePicker.tsx:1`; `src/app/(backoffice)/settings/appearance/page.tsx:1` | Appearance UI | Added registry-rendered GitHub-style miniature interface previews with radio semantics, visible selection state, and an Appearance settings route. Added Appearance to the settings landing page and sidebar. |
+| C-006 | `src/components/shared/*.tsx:1`; `src/components/backoffice/KPICard.tsx:1` | Shared UI | Converted existing shared controls to semantic utilities and added semantic Button, Input, Select, Card, Modal, StatCard, Badge, Switch, and Tabs primitives. `KPICard` now delegates to `StatCard`; pages were not individually redesigned. |
+| C-007 | `scripts/codemod-theme.mjs:1`; `src/app/**`; `src/components/**` | Palette removal | Mechanically converted numbered gray/zinc/slate/neutral/stone/red/green/emerald/blue/amber/purple and black/white utilities in 157 files to role-based utilities. The follow-up scan reports zero numbered palette utilities. |
+| C-008 | `.route/theme-exemptions.txt:1` | Literal-color exceptions | Documented seven narrowly scoped files containing user-persisted color values, native color-input defaults, or black-on-white thermal print output. Exemptions apply only to hex scanning; palette utilities remain forbidden even in exempt files. |
+| C-009 | `src/components/backoffice/charts/SalesByCategoryChart.tsx:14`; `SalesByHourChart.tsx:19`; `SalesTrendChart.tsx:14` | Chart theming | Replaced Recharts hex literals with `--chart-*`, surface, edge, and text variables so charts react immediately to the selected theme. |
+| C-010 | `scripts/check-theme.mjs:1`; `package.json:13` | Regression gate | Added `npm run check:theme`. It recursively scans 441 files, rejects forbidden palette utilities and non-exempt hex, validates exemption paths, computes contrast from shipped CSS, and fails below WCAG AA 4.5:1. |
+| C-011 | `src/lib/theme/__tests__/theme-contract.test.ts:1` | Contract tests | Added AC-C3 registry/CSS-block/provider/picker assertions and a no-FOUC source-order/persistence test. Initial RED: 3/3 failed before implementation; final targeted run: 3/3 passed. |
+| C-012 | `src/components/shared/__tests__/shared.test.tsx:99` | Semantic test repair | The shared cluster exposed an obsolete emerald-class assertion and showed success badges had inherited the accent role. Changed `StatusBadge` to success/warning/danger/info soft pairs and asserted semantic success tokens. Targeted component/theme run: 43/43 passed. |
+
+### WCAG AA computed contrast results
+
+Command: `npm run check:theme` (exit 0). Normal-text threshold: 4.50:1. The gate checks each normal text role on every general surface, inverse text on all strong status fills, accent foreground, and status text on its soft surface.
+
+```text
+oasis-dark: text-primary/bg=17.80, text-primary/surface=16.75, text-primary/surface-raised=15.38, text-primary/surface-overlay=13.89, text-secondary/bg=11.92, text-secondary/surface=11.22, text-secondary/surface-raised=10.30, text-secondary/surface-overlay=9.30, text-muted/bg=7.32, text-muted/surface=6.89, text-muted/surface-raised=6.32, text-muted/surface-overlay=5.71, text-inverse/success=11.06, text-inverse/warning=11.54, text-inverse/danger=7.16, text-inverse/info=7.58, accent-fg/accent=8.41, success/success-soft=7.09, warning/warning-soft=7.33, danger/danger-soft=5.40, info/info-soft=5.31
+oasis-light: text-primary/bg=15.30, text-primary/surface=16.13, text-primary/surface-raised=14.69, text-primary/surface-overlay=13.86, text-secondary/bg=7.76, text-secondary/surface=8.19, text-secondary/surface-raised=7.46, text-secondary/surface-overlay=7.03, text-muted/bg=5.21, text-muted/surface=5.50, text-muted/surface-raised=5.01, text-muted/surface-overlay=4.72, text-inverse/success=6.77, text-inverse/warning=6.73, text-inverse/danger=5.97, text-inverse/info=6.36, accent-fg/accent=5.39, success/success-soft=6.49, warning/warning-soft=6.37, danger/danger-soft=5.24, info/info-soft=5.49
+oasis-contrast: text-primary/bg=19.94, text-primary/surface=19.26, text-primary/surface-raised=18.01, text-primary/surface-overlay=16.36, text-secondary/bg=16.22, text-secondary/surface=15.67, text-secondary/surface-raised=14.65, text-secondary/surface-overlay=13.31, text-muted/bg=11.53, text-muted/surface=11.14, text-muted/surface-raised=10.41, text-muted/surface-overlay=9.46, text-inverse/success=12.74, text-inverse/warning=14.73, text-inverse/danger=10.27, text-inverse/info=10.77, accent-fg/accent=10.10, success/success-soft=8.11, warning/warning-soft=8.78, danger/danger-soft=7.69, info/info-soft=7.48
+```
+
+The lowest shipped pairing is Oasis Light muted text on the overlay surface at 4.72:1. The gate initially caught that pair below threshold; `--text-muted` was adjusted before completion.
+
+### Supplemental release checks
+
+- `npm run lint`: exit 0, 0 errors (226 pre-existing warnings).
+- `npm run build`: exit 1 before application compilation because the restricted environment could not fetch the pre-existing `Geist` and `Geist Mono` Google font CSS. It also reported pre-existing `next.config.ts` stale-time/API warnings and the middleware deprecation. No Phase C compile error was emitted.
+- `npm audit --audit-level=moderate`: exit 1 because the restricted environment could not reach the npm advisory endpoint; no dependency changes were made in Phase C.
+- Security scan: no Phase C secret, credential, privileged SQL, or runtime debug path was introduced. The three new `console.log` matches are intentional output from the CLI-only `check-theme.mjs` gate.
+
+### Phase C final verification — 2026-07-14
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm run typecheck` | 0 | PASS — TypeScript emitted no errors. |
+| `npm run test` | 0 | PASS — 49 files, 377/377 tests. |
+| `npm run check:theme` | 0 | PASS — 441 files scanned, 7 documented exemptions, all computed pairs >= 4.50:1. |
+
+Final trio rerun after blocked-storage/cross-tab persistence hardening: `typecheck=0`, `test=0` (377/377), `check:theme=0`.

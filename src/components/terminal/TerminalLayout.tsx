@@ -32,18 +32,18 @@ export default function TerminalLayout({ children }: TerminalLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-gray-900 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+      <div className="h-screen bg-bg flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-edge border-t-emerald-400 rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="h-screen bg-[#0a0a0b] flex flex-col overflow-hidden">
+    <div className="h-screen bg-bg flex flex-col overflow-hidden">
       <TerminalHeader />
       <div className="flex flex-1 min-h-0">
         <main className="flex-1 flex flex-col min-h-0">{children}</main>
-        <aside className="w-[420px] shrink-0 border-l border-gray-800">
+        <aside className="w-[420px] shrink-0 border-l border-edge">
           <CartSidebar />
         </aside>
       </div>

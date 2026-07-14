@@ -46,12 +46,12 @@ type SortDir = 'asc' | 'desc'
 /* ------------------------------------------------------------------ */
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-blue-600/20 text-blue-400',
-  open: 'bg-blue-600/20 text-blue-400',
-  in_transit: 'bg-amber-600/20 text-amber-400',
-  delivered: 'bg-emerald-600/20 text-emerald-400',
-  sold: 'bg-emerald-600/20 text-emerald-400',
-  cancelled: 'bg-red-600/20 text-red-400',
+  draft: 'bg-info/20 text-info',
+  open: 'bg-info/20 text-info',
+  in_transit: 'bg-warning/20 text-warning',
+  delivered: 'bg-accent/20 text-accent',
+  sold: 'bg-accent/20 text-accent',
+  cancelled: 'bg-danger/20 text-danger',
 }
 
 const STATUS_OPTIONS = ['draft', 'open', 'in_transit', 'delivered', 'sold', 'cancelled']
@@ -79,7 +79,7 @@ function formatCurrency(n: number | null | undefined): string {
 /* ------------------------------------------------------------------ */
 
 function ManifestStatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] ?? 'bg-gray-600/20 text-gray-400'
+  const style = STATUS_STYLES[status] ?? 'bg-raised/20 text-secondary'
   return (
     <span className={`inline-flex items-center rounded-full text-[10px] font-medium px-2 py-0.5 capitalize ${style}`}>
       {status.replace(/_/g, ' ')}
@@ -110,7 +110,7 @@ function SortHeader({
   const arrow = active ? (currentDir === 'asc' ? ' \u25B2' : ' \u25BC') : ''
   return (
     <th
-      className={`${align === 'right' ? 'text-right' : 'text-left'} px-4 py-3 cursor-pointer select-none hover:text-gray-200 transition-colors whitespace-nowrap ${active ? 'text-emerald-400' : ''}`}
+      className={`${align === 'right' ? 'text-right' : 'text-left'} px-4 py-3 cursor-pointer select-none hover:text-primary transition-colors whitespace-nowrap ${active ? 'text-accent' : ''}`}
       onClick={() => onSort(field)}
     >
       {label}{arrow}
@@ -124,10 +124,10 @@ function SortHeader({
 
 function SkeletonRow() {
   return (
-    <tr className="border-b border-gray-700/50 animate-pulse">
+    <tr className="border-b border-edge/50 animate-pulse">
       {Array.from({ length: 14 }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-4 bg-raised rounded w-3/4" />
         </td>
       ))}
     </tr>
@@ -156,7 +156,7 @@ function RowMenu({ manifest, onDelete }: { manifest: Manifest; onDelete: (id: st
     <div ref={ref} className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o) }}
-        className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+        className="p-1 rounded hover:bg-raised text-secondary hover:text-primary"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <circle cx="10" cy="4" r="1.5" />
@@ -165,16 +165,16 @@ function RowMenu({ manifest, onDelete }: { manifest: Manifest; onDelete: (id: st
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-36 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute right-0 z-50 mt-1 w-36 bg-surface border border-edge rounded-lg shadow-xl overflow-hidden">
           {isDraft ? (
             <button
               onClick={(e) => { e.stopPropagation(); e.preventDefault(); onDelete(manifest.id); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700"
+              className="w-full text-left px-3 py-2 text-sm text-danger hover:bg-raised"
             >
               Delete
             </button>
           ) : (
-            <div className="px-3 py-2 text-xs text-gray-500">No actions available</div>
+            <div className="px-3 py-2 text-xs text-muted">No actions available</div>
           )}
         </div>
       )}
@@ -208,21 +208,21 @@ function StatusFilter({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 min-w-[160px] text-left flex items-center justify-between gap-2"
+        className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary min-w-[160px] text-left flex items-center justify-between gap-2"
       >
         <span className="truncate capitalize">
           {value ? value.replace(/_/g, ' ') : 'All statuses'}
         </span>
-        <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3 h-3 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute z-50 mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl overflow-hidden">
           {value && (
             <button
               onClick={() => { onChange(''); setOpen(false) }}
-              className="w-full text-left px-3 py-2 text-xs text-gray-400 hover:bg-gray-700 border-b border-gray-700"
+              className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-raised border-b border-edge"
             >
               Clear status filter
             </button>
@@ -231,7 +231,7 @@ function StatusFilter({
             <button
               key={s}
               onClick={() => { onChange(s); setOpen(false) }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 capitalize ${value === s ? 'text-emerald-400' : 'text-gray-200'}`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-raised capitalize ${value === s ? 'text-accent' : 'text-primary'}`}
             >
               {s.replace(/_/g, ' ')}
             </button>
@@ -282,23 +282,23 @@ function CreateManifestModal({
     }
   }
 
-  const inputCls = 'w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500'
+  const inputCls = 'w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-bold text-gray-50">Create Manifest</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">&times;</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+      <div className="bg-surface border border-edge rounded-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-bold text-primary">Create Manifest</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary text-lg">&times;</button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300">
+            <div className="px-3 py-2 bg-danger/30 border border-danger rounded text-sm text-danger">
               {error}
             </div>
           )}
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Title *</label>
+            <label className="block text-xs text-secondary mb-1">Title *</label>
             <input
               type="text"
               value={title}
@@ -309,7 +309,7 @@ function CreateManifestModal({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Type *</label>
+            <label className="block text-xs text-secondary mb-1">Type *</label>
             <select
               value={type}
               onChange={(e) => { setType(e.target.value); setCustomerId('') }}
@@ -320,7 +320,7 @@ function CreateManifestModal({
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">{customerLabel} *</label>
+            <label className="block text-xs text-secondary mb-1">{customerLabel} *</label>
             <select
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
@@ -333,7 +333,7 @@ function CreateManifestModal({
             </select>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Date *</label>
+            <label className="block text-xs text-secondary mb-1">Date *</label>
             <input
               type="date"
               value={date}
@@ -345,14 +345,14 @@ function CreateManifestModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-300 hover:text-gray-100 transition-colors"
+              className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-40 transition-colors"
+              className="px-4 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-40 transition-colors"
             >
               {submitting ? 'Creating...' : 'Create Manifest'}
             </button>
@@ -527,7 +527,7 @@ export default function ManifestsPage() {
         actions={
           <button
             onClick={() => setShowCreate(true)}
-            className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors font-medium"
+            className="px-4 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent transition-colors font-medium"
           >
             Add manifest
           </button>
@@ -535,7 +535,7 @@ export default function ManifestsPage() {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 bg-gray-800 rounded-lg p-1 w-fit border border-gray-700">
+      <div className="flex gap-1 mb-4 bg-surface rounded-lg p-1 w-fit border border-edge">
         <TabButton label="Wholesale" active={tab === 'wholesale'} onClick={() => handleTabChange('wholesale')} />
         <TabButton label="Retail" active={tab === 'retail'} onClick={() => handleTabChange('retail')} />
       </div>
@@ -547,24 +547,24 @@ export default function ManifestsPage() {
           defaultValue={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search by title or customer..."
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 w-80 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+          className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary w-80 placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
         />
         <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1) }} />
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-300">
+        <div className="mb-4 px-4 py-3 bg-danger/30 border border-danger rounded-lg text-sm text-danger">
           {error}
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[1400px]">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <SortHeader label="Title" field="title" currentSort={sortBy} currentDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Customer" field="customer_name" currentSort={sortBy} currentDir={sortDir} onSort={handleSort} />
                 <SortHeader label="Created Date" field="created_date" currentSort={sortBy} currentDir={sortDir} onSort={handleSort} />
@@ -592,35 +592,35 @@ export default function ManifestsPage() {
                 </>
               ) : manifests.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="text-center py-12 text-gray-500">
+                  <td colSpan={14} className="text-center py-12 text-muted">
                     No manifests found
                   </td>
                 </tr>
               ) : manifests.map((m) => (
                 <tr
                   key={m.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                  className="border-b border-edge/50 hover:bg-raised/30 transition-colors"
                 >
                   <td className="px-4 py-2.5 whitespace-nowrap">
                     <Link
                       href={`/inventory/manifests/${m.id}`}
-                      className="text-emerald-400 hover:text-emerald-300 hover:underline font-medium"
+                      className="text-accent hover:text-accent hover:underline font-medium"
                     >
                       {m.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-2.5 text-gray-300">{m.customer_name ?? '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs whitespace-nowrap">{formatDate(m.created_date)}</td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs whitespace-nowrap">{formatDate(m.completed_date)}</td>
+                  <td className="px-4 py-2.5 text-secondary">{m.customer_name ?? '\u2014'}</td>
+                  <td className="px-4 py-2.5 text-secondary text-xs whitespace-nowrap">{formatDate(m.created_date)}</td>
+                  <td className="px-4 py-2.5 text-secondary text-xs whitespace-nowrap">{formatDate(m.completed_date)}</td>
                   <td className="px-4 py-2.5"><ManifestStatusBadge status={m.status} /></td>
-                  <td className="px-4 py-2.5 text-right text-gray-50 tabular-nums">{m.total_items}</td>
-                  <td className="px-4 py-2.5 text-gray-300 capitalize">{m.type}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{m.manifest_number ?? '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-50 tabular-nums">{formatCurrency(m.subtotal)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{formatCurrency(m.credits)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{formatCurrency(m.discounts)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-50 tabular-nums font-medium">{formatCurrency(m.total)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{formatCurrency(m.taxes)}</td>
+                  <td className="px-4 py-2.5 text-right text-primary tabular-nums">{m.total_items}</td>
+                  <td className="px-4 py-2.5 text-secondary capitalize">{m.type}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{m.manifest_number ?? '\u2014'}</td>
+                  <td className="px-4 py-2.5 text-right text-primary tabular-nums">{formatCurrency(m.subtotal)}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(m.credits)}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(m.discounts)}</td>
+                  <td className="px-4 py-2.5 text-right text-primary tabular-nums font-medium">{formatCurrency(m.total)}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(m.taxes)}</td>
                   <td className="px-4 py-2.5">
                     <RowMenu manifest={m} onDelete={(id) => setDeleteConfirm(id)} />
                   </td>
@@ -631,17 +631,17 @@ export default function ManifestsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-secondary">
               Displaying {displayStart} - {displayEnd} of {total}
             </span>
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500">Per page:</span>
+              <span className="text-xs text-muted">Per page:</span>
               <select
                 value={perPage}
                 onChange={(e) => handlePerPageChange(Number(e.target.value))}
-                className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="bg-bg border border-edge rounded px-2 py-1 text-xs text-secondary focus:outline-none focus:ring-1 focus:ring-accent"
               >
                 {PER_PAGE_OPTIONS.map(n => (
                   <option key={n} value={n}>{n}</option>
@@ -653,17 +653,17 @@ export default function ManifestsPage() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 transition-colors"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised transition-colors"
             >
               Prev
             </button>
-            <span className="px-3 py-1 text-xs text-gray-400 tabular-nums">
+            <span className="px-3 py-1 text-xs text-secondary tabular-nums">
               {page} / {totalPages}
             </span>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 transition-colors"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised transition-colors"
             >
               Next
             </button>
@@ -683,22 +683,22 @@ export default function ManifestsPage() {
 
       {/* Delete Confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-gray-50 mb-2">Delete Manifest</h3>
-            <p className="text-sm text-gray-400 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface border border-edge rounded-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-bold text-primary mb-2">Delete Manifest</h3>
+            <p className="text-sm text-secondary mb-6">
               Are you sure you want to delete this draft manifest? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 text-sm text-gray-300 hover:text-gray-100"
+                className="px-4 py-2 text-sm text-secondary hover:text-primary"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm)}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-500"
+                className="px-4 py-2 text-sm bg-danger text-primary rounded-lg hover:bg-danger"
               >
                 Delete
               </button>
@@ -720,8 +720,8 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
       onClick={onClick}
       className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${
         active
-          ? 'bg-emerald-600 text-white'
-          : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+          ? 'bg-accent text-primary'
+          : 'text-secondary hover:text-primary hover:bg-raised'
       }`}
     >
       {label}

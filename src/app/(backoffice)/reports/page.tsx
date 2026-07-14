@@ -103,11 +103,11 @@ const categories: ReportCategory[] = [
 export default function ReportsPage() {
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-50">Reports</h1>
+      <h1 className="text-2xl font-bold text-primary">Reports</h1>
 
       {categories.map((category) => (
         <section key={category.name}>
-          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-gray-500">
+          <h2 className="mb-3 text-sm font-medium uppercase tracking-wide text-muted">
             {category.name}
           </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -115,15 +115,15 @@ export default function ReportsPage() {
               <Link
                 key={report.href}
                 href={report.href}
-                className="group rounded-xl border border-gray-700 bg-gray-800 p-5 transition-all hover:-translate-y-px hover:border-emerald-600"
+                className="group rounded-xl border border-edge bg-surface p-5 transition-all hover:-translate-y-px hover:border-accent"
               >
                 <div className="flex items-start gap-3">
-                  <report.icon className="mt-0.5 h-6 w-6 shrink-0 text-emerald-400" />
+                  <report.icon className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
                   <div>
-                    <h3 className="font-semibold text-gray-50">
+                    <h3 className="font-semibold text-primary">
                       {report.title}
                     </h3>
-                    <p className="mt-1 text-sm text-gray-400">
+                    <p className="mt-1 text-sm text-secondary">
                       {report.description}
                     </p>
                   </div>

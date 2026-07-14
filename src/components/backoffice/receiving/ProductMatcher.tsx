@@ -23,9 +23,9 @@ interface ProductMatcherProps {
 }
 
 function confidenceColor(c: number): string {
-  if (c >= 0.8) return 'bg-emerald-600/20 text-emerald-400'
-  if (c >= 0.5) return 'bg-amber-600/20 text-amber-400'
-  return 'bg-red-600/20 text-red-400'
+  if (c >= 0.8) return 'bg-accent/20 text-accent'
+  if (c >= 0.5) return 'bg-warning/20 text-warning'
+  return 'bg-danger/20 text-danger'
 }
 
 function confidenceLabel(c: number): string {
@@ -86,7 +86,7 @@ export function ProductMatcher({
         type="button"
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className="w-full min-h-[40px] px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-left flex items-center justify-between text-gray-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="w-full min-h-[40px] px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-left flex items-center justify-between text-primary disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent"
       >
         {selected ? (
           <span className="flex items-center gap-2 min-w-0">
@@ -96,39 +96,39 @@ export function ProductMatcher({
             </span>
           </span>
         ) : (
-          <span className="text-gray-500">Select catalog product...</span>
+          <span className="text-muted">Select catalog product...</span>
         )}
-        <span className="text-gray-500 text-xs ml-2 shrink-0">&#9662;</span>
+        <span className="text-muted text-xs ml-2 shrink-0">&#9662;</span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-80 overflow-hidden flex flex-col">
-            <div className="p-2 border-b border-gray-700">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-edge rounded-lg shadow-xl z-50 max-h-80 overflow-hidden flex flex-col">
+            <div className="p-2 border-b border-edge">
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => handleSearch(e.target.value)}
                 placeholder="Search products by name or SKU..."
-                className="w-full h-8 px-2 bg-gray-900 border border-gray-600 rounded text-sm text-gray-50 focus:outline-none"
+                className="w-full h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary focus:outline-none"
               />
             </div>
 
             {biotrackName && (
-              <div className="px-3 py-1.5 border-b border-gray-700/50 bg-gray-900/50">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide">BioTrack Name</p>
-                <p className="text-xs text-gray-400 truncate">{biotrackName}</p>
+              <div className="px-3 py-1.5 border-b border-edge/50 bg-bg/50">
+                <p className="text-[10px] text-muted uppercase tracking-wide">BioTrack Name</p>
+                <p className="text-xs text-secondary truncate">{biotrackName}</p>
               </div>
             )}
 
             <div className="overflow-y-auto flex-1">
               {loading ? (
                 <div className="p-4 flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-edge border-t-emerald-400 rounded-full animate-spin" />
                 </div>
               ) : displayed.length === 0 ? (
-                <p className="p-3 text-gray-500 text-xs">No matching products found</p>
+                <p className="p-3 text-muted text-xs">No matching products found</p>
               ) : (
                 displayed.map((match) => (
                   <button
@@ -138,12 +138,12 @@ export function ProductMatcher({
                       setOpen(false)
                       setQuery('')
                     }}
-                    className={`w-full text-left px-3 py-2.5 text-sm hover:bg-gray-700 border-b border-gray-700/30 ${
-                      match.product_id === selectedProductId ? 'bg-gray-700/50' : ''
+                    className={`w-full text-left px-3 py-2.5 text-sm hover:bg-raised border-b border-edge/30 ${
+                      match.product_id === selectedProductId ? 'bg-raised/50' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className={match.product_id === selectedProductId ? 'text-emerald-400' : 'text-gray-200'}>
+                      <span className={match.product_id === selectedProductId ? 'text-accent' : 'text-primary'}>
                         {match.product_name}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -153,9 +153,9 @@ export function ProductMatcher({
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      {match.sku && <span className="text-[10px] text-gray-500">SKU: {match.sku}</span>}
-                      {match.brand_name && <span className="text-[10px] text-gray-500">{match.brand_name}</span>}
-                      <span className="text-[10px] text-gray-600">{methodLabel(match.match_method)}</span>
+                      {match.sku && <span className="text-[10px] text-muted">SKU: {match.sku}</span>}
+                      {match.brand_name && <span className="text-[10px] text-muted">{match.brand_name}</span>}
+                      <span className="text-[10px] text-muted">{methodLabel(match.match_method)}</span>
                     </div>
                   </button>
                 ))

@@ -277,7 +277,7 @@ export default function SmartTagsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="animate-spin text-gray-400" size={32} />
+        <Loader2 className="animate-spin text-secondary" size={32} />
       </div>
     )
   }
@@ -287,8 +287,8 @@ export default function SmartTagsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-100">Smart Tags</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-primary">Smart Tags</h1>
+          <p className="text-sm text-secondary mt-1">
             Auto-tag products based on rule conditions
           </p>
         </div>
@@ -296,14 +296,14 @@ export default function SmartTagsPage() {
           <button
             onClick={handleRunAll}
             disabled={runningAll || rules.filter((r) => r.is_active).length === 0}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-warning hover:bg-warning text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {runningAll ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
             Run All
           </button>
           <button
             onClick={openCreateForm}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent hover:bg-accent text-primary transition-colors"
           >
             <Plus size={16} />
             Create Rule
@@ -313,17 +313,17 @@ export default function SmartTagsPage() {
 
       {/* Messages */}
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-900/40 border border-red-700 text-red-300 text-sm flex items-center justify-between">
+        <div className="mb-4 p-3 rounded-lg bg-danger/40 border border-danger text-danger text-sm flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-200">
+          <button onClick={() => setError(null)} className="text-danger hover:text-danger">
             <X size={14} />
           </button>
         </div>
       )}
       {successMsg && (
-        <div className="mb-4 p-3 rounded-lg bg-emerald-900/40 border border-emerald-700 text-emerald-300 text-sm flex items-center justify-between">
+        <div className="mb-4 p-3 rounded-lg bg-accent/40 border border-accent text-accent text-sm flex items-center justify-between">
           <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg(null)} className="text-emerald-400 hover:text-emerald-200">
+          <button onClick={() => setSuccessMsg(null)} className="text-accent hover:text-accent">
             <X size={14} />
           </button>
         </div>
@@ -331,52 +331,52 @@ export default function SmartTagsPage() {
 
       {/* Rules Table */}
       {rules.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
+        <div className="text-center py-16 text-muted">
           <p className="text-lg mb-2">No smart tag rules yet</p>
           <p className="text-sm">Create a rule to automatically tag products based on conditions.</p>
         </div>
       ) : (
-        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div className="bg-surface rounded-lg border border-edge overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Name</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Tag</th>
-                <th className="text-center px-4 py-3 text-gray-400 font-medium">Conditions</th>
-                <th className="text-left px-4 py-3 text-gray-400 font-medium">Last Run</th>
-                <th className="text-center px-4 py-3 text-gray-400 font-medium">Status</th>
-                <th className="text-right px-4 py-3 text-gray-400 font-medium">Actions</th>
+              <tr className="border-b border-edge">
+                <th className="text-left px-4 py-3 text-secondary font-medium">Name</th>
+                <th className="text-left px-4 py-3 text-secondary font-medium">Tag</th>
+                <th className="text-center px-4 py-3 text-secondary font-medium">Conditions</th>
+                <th className="text-left px-4 py-3 text-secondary font-medium">Last Run</th>
+                <th className="text-center px-4 py-3 text-secondary font-medium">Status</th>
+                <th className="text-right px-4 py-3 text-secondary font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rules.map((rule) => (
-                <tr key={rule.id} className="border-b border-gray-700/50 hover:bg-gray-750/50">
-                  <td className="px-4 py-3 text-gray-200 font-medium">{rule.name}</td>
+                <tr key={rule.id} className="border-b border-edge/50 hover:bg-raised/50">
+                  <td className="px-4 py-3 text-primary font-medium">{rule.name}</td>
                   <td className="px-4 py-3">
                     {rule.tags ? (
                       <span
                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                         style={{
-                          backgroundColor: rule.tags.color ? `${rule.tags.color}20` : '#374151',
-                          color: rule.tags.color ?? '#9CA3AF',
-                          border: `1px solid ${rule.tags.color ?? '#4B5563'}`,
+                          backgroundColor: rule.tags.color ? `${rule.tags.color}20` : 'var(--surface-raised)',
+                          color: rule.tags.color ?? 'var(--text-muted)',
+                          border: `1px solid ${rule.tags.color ?? 'var(--edge-strong)'}`,
                         }}
                       >
                         {rule.tags.name}
                       </span>
                     ) : (
-                      <span className="text-gray-500">Unknown</span>
+                      <span className="text-muted">Unknown</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-400">{rule.rules.length}</td>
-                  <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(rule.last_run_at)}</td>
+                  <td className="px-4 py-3 text-center text-secondary">{rule.rules.length}</td>
+                  <td className="px-4 py-3 text-secondary text-xs">{formatDate(rule.last_run_at)}</td>
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => handleToggleActive(rule)}
                       className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-colors ${
                         rule.is_active
-                          ? 'bg-emerald-900/40 text-emerald-400 border border-emerald-700 hover:bg-emerald-900/60'
-                          : 'bg-gray-700 text-gray-500 border border-gray-600 hover:bg-gray-600'
+                          ? 'bg-accent/40 text-accent border border-accent hover:bg-accent/60'
+                          : 'bg-raised text-muted border border-edge-strong hover:bg-raised'
                       }`}
                     >
                       {rule.is_active ? 'Active' : 'Inactive'}
@@ -387,7 +387,7 @@ export default function SmartTagsPage() {
                       <button
                         onClick={() => handleRun(rule.id)}
                         disabled={runningId === rule.id || !rule.is_active}
-                        className="p-1.5 rounded text-blue-400 hover:bg-blue-900/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                        className="p-1.5 rounded text-info hover:bg-info/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         title="Run rule"
                       >
                         {runningId === rule.id ? (
@@ -398,14 +398,14 @@ export default function SmartTagsPage() {
                       </button>
                       <button
                         onClick={() => openEditForm(rule)}
-                        className="p-1.5 rounded text-gray-400 hover:bg-gray-700 hover:text-gray-200 transition-colors"
+                        className="p-1.5 rounded text-secondary hover:bg-raised hover:text-primary transition-colors"
                         title="Edit rule"
                       >
                         <Pencil size={15} />
                       </button>
                       <button
                         onClick={() => handleDeactivate(rule.id)}
-                        className="p-1.5 rounded text-red-400 hover:bg-red-900/30 transition-colors"
+                        className="p-1.5 rounded text-danger hover:bg-danger/30 transition-colors"
                         title="Deactivate rule"
                       >
                         <Trash2 size={15} />
@@ -421,13 +421,13 @@ export default function SmartTagsPage() {
 
       {/* Create/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-100">
+        <div className="fixed inset-0 bg-bg/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-xl border border-edge w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+              <h2 className="text-lg font-semibold text-primary">
                 {editingRule ? 'Edit Rule' : 'Create Smart Tag Rule'}
               </h2>
-              <button onClick={closeForm} className="text-gray-400 hover:text-gray-200">
+              <button onClick={closeForm} className="text-secondary hover:text-primary">
                 <X size={20} />
               </button>
             </div>
@@ -435,23 +435,23 @@ export default function SmartTagsPage() {
             <div className="px-6 py-4 space-y-5">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Rule Name</label>
+                <label className="block text-sm font-medium text-secondary mb-1.5">Rule Name</label>
                 <input
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g., High THC Products"
-                  className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-600 text-gray-100 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg bg-bg border border-edge-strong text-primary text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
               </div>
 
               {/* Tag Select */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">Tag to Apply</label>
+                <label className="block text-sm font-medium text-secondary mb-1.5">Tag to Apply</label>
                 <select
                   value={formTagId}
                   onChange={(e) => setFormTagId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-900 border border-gray-600 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 rounded-lg bg-bg border border-edge-strong text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 >
                   <option value="">Select a tag...</option>
                   {tags.map((tag) => (
@@ -465,12 +465,12 @@ export default function SmartTagsPage() {
               {/* Conditions */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-300">
-                    Conditions <span className="text-gray-500 font-normal">(all must match)</span>
+                  <label className="block text-sm font-medium text-secondary">
+                    Conditions <span className="text-muted font-normal">(all must match)</span>
                   </label>
                   <button
                     onClick={addCondition}
-                    className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                    className="text-xs text-accent hover:text-accent transition-colors"
                   >
                     + Add Condition
                   </button>
@@ -482,7 +482,7 @@ export default function SmartTagsPage() {
                       <select
                         value={cond.field}
                         onChange={(e) => updateCondition(idx, 'field', e.target.value)}
-                        className="flex-1 px-2 py-1.5 rounded bg-gray-900 border border-gray-600 text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="flex-1 px-2 py-1.5 rounded bg-bg border border-edge-strong text-primary text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                       >
                         {FIELD_OPTIONS.map((f) => (
                           <option key={f.value} value={f.value}>
@@ -493,7 +493,7 @@ export default function SmartTagsPage() {
                       <select
                         value={cond.operator}
                         onChange={(e) => updateCondition(idx, 'operator', e.target.value)}
-                        className="w-24 px-2 py-1.5 rounded bg-gray-900 border border-gray-600 text-gray-100 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-24 px-2 py-1.5 rounded bg-bg border border-edge-strong text-primary text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                       >
                         {OPERATOR_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>
@@ -506,12 +506,12 @@ export default function SmartTagsPage() {
                         value={String(cond.value)}
                         onChange={(e) => updateCondition(idx, 'value', e.target.value)}
                         placeholder="Value"
-                        className="flex-1 px-2 py-1.5 rounded bg-gray-900 border border-gray-600 text-gray-100 text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="flex-1 px-2 py-1.5 rounded bg-bg border border-edge-strong text-primary text-sm placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                       {formConditions.length > 1 && (
                         <button
                           onClick={() => removeCondition(idx)}
-                          className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                          className="p-1 text-danger hover:text-danger transition-colors"
                         >
                           <X size={16} />
                         </button>
@@ -523,17 +523,17 @@ export default function SmartTagsPage() {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-edge">
               <button
                 onClick={closeForm}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !formName.trim() || !formTagId}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent hover:bg-accent text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {saving && <Loader2 size={14} className="animate-spin" />}
                 {editingRule ? 'Update Rule' : 'Create Rule'}

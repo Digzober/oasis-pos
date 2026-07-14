@@ -5,8 +5,8 @@ import BaseActionModal from './BaseActionModal'
 import { SearchableSelect } from '@/components/shared/SearchableSelect'
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 interface ConvertModalProps {
   itemId: string
@@ -142,10 +142,10 @@ export default function ConvertModal({
       <div className="space-y-6">
         {/* FROM section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
             From (Source)
           </h3>
-          <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-3">
+          <div className="bg-bg/50 border border-edge rounded-lg p-4 space-y-3">
             <div>
               <label className={labelCls}>Product</label>
               <input type="text" readOnly value={productName} className={`${inputCls} opacity-60`} />
@@ -169,7 +169,7 @@ export default function ConvertModal({
                   step="any"
                   className={inputCls}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted mt-1">
                   Available: {currentQty} {unit}
                 </p>
               </div>
@@ -179,7 +179,7 @@ export default function ConvertModal({
 
         {/* TO section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
             To (Target)
           </h3>
           <div className="space-y-3">
@@ -199,12 +199,12 @@ export default function ConvertModal({
                 onBlur={() => setTimeout(() => setShowResults(false), 200)}
               />
               {showResults && products.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 mt-1 w-full bg-surface border border-edge-strong rounded-lg shadow-lg max-h-48 overflow-y-auto">
                   {products.map((p) => (
                     <button
                       key={p.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                      className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-raised"
                       onMouseDown={() => {
                         setSelectedProductId(p.id)
                         setProductSearch(p.name)
@@ -232,7 +232,7 @@ export default function ConvertModal({
                 <button
                   type="button"
                   onClick={generatePackageId}
-                  className="shrink-0 px-3 h-10 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="shrink-0 px-3 h-10 text-xs font-medium bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
                 >
                   Generate
                 </button>
@@ -292,7 +292,7 @@ export default function ConvertModal({
                 <button
                   type="button"
                   onClick={generateBatchId}
-                  className="shrink-0 px-3 h-10 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="shrink-0 px-3 h-10 text-xs font-medium bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
                 >
                   Generate
                 </button>

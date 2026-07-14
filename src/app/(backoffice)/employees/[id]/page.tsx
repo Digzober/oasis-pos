@@ -31,56 +31,56 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
     router.push('/employees')
   }
 
-  if (loading) return <p className="text-gray-500">Loading...</p>
-  if (!emp) return <p className="text-gray-500">Employee not found</p>
+  if (loading) return <p className="text-muted">Loading...</p>
+  if (!emp) return <p className="text-muted">Employee not found</p>
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-50">{emp.first_name} {emp.last_name}</h1>
-        <button onClick={deactivate} className="text-sm px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30">Deactivate</button>
+        <h1 className="text-xl font-bold text-primary">{emp.first_name} {emp.last_name}</h1>
+        <button onClick={deactivate} className="text-sm px-3 py-1.5 bg-danger/20 text-danger rounded-lg hover:bg-danger/30">Deactivate</button>
       </div>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase">Info</h3>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-secondary uppercase">Info</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><span className="text-gray-400">Role: </span><span className="text-gray-50 capitalize">{emp.role?.replace('_', ' ')}</span></div>
-          <div><span className="text-gray-400">Email: </span><span className="text-gray-50">{emp.email ?? '—'}</span></div>
-          <div><span className="text-gray-400">Phone: </span><span className="text-gray-50">{emp.phone ?? '—'}</span></div>
-          <div><span className="text-gray-400">Status: </span><span className={emp.is_active ? 'text-emerald-400' : 'text-red-400'}>{emp.is_active ? 'Active' : 'Inactive'}</span></div>
+          <div><span className="text-secondary">Role: </span><span className="text-primary capitalize">{emp.role?.replace('_', ' ')}</span></div>
+          <div><span className="text-secondary">Email: </span><span className="text-primary">{emp.email ?? '—'}</span></div>
+          <div><span className="text-secondary">Phone: </span><span className="text-primary">{emp.phone ?? '—'}</span></div>
+          <div><span className="text-secondary">Status: </span><span className={emp.is_active ? 'text-accent' : 'text-danger'}>{emp.is_active ? 'Active' : 'Inactive'}</span></div>
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase">Locations</h3>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-secondary uppercase">Locations</h3>
         <div className="space-y-1">
           {(emp.employee_locations ?? []).map((el: AnyR) => (
             <div key={el.location_id} className="flex items-center gap-2 text-sm">
-              <span className="text-gray-50">{el.locations?.name ?? el.location_id}</span>
-              {el.is_primary && <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Primary</span>}
+              <span className="text-primary">{el.locations?.name ?? el.location_id}</span>
+              {el.is_primary && <span className="text-[10px] bg-accent text-primary px-1.5 py-0.5 rounded">Primary</span>}
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase">Permission Groups</h3>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-secondary uppercase">Permission Groups</h3>
         <div className="flex flex-wrap gap-2">
           {(emp.user_permission_groups ?? []).map((g: AnyR) => (
-            <span key={g.permission_group_id} className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">{g.permission_groups?.name ?? g.permission_group_id}</span>
+            <span key={g.permission_group_id} className="text-xs bg-raised text-secondary px-2 py-1 rounded">{g.permission_groups?.name ?? g.permission_group_id}</span>
           ))}
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase">Reset PIN</h3>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-secondary uppercase">Reset PIN</h3>
         <div className="flex gap-2">
           <input type="password" maxLength={4} value={newPin} onChange={e => setNewPin(e.target.value)} placeholder="New 4-digit PIN" className={inputCls + ' w-40'} />
-          <button onClick={resetPin} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600">Reset</button>
+          <button onClick={resetPin} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm hover:bg-raised">Reset</button>
         </div>
-        {pinMsg && <p className={`text-sm ${pinMsg === 'PIN updated' ? 'text-emerald-400' : 'text-red-400'}`}>{pinMsg}</p>}
+        {pinMsg && <p className={`text-sm ${pinMsg === 'PIN updated' ? 'text-accent' : 'text-danger'}`}>{pinMsg}</p>}
       </div>
     </div>
   )

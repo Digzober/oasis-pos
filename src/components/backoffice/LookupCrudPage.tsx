@@ -126,29 +126,29 @@ export default function LookupCrudPage({
     fetchItems()
   }
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-  const selectCls = "h-8 px-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+  const selectCls = "h-8 px-2 bg-bg border border-edge-strong rounded-lg text-secondary text-xs focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-50">{title}</h1>
-        <button onClick={openNew} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New</button>
+        <h1 className="text-xl font-bold text-primary">{title}</h1>
+        <button onClick={openNew} className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New</button>
       </div>
 
       {/* Controls bar */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
-        <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+        <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer select-none">
           <input
             type="checkbox"
             checked={includeInactive}
             onChange={e => setIncludeInactive(e.target.checked)}
-            className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+            className="w-4 h-4 rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0 cursor-pointer"
           />
           Show inactive
         </label>
         {filters.map(f => (
-          <label key={f.key} className="flex items-center gap-2 text-sm text-gray-400">
+          <label key={f.key} className="flex items-center gap-2 text-sm text-secondary">
             <span>{f.label}:</span>
             <select
               value={filterValues[f.key] ?? ''}
@@ -162,7 +162,7 @@ export default function LookupCrudPage({
             </select>
           </label>
         ))}
-        <div className="ml-auto flex items-center gap-2 text-sm text-gray-400">
+        <div className="ml-auto flex items-center gap-2 text-sm text-secondary">
           <span>Per page:</span>
           <select value={limit} onChange={e => setLimit(Number(e.target.value))} className={selectCls}>
             {PAGE_SIZE_OPTIONS.map(n => (
@@ -174,16 +174,16 @@ export default function LookupCrudPage({
 
       {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-50">{editId ? 'Edit' : 'New'} {title.slice(0, -1)}</h2>
+        <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-primary">{editId ? 'Edit' : 'New'} {title.slice(0, -1)}</h2>
             <label className="block">
-              <span className="text-xs text-gray-400">Name *</span>
+              <span className="text-xs text-secondary">Name *</span>
               <input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} className={inputCls} />
             </label>
             {extraFields.map(f => (
               <label key={f.key} className="block">
-                <span className="text-xs text-gray-400">{f.label}</span>
+                <span className="text-xs text-secondary">{f.label}</span>
                 {f.type === 'select' ? (
                   <select
                     value={formData[f.key] ?? ''}
@@ -214,20 +214,20 @@ export default function LookupCrudPage({
                 )}
               </label>
             ))}
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowForm(false)} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+              <button onClick={() => setShowForm(false)} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>
               {extraFields.map(f => <th key={f.key} className="text-left px-4 py-3">{f.label}</th>)}
               {includeInactive && <th className="text-left px-4 py-3">Status</th>}
@@ -236,28 +236,28 @@ export default function LookupCrudPage({
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-muted">Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-gray-500">None found</td></tr>
+              <tr><td colSpan={2 + extraFields.length + (includeInactive ? 1 : 0)} className="text-center py-8 text-muted">None found</td></tr>
             ) : items.map(item => (
-              <tr key={item.id} className={`border-b border-gray-700/50 ${!item.is_active ? 'opacity-50' : ''}`}>
-                <td className="px-4 py-2.5 text-gray-50">{item.name}</td>
-                {extraFields.map(f => <td key={f.key} className="px-4 py-2.5 text-gray-400">{String(item[f.key] ?? '')}</td>)}
+              <tr key={item.id} className={`border-b border-edge/50 ${!item.is_active ? 'opacity-50' : ''}`}>
+                <td className="px-4 py-2.5 text-primary">{item.name}</td>
+                {extraFields.map(f => <td key={f.key} className="px-4 py-2.5 text-secondary">{String(item[f.key] ?? '')}</td>)}
                 {includeInactive && (
                   <td className="px-4 py-2.5">
                     {item.is_active ? (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400">Active</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-accent/50 text-accent">Active</span>
                     ) : (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-400">Inactive</span>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-danger/50 text-danger">Inactive</span>
                     )}
                   </td>
                 )}
                 <td className="px-4 py-2.5 text-right">
-                  <button onClick={() => openEdit(item)} className="text-xs text-gray-400 hover:text-emerald-400 mr-3">Edit</button>
+                  <button onClick={() => openEdit(item)} className="text-xs text-secondary hover:text-accent mr-3">Edit</button>
                   {item.is_active ? (
-                    <button onClick={() => handleDeactivate(item.id)} className="text-xs text-gray-400 hover:text-red-400">Remove</button>
+                    <button onClick={() => handleDeactivate(item.id)} className="text-xs text-secondary hover:text-danger">Remove</button>
                   ) : (
-                    <button onClick={() => handleReactivate(item.id)} className="text-xs text-gray-400 hover:text-emerald-400">Reactivate</button>
+                    <button onClick={() => handleReactivate(item.id)} className="text-xs text-secondary hover:text-accent">Reactivate</button>
                   )}
                 </td>
               </tr>
@@ -267,7 +267,7 @@ export default function LookupCrudPage({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 text-sm text-gray-400">
+      <div className="flex items-center justify-between mt-4 text-sm text-secondary">
         <span>
           {total} {total === 1 ? 'item' : 'items'} total
           {totalPages > 1 && ` \u2014 Page ${page} of ${totalPages}`}
@@ -276,14 +276,14 @@ export default function LookupCrudPage({
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600 disabled:hover:bg-gray-700"
+            className="px-3 py-1 bg-raised text-secondary rounded-lg text-xs disabled:opacity-30 hover:bg-raised disabled:hover:bg-raised"
           >
             Prev
           </button>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600 disabled:hover:bg-gray-700"
+            className="px-3 py-1 bg-raised text-secondary rounded-lg text-xs disabled:opacity-30 hover:bg-raised disabled:hover:bg-raised"
           >
             Next
           </button>

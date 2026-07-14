@@ -56,20 +56,20 @@ export default function ReceiveInventoryPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-50">Receive Inventory</h1>
-          <p className="text-xs text-gray-500 mt-0.5">Accept BioTrack manifests or manually receive inventory</p>
+          <h1 className="text-xl font-bold text-primary">Receive Inventory</h1>
+          <p className="text-xs text-muted mt-0.5">Accept BioTrack manifests or manually receive inventory</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised disabled:opacity-50"
           >
             {loading ? 'Refreshing...' : 'Refresh'}
           </button>
           <button
             onClick={() => setShowManual(true)}
-            className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised"
           >
             Manual Receive
           </button>
@@ -79,16 +79,16 @@ export default function ReceiveInventoryPage() {
       {showManual && <ManualReceiveForm onClose={() => setShowManual(false)} />}
 
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-900/30 border border-red-700 rounded-lg text-sm text-red-300">
+        <div className="mb-4 px-4 py-3 bg-danger/30 border border-danger rounded-lg text-sm text-danger">
           {error}
         </div>
       )}
 
       {/* BioTrack Manifests */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+      <div className="bg-surface rounded-xl border border-edge p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Pending BioTrack Manifests</h2>
-          <span className="text-xs text-gray-500">
+          <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide">Pending BioTrack Manifests</h2>
+          <span className="text-xs text-muted">
             {pendingManifests.length} pending
           </span>
         </div>
@@ -97,16 +97,16 @@ export default function ReceiveInventoryPage() {
           <LoadingState message="Checking for pending manifests..." />
         ) : pendingManifests.length === 0 ? (
           <div className="text-center py-10">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-700 flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-raised flex items-center justify-center">
+              <svg className="w-6 h-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
               </svg>
             </div>
-            <p className="text-gray-400 text-sm font-medium">No Pending Manifests</p>
-            <p className="text-gray-500 text-xs mt-1">
+            <p className="text-secondary text-sm font-medium">No Pending Manifests</p>
+            <p className="text-muted text-xs mt-1">
               When vendors send manifests via BioTrack, they will appear here automatically.
             </p>
-            <p className="text-gray-600 text-xs mt-2">
+            <p className="text-muted text-xs mt-2">
               Use Manual Receive for non-manifest inventory.
             </p>
           </div>
@@ -116,43 +116,43 @@ export default function ReceiveInventoryPage() {
               const itemCount = (m.items as unknown[]).length
               const transferDate = new Date(m.transfer_date)
               const statusColor = m.status === 'pending'
-                ? 'bg-amber-600/20 text-amber-400'
+                ? 'bg-warning/20 text-warning'
                 : m.status === 'in_transit'
-                  ? 'bg-blue-600/20 text-blue-400'
-                  : 'bg-emerald-600/20 text-emerald-400'
+                  ? 'bg-info/20 text-info'
+                  : 'bg-accent/20 text-accent'
 
               return (
                 <button
                   key={m.manifest_id}
                   onClick={() => router.push(`/inventory/receive/manifest/${m.manifest_id}`)}
-                  className="w-full bg-gray-900 rounded-lg p-4 flex items-center justify-between hover:bg-gray-850 hover:border-gray-600 border border-gray-700/50 transition-colors text-left group"
+                  className="w-full bg-bg rounded-lg p-4 flex items-center justify-between hover:bg-raised hover:border-edge-strong border border-edge/50 transition-colors text-left group"
                 >
                   <div className="min-w-0">
-                    <p className="text-gray-50 font-medium group-hover:text-emerald-400 transition-colors">
+                    <p className="text-primary font-medium group-hover:text-accent transition-colors">
                       {m.sender_name}
                     </p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">
                         Manifest #{m.manifest_id}
                       </span>
-                      <span className="text-xs text-gray-600">|</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">|</span>
+                      <span className="text-xs text-muted">
                         {transferDate.toLocaleDateString()} {transferDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
-                      <span className="text-xs text-gray-600">|</span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">|</span>
+                      <span className="text-xs text-muted">
                         {itemCount} item{itemCount !== 1 ? 's' : ''}
                       </span>
                     </div>
                     {m.sender_license && (
-                      <p className="text-[10px] text-gray-600 mt-0.5">License: {m.sender_license}</p>
+                      <p className="text-[10px] text-muted mt-0.5">License: {m.sender_license}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor}`}>
                       {m.status.replace(/_/g, ' ')}
                     </span>
-                    <svg className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-muted group-hover:text-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>

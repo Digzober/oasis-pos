@@ -171,20 +171,20 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center">
+    <div className="min-h-screen bg-bg flex items-center justify-center">
       <div className="w-full max-w-sm px-4">
         {step === 'pin' && (
           <>
             {/* Logo Mark */}
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-              <span className="text-emerald-400 text-2xl font-bold">O</span>
+            <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
+              <span className="text-accent text-2xl font-bold">O</span>
             </div>
 
             {/* Title */}
-            <h1 className="text-lg font-semibold text-gray-200 text-center">
+            <h1 className="text-lg font-semibold text-primary text-center">
               Oasis Cannabis
             </h1>
-            <p className="text-xs text-gray-600 text-center mt-0.5 font-mono uppercase tracking-widest">
+            <p className="text-xs text-muted text-center mt-0.5 font-mono uppercase tracking-widest">
               Point of Sale
             </p>
 
@@ -193,7 +193,7 @@ export default function LoginPage() {
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full h-11 bg-gray-900 border border-gray-800 rounded-xl px-4 text-sm text-gray-300 focus:border-emerald-500/50 focus:outline-none appearance-none cursor-pointer"
+                className="w-full h-11 bg-bg border border-edge rounded-xl px-4 text-sm text-secondary focus:border-accent/50 focus:outline-none appearance-none cursor-pointer"
               >
                 {locations.length === 0 && (
                   <option value="">No locations available</option>
@@ -205,7 +205,7 @@ export default function LoginPage() {
                 ))}
               </select>
               {/* Dropdown chevron */}
-              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
@@ -218,9 +218,9 @@ export default function LoginPage() {
                   className={`w-4 h-4 rounded-full transition-all duration-200 ${
                     i < pin.length
                       ? shake
-                        ? 'bg-red-500 border border-red-400 shadow-md shadow-red-500/30'
-                        : `bg-emerald-500 border border-emerald-400 shadow-md shadow-emerald-500/30 ${filledIndex === i ? 'scale-125' : ''}`
-                      : 'bg-gray-800 border border-gray-700'
+                        ? 'bg-danger border border-danger shadow-md shadow-danger/30'
+                        : `bg-accent border border-accent shadow-md shadow-accent/30 ${filledIndex === i ? 'scale-125' : ''}`
+                      : 'bg-surface border border-edge'
                   }`}
                 />
               ))}
@@ -229,10 +229,10 @@ export default function LoginPage() {
             {/* Error / Loading Message */}
             <div className="h-6 mt-3">
               {error && (
-                <p className="text-red-400 text-xs text-center">{error}</p>
+                <p className="text-danger text-xs text-center">{error}</p>
               )}
               {isLoading && !error && (
-                <p className="text-emerald-400 text-xs text-center animate-pulse">
+                <p className="text-accent text-xs text-center animate-pulse">
                   Verifying...
                 </p>
               )}
@@ -253,10 +253,10 @@ export default function LoginPage() {
                     }}
                     className={`h-14 rounded-xl transition-all focus:outline-none disabled:opacity-50 ${
                       key === 'CLR'
-                        ? 'bg-gray-900 border border-gray-800 text-xs text-gray-500 hover:bg-gray-800 hover:border-gray-700 active:scale-95'
+                        ? 'bg-bg border border-edge text-xs text-muted hover:bg-surface hover:border-edge active:scale-95'
                         : key === '←'
-                          ? 'bg-gray-900 border border-gray-800 text-gray-500 hover:bg-gray-800 hover:border-gray-700 active:scale-95 text-lg'
-                          : 'bg-gray-900 border border-gray-800 text-xl font-medium text-gray-200 hover:bg-gray-800 hover:border-gray-700 active:scale-95'
+                          ? 'bg-bg border border-edge text-muted hover:bg-surface hover:border-edge active:scale-95 text-lg'
+                          : 'bg-bg border border-edge text-xl font-medium text-primary hover:bg-surface hover:border-edge active:scale-95'
                     }`}
                   >
                     {key}
@@ -270,29 +270,29 @@ export default function LoginPage() {
         {step === 'register' && (
           <>
             {/* Logo Mark */}
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-              <span className="text-emerald-400 text-2xl font-bold">O</span>
+            <div className="w-14 h-14 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center mx-auto mb-6">
+              <span className="text-accent text-2xl font-bold">O</span>
             </div>
 
-            <h1 className="text-lg font-semibold text-gray-200 text-center">
+            <h1 className="text-lg font-semibold text-primary text-center">
               Oasis Cannabis
             </h1>
-            <p className="text-sm text-gray-400 text-center mt-2">
+            <p className="text-sm text-secondary text-center mt-2">
               Select Register
             </p>
 
             {loadingRegisters ? (
-              <div className="text-emerald-400 text-xs text-center mt-8 animate-pulse">
+              <div className="text-accent text-xs text-center mt-8 animate-pulse">
                 Loading registers...
               </div>
             ) : registers.length === 0 ? (
               <div className="text-center mt-8">
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted text-sm">
                   No registers available. Contact a manager.
                 </p>
                 <button
                   onClick={handleBackToPin}
-                  className="mt-4 text-sm text-gray-600 hover:text-gray-400 transition-colors"
+                  className="mt-4 text-sm text-muted hover:text-secondary transition-colors"
                 >
                   Back
                 </button>
@@ -304,20 +304,20 @@ export default function LoginPage() {
                     key={reg.id}
                     disabled={isLoading}
                     onClick={() => selectRegister(reg.id)}
-                    className={`p-5 bg-gray-900 rounded-xl cursor-pointer hover:border-emerald-500/40 hover:bg-gray-800/60 active:scale-[0.97] transition-all text-center disabled:opacity-50 border ${
+                    className={`p-5 bg-bg rounded-xl cursor-pointer hover:border-accent/40 hover:bg-surface/60 active:scale-[0.97] transition-all text-center disabled:opacity-50 border ${
                       reg.has_open_drawer
-                        ? 'border-emerald-500/20'
-                        : 'border-gray-800'
+                        ? 'border-accent/20'
+                        : 'border-edge'
                     }`}
                   >
-                    <span className="text-sm font-medium text-gray-200 block">
+                    <span className="text-sm font-medium text-primary block">
                       {reg.name}
                     </span>
                     <span
                       className={`text-[11px] mt-1 block ${
                         reg.has_open_drawer
-                          ? 'text-emerald-400'
-                          : 'text-gray-600'
+                          ? 'text-accent'
+                          : 'text-muted'
                       }`}
                     >
                       {reg.has_open_drawer ? 'Drawer Open' : 'No Drawer'}
@@ -329,14 +329,14 @@ export default function LoginPage() {
 
             {/* Error Message */}
             {error && (
-              <p className="text-red-400 text-xs text-center mt-4">{error}</p>
+              <p className="text-danger text-xs text-center mt-4">{error}</p>
             )}
 
             {/* Back button */}
             {registers.length > 0 && (
               <p
                 onClick={handleBackToPin}
-                className="mt-6 text-sm text-gray-600 hover:text-gray-400 text-center cursor-pointer transition-colors"
+                className="mt-6 text-sm text-muted hover:text-secondary text-center cursor-pointer transition-colors"
               >
                 Back to PIN
               </p>

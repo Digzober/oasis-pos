@@ -15,19 +15,19 @@ export default function WorkflowsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Workflows</h1>
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <h1 className="text-xl font-bold text-primary mb-6">Workflows</h1>
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+          <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Trigger</th><th className="text-center px-4 py-3">Status</th><th className="text-right px-4 py-3">Actions</th>
           </tr></thead>
-          <tbody>{workflows.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-gray-500">No workflows</td></tr>
+          <tbody>{workflows.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-muted">No workflows</td></tr>
             : workflows.map((w: W) => (
-            <tr key={w.id} className="border-b border-gray-700/50">
-              <td className="px-4 py-2.5 text-gray-50">{w.name}</td>
-              <td className="px-4 py-2.5 text-gray-300 text-xs">{w.trigger_type}</td>
-              <td className="px-4 py-2.5 text-center"><span className={`text-xs ${w.status === 'active' ? 'text-emerald-400' : 'text-gray-400'}`}>{w.status}</span></td>
-              <td className="px-4 py-2.5 text-right"><button onClick={() => toggle(w.id, w.status)} className="text-xs text-emerald-400 hover:text-emerald-300">{w.status === 'active' ? 'Pause' : 'Activate'}</button></td>
+            <tr key={w.id} className="border-b border-edge/50">
+              <td className="px-4 py-2.5 text-primary">{w.name}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs">{w.trigger_type}</td>
+              <td className="px-4 py-2.5 text-center"><span className={`text-xs ${w.status === 'active' ? 'text-accent' : 'text-secondary'}`}>{w.status}</span></td>
+              <td className="px-4 py-2.5 text-right"><button onClick={() => toggle(w.id, w.status)} className="text-xs text-accent hover:text-accent">{w.status === 'active' ? 'Pause' : 'Activate'}</button></td>
             </tr>
           ))}</tbody>
         </table>

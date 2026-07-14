@@ -17,8 +17,8 @@ interface PricingTier {
   is_active: boolean
 }
 
-const inputCls = 'w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500'
-const selectCls = 'w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500'
+const inputCls = 'w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent'
+const selectCls = 'w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent'
 
 export default function PricingTab() {
   const [groups, setGroups] = useState<PricingTierGroup[]>([])
@@ -217,7 +217,7 @@ export default function PricingTab() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400 text-sm">Loading pricing configuration...</div>
+        <div className="text-secondary text-sm">Loading pricing configuration...</div>
       </div>
     )
   }
@@ -227,8 +227,8 @@ export default function PricingTab() {
       {feedback && (
         <div className={`px-4 py-2.5 rounded-lg text-sm ${
           feedback.type === 'success'
-            ? 'bg-emerald-900/50 border border-emerald-700 text-emerald-300'
-            : 'bg-red-900/50 border border-red-700 text-red-300'
+            ? 'bg-accent/50 border border-accent text-accent'
+            : 'bg-danger/50 border border-danger text-danger'
         }`}>
           {feedback.message}
         </div>
@@ -238,21 +238,21 @@ export default function PricingTab() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-50">Tier Groups</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Organize pricing tiers into logical groups.</p>
+            <h2 className="text-lg font-semibold text-primary">Tier Groups</h2>
+            <p className="text-sm text-secondary mt-0.5">Organize pricing tiers into logical groups.</p>
           </div>
           <button
             onClick={openNewGroup}
-            className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500"
+            className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent"
           >
             + Add Group
           </button>
         </div>
 
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-edge overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Name</th>
                 <th className="text-left px-4 py-3">Description</th>
                 <th className="text-center px-4 py-3">Status</th>
@@ -262,19 +262,19 @@ export default function PricingTab() {
             <tbody>
               {groups.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted">
                     No tier groups configured. Click &quot;+ Add Group&quot; to create one.
                   </td>
                 </tr>
               ) : groups.map(group => (
-                <tr key={group.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="px-4 py-3 text-gray-50 font-medium">{group.name}</td>
-                  <td className="px-4 py-3 text-gray-400">{group.description ?? '\u2014'}</td>
+                <tr key={group.id} className="border-b border-edge/50 hover:bg-raised/20">
+                  <td className="px-4 py-3 text-primary font-medium">{group.name}</td>
+                  <td className="px-4 py-3 text-secondary">{group.description ?? '\u2014'}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
                       group.is_active
-                        ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700'
-                        : 'bg-gray-700/50 text-gray-500 border border-gray-600'
+                        ? 'bg-accent/50 text-accent border border-accent'
+                        : 'bg-raised/50 text-muted border border-edge-strong'
                     }`}>
                       {group.is_active ? 'Active' : 'Inactive'}
                     </span>
@@ -282,14 +282,14 @@ export default function PricingTab() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => openEditGroup(group)}
-                      className="text-xs text-gray-400 hover:text-emerald-400 mr-3"
+                      className="text-xs text-secondary hover:text-accent mr-3"
                     >
                       Edit
                     </button>
                     {group.is_active && (
                       <button
                         onClick={() => handleDeactivateGroup(group.id)}
-                        className="text-xs text-gray-400 hover:text-red-400"
+                        className="text-xs text-secondary hover:text-danger"
                       >
                         Deactivate
                       </button>
@@ -306,21 +306,21 @@ export default function PricingTab() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-50">Pricing Tiers</h2>
-            <p className="text-sm text-gray-400 mt-0.5">Define pricing multipliers for different customer segments or product tiers.</p>
+            <h2 className="text-lg font-semibold text-primary">Pricing Tiers</h2>
+            <p className="text-sm text-secondary mt-0.5">Define pricing multipliers for different customer segments or product tiers.</p>
           </div>
           <button
             onClick={openNewTier}
-            className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500"
+            className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent"
           >
             + Add Tier
           </button>
         </div>
 
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-surface rounded-xl border border-edge overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Name</th>
                 <th className="text-right px-4 py-3">Multiplier</th>
                 <th className="text-left px-4 py-3">Group</th>
@@ -331,22 +331,22 @@ export default function PricingTab() {
             <tbody>
               {tiers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-muted">
                     No pricing tiers configured. Click &quot;+ Add Tier&quot; to create one.
                   </td>
                 </tr>
               ) : tiers.map(tier => (
-                <tr key={tier.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="px-4 py-3 text-gray-50 font-medium">{tier.name}</td>
-                  <td className="px-4 py-3 text-right text-gray-300 font-mono tabular-nums">
+                <tr key={tier.id} className="border-b border-edge/50 hover:bg-raised/20">
+                  <td className="px-4 py-3 text-primary font-medium">{tier.name}</td>
+                  <td className="px-4 py-3 text-right text-secondary font-mono tabular-nums">
                     {tier.multiplier.toFixed(2)}x
                   </td>
-                  <td className="px-4 py-3 text-gray-400">{getGroupName(tier.group_id)}</td>
+                  <td className="px-4 py-3 text-secondary">{getGroupName(tier.group_id)}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
                       tier.is_active
-                        ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700'
-                        : 'bg-gray-700/50 text-gray-500 border border-gray-600'
+                        ? 'bg-accent/50 text-accent border border-accent'
+                        : 'bg-raised/50 text-muted border border-edge-strong'
                     }`}>
                       {tier.is_active ? 'Active' : 'Inactive'}
                     </span>
@@ -354,14 +354,14 @@ export default function PricingTab() {
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => openEditTier(tier)}
-                      className="text-xs text-gray-400 hover:text-emerald-400 mr-3"
+                      className="text-xs text-secondary hover:text-accent mr-3"
                     >
                       Edit
                     </button>
                     {tier.is_active && (
                       <button
                         onClick={() => handleDeactivateTier(tier.id)}
-                        className="text-xs text-gray-400 hover:text-red-400"
+                        className="text-xs text-secondary hover:text-danger"
                       >
                         Deactivate
                       </button>
@@ -376,14 +376,14 @@ export default function PricingTab() {
 
       {/* Group Modal */}
       {showGroupModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-50">
+        <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-primary">
               {editGroupId ? 'Edit' : 'New'} Tier Group
             </h3>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Name *</span>
+              <span className="text-xs text-secondary">Name *</span>
               <input
                 value={groupForm.name}
                 onChange={e => setGroupForm(p => ({ ...p, name: e.target.value }))}
@@ -394,7 +394,7 @@ export default function PricingTab() {
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Description</span>
+              <span className="text-xs text-secondary">Description</span>
               <input
                 value={groupForm.description}
                 onChange={e => setGroupForm(p => ({ ...p, description: e.target.value }))}
@@ -406,14 +406,14 @@ export default function PricingTab() {
             <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => setShowGroupModal(false)}
-                className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm"
+                className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveGroup}
                 disabled={savingGroup}
-                className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50"
+                className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50"
               >
                 {savingGroup ? 'Saving...' : 'Save'}
               </button>
@@ -424,14 +424,14 @@ export default function PricingTab() {
 
       {/* Tier Modal */}
       {showTierModal && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-50">
+        <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-lg font-semibold text-primary">
               {editTierId ? 'Edit' : 'New'} Pricing Tier
             </h3>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Name *</span>
+              <span className="text-xs text-secondary">Name *</span>
               <input
                 value={tierForm.name}
                 onChange={e => setTierForm(p => ({ ...p, name: e.target.value }))}
@@ -442,7 +442,7 @@ export default function PricingTab() {
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Multiplier *</span>
+              <span className="text-xs text-secondary">Multiplier *</span>
               <input
                 type="number"
                 step="0.01"
@@ -452,13 +452,13 @@ export default function PricingTab() {
                 className={inputCls}
                 placeholder="1.00"
               />
-              <span className="text-xs text-gray-500 mt-1 block">
+              <span className="text-xs text-muted mt-1 block">
                 1.00 = base price. 0.80 = 20% discount. 1.20 = 20% markup.
               </span>
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Group</span>
+              <span className="text-xs text-secondary">Group</span>
               <select
                 value={tierForm.group_id}
                 onChange={e => setTierForm(p => ({ ...p, group_id: e.target.value }))}
@@ -474,14 +474,14 @@ export default function PricingTab() {
             <div className="flex gap-2 justify-end pt-2">
               <button
                 onClick={() => setShowTierModal(false)}
-                className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm"
+                className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveTier}
                 disabled={savingTier}
-                className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50"
+                className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50"
               >
                 {savingTier ? 'Saving...' : 'Save'}
               </button>

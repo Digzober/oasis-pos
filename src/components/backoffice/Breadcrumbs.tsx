@@ -42,14 +42,14 @@ export default function Breadcrumbs() {
   if (crumbs.length <= 1) return null
 
   return (
-    <nav className="flex items-center gap-1.5 text-xs text-gray-500 mb-1 overflow-hidden">
+    <nav className="flex items-center gap-1.5 text-xs text-muted mb-1 overflow-hidden">
       {crumbs.map((bc, i) => (
         <span key={i} className="flex items-center gap-1.5 min-w-0">
-          {i > 0 && <span className="text-gray-600">/</span>}
+          {i > 0 && <span className="text-muted">/</span>}
           {i < crumbs.length - 1 && bc.href ? (
-            <Link href={bc.href} className="hover:text-gray-300 truncate">{bc.label}</Link>
+            <Link href={bc.href} className="hover:text-secondary truncate">{bc.label}</Link>
           ) : (
-            <span className="text-gray-400 truncate">{bc.label}</span>
+            <span className="text-secondary truncate">{bc.label}</span>
           )}
         </span>
       ))}

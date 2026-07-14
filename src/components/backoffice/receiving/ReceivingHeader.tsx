@@ -41,15 +41,15 @@ export function ReceivingHeader({
   data, vendors, rooms, statuses, onChange, onSave, onReceive,
   receiving, canReceive, itemCount, totalCost,
 }: ReceivingHeaderProps) {
-  const inputCls = 'w-full h-9 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500'
+  const inputCls = 'w-full h-9 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent'
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-5 mb-5">
+    <div className="bg-surface rounded-xl border border-edge p-5 mb-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">Receiving Details</h2>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide">Receiving Details</h2>
+        <div className="flex items-center gap-2 text-xs text-secondary">
           <span>{itemCount} items</span>
-          <span className="text-gray-600">|</span>
+          <span className="text-muted">|</span>
           <span>Total: ${totalCost.toFixed(2)}</span>
         </div>
       </div>
@@ -57,7 +57,7 @@ export function ReceivingHeader({
       {/* Row 1 */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-3">
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Vendor</span>
+          <span className="text-[11px] text-secondary mb-1 block">Vendor</span>
           <SearchableSelect
             options={vendors}
             value={data.vendor_id}
@@ -66,7 +66,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Producer</span>
+          <span className="text-[11px] text-secondary mb-1 block">Producer</span>
           <SearchableSelect
             options={vendors}
             value={data.producer_id}
@@ -75,7 +75,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Delivered by</span>
+          <span className="text-[11px] text-secondary mb-1 block">Delivered by</span>
           <input
             value={data.delivered_by}
             onChange={(e) => onChange('delivered_by', e.target.value)}
@@ -84,7 +84,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Vendor License #</span>
+          <span className="text-[11px] text-secondary mb-1 block">Vendor License #</span>
           <input
             value={data.vendor_license}
             onChange={(e) => onChange('vendor_license', e.target.value)}
@@ -92,7 +92,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Order Title</span>
+          <span className="text-[11px] text-secondary mb-1 block">Order Title</span>
           <input
             value={data.order_title}
             onChange={(e) => onChange('order_title', e.target.value)}
@@ -100,7 +100,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Delivered on</span>
+          <span className="text-[11px] text-secondary mb-1 block">Delivered on</span>
           <input
             type="datetime-local"
             value={data.delivered_on}
@@ -109,7 +109,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">BioTrack Manifest ID</span>
+          <span className="text-[11px] text-secondary mb-1 block">BioTrack Manifest ID</span>
           <input value={data.manifest_id} readOnly className={inputCls + ' opacity-60 cursor-not-allowed'} />
         </label>
       </div>
@@ -117,7 +117,7 @@ export function ReceivingHeader({
       {/* Row 2 */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Room</span>
+          <span className="text-[11px] text-secondary mb-1 block">Room</span>
           <SearchableSelect
             options={rooms}
             value={data.room_id}
@@ -126,7 +126,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Inventory Status</span>
+          <span className="text-[11px] text-secondary mb-1 block">Inventory Status</span>
           <select
             value={data.inventory_status}
             onChange={(e) => onChange('inventory_status', e.target.value)}
@@ -138,7 +138,7 @@ export function ReceivingHeader({
           </select>
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Total Credits</span>
+          <span className="text-[11px] text-secondary mb-1 block">Total Credits</span>
           <input
             type="number"
             step="0.01"
@@ -149,7 +149,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Shipping Charges</span>
+          <span className="text-[11px] text-secondary mb-1 block">Shipping Charges</span>
           <input
             type="number"
             step="0.01"
@@ -160,7 +160,7 @@ export function ReceivingHeader({
           />
         </label>
         <label className="block">
-          <span className="text-[11px] text-gray-400 mb-1 block">Apply Cost Options</span>
+          <span className="text-[11px] text-secondary mb-1 block">Apply Cost Options</span>
           <select
             value={data.cost_option}
             onChange={(e) => onChange('cost_option', e.target.value)}
@@ -172,7 +172,7 @@ export function ReceivingHeader({
           </select>
         </label>
         <label className="block lg:col-span-2">
-          <span className="text-[11px] text-gray-400 mb-1 block">Notes</span>
+          <span className="text-[11px] text-secondary mb-1 block">Notes</span>
           <input
             value={data.notes}
             onChange={(e) => onChange('notes', e.target.value)}
@@ -183,25 +183,25 @@ export function ReceivingHeader({
       </div>
 
       {/* Action Bar */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+      <div className="flex items-center justify-between pt-3 border-t border-edge">
         <div className="flex items-center gap-2">
           <div className="relative">
             <details className="group">
-              <summary className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm cursor-pointer hover:bg-gray-600 list-none flex items-center gap-1">
+              <summary className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm cursor-pointer hover:bg-raised list-none flex items-center gap-1">
                 Actions
                 <span className="text-xs">&#9662;</span>
               </summary>
-              <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 min-w-[180px]">
+              <div className="absolute top-full left-0 mt-1 bg-surface border border-edge rounded-lg shadow-xl z-50 min-w-[180px]">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-t-lg"
+                  className="w-full text-left px-3 py-2 text-sm text-secondary hover:bg-raised rounded-t-lg"
                 >
                   Print receiving report
                 </button>
                 <button
                   type="button"
-                  className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-b-lg"
+                  className="w-full text-left px-3 py-2 text-sm text-secondary hover:bg-raised rounded-b-lg"
                 >
                   Export CSV
                 </button>
@@ -213,7 +213,7 @@ export function ReceivingHeader({
           <button
             type="button"
             onClick={onSave}
-            className="px-4 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600"
+            className="px-4 py-1.5 bg-raised text-secondary rounded-lg text-sm hover:bg-raised"
           >
             Save Draft
           </button>
@@ -221,7 +221,7 @@ export function ReceivingHeader({
             type="button"
             onClick={onReceive}
             disabled={!canReceive || receiving}
-            className="px-5 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-1.5 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {receiving ? 'Receiving...' : 'Receive All'}
           </button>

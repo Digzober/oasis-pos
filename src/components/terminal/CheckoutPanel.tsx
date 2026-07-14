@@ -82,14 +82,14 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
   }
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl">
+    <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-bg border border-edge rounded-2xl w-full max-w-lg shadow-2xl">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-800 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-50">Complete Sale</h2>
+        <div className="px-6 pt-6 pb-4 border-b border-edge flex items-center justify-between">
+          <h2 className="text-lg font-bold text-primary">Complete Sale</h2>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg hover:bg-white/5 flex items-center justify-center text-gray-500 hover:text-gray-300 transition-colors"
+            className="w-8 h-8 rounded-lg hover:bg-surface/5 flex items-center justify-center text-muted hover:text-secondary transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M4 4l8 8M12 4l-8 8" />
@@ -98,29 +98,29 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
         </div>
 
         {/* Item count + customer */}
-        <p className="text-sm text-gray-500 px-6 pt-3">
+        <p className="text-sm text-muted px-6 pt-3">
           {items.length} item{items.length !== 1 ? 's' : ''}
           {customerId ? ' \u00b7 Customer attached' : ''}
         </p>
 
         {/* Total Due */}
-        <div className="mx-6 mt-4 bg-[#0a0a0b] rounded-xl p-6 text-center">
-          <p className="text-xs text-gray-600 uppercase tracking-widest font-mono">Total Due</p>
-          <p className="text-5xl font-bold text-gray-50 tabular-nums font-mono tracking-tight mt-1">
+      <div className="mx-6 mt-4 bg-bg rounded-xl p-6 text-center">
+          <p className="text-xs text-muted uppercase tracking-widest font-mono">Total Due</p>
+          <p className="text-5xl font-bold text-primary tabular-nums font-mono tracking-tight mt-1">
             {fmt(total)}
           </p>
         </div>
 
         {/* Cash Tendered */}
         <div className="mx-6 mt-5">
-          <label className="block text-xs text-gray-500 mb-1.5">Cash Tendered</label>
+          <label className="block text-xs text-muted mb-1.5">Cash Tendered</label>
           <input
             type="number"
             step="0.01"
             value={tendered}
             onChange={(e) => setTendered(e.target.value)}
             autoFocus
-            className="w-full h-16 text-3xl text-center bg-[#0a0a0b] border-2 border-gray-800 focus:border-emerald-500 rounded-xl font-mono tabular-nums text-gray-50 outline-none transition-colors"
+            className="w-full h-16 text-3xl text-center bg-bg border-2 border-edge focus:border-accent rounded-xl font-mono tabular-nums text-primary outline-none transition-colors"
             placeholder="0.00"
           />
         </div>
@@ -131,14 +131,14 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
             <button
               key={amt}
               onClick={() => handleQuick(amt)}
-              className="h-11 rounded-lg bg-gray-800 border border-gray-700/50 text-gray-300 text-sm font-medium hover:bg-gray-700 hover:border-gray-600 transition-all"
+              className="h-11 rounded-lg bg-surface border border-edge/50 text-secondary text-sm font-medium hover:bg-raised hover:border-edge-strong transition-all"
             >
               ${amt}
             </button>
           ))}
           <button
             onClick={handleExact}
-            className="col-span-2 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium hover:bg-emerald-500/20 transition-all"
+            className="col-span-2 h-11 rounded-lg bg-accent/10 border border-accent/30 text-accent text-sm font-medium hover:bg-accent/20 transition-all"
           >
             Exact
           </button>
@@ -147,8 +147,8 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
         {/* Change Due */}
         {tenderedAmount > 0 && tenderedAmount >= total && (
           <div className="mx-6 mt-4 text-center">
-            <p className="text-xs text-gray-600">Change Due</p>
-            <p className="text-3xl font-bold text-emerald-400 font-mono tabular-nums mt-0.5">
+            <p className="text-xs text-muted">Change Due</p>
+            <p className="text-3xl font-bold text-accent font-mono tabular-nums mt-0.5">
               {fmt(changeDue)}
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
 
         {/* Error */}
         {error && (
-          <p className="mx-6 mt-3 text-sm text-red-400 text-center">{error}</p>
+          <p className="mx-6 mt-3 text-sm text-danger text-center">{error}</p>
         )}
 
         {/* Complete Button */}
@@ -164,7 +164,7 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
           <button
             onClick={handleComplete}
             disabled={!canComplete}
-            className="w-full h-14 rounded-xl bg-emerald-600 text-white text-lg font-bold hover:bg-emerald-500 disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-lg shadow-emerald-900/40"
+            className="w-full h-14 rounded-xl bg-accent text-primary text-lg font-bold hover:bg-accent disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-lg shadow-accent/40"
           >
             {isProcessing ? 'Processing...' : 'Complete Sale'}
           </button>
@@ -211,11 +211,11 @@ function SuccessScreen({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl py-10 px-8 text-center">
+    <div className="fixed inset-0 bg-bg/90 backdrop-blur-sm z-50 flex items-center justify-center">
+      <div className="bg-bg border border-edge rounded-2xl w-full max-w-lg shadow-2xl py-10 px-8 text-center">
         {/* Checkmark */}
         <svg
-          className="w-16 h-16 text-emerald-400 mx-auto"
+          className="w-16 h-16 text-accent mx-auto"
           viewBox="0 0 64 64"
           fill="none"
           stroke="currentColor"
@@ -223,20 +223,20 @@ function SuccessScreen({
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <circle cx="32" cy="32" r="28" className="text-emerald-400/20" />
+          <circle cx="32" cy="32" r="28" className="text-accent/20" />
           <path d="M20 33l8 8 16-16" />
         </svg>
 
-        <p className="text-lg text-gray-300 font-medium mt-4">Sale Complete</p>
-        <p className="text-sm text-gray-500 font-mono mt-1">
+        <p className="text-lg text-secondary font-medium mt-4">Sale Complete</p>
+        <p className="text-sm text-muted font-mono mt-1">
           Transaction #{result.transactionNumber}
         </p>
 
         {/* Change Due */}
         {result.changeDue > 0 && (
           <div className="mt-6">
-            <p className="text-xs text-gray-600 uppercase tracking-widest">Change Due</p>
-            <p className="text-5xl font-bold text-emerald-400 font-mono tabular-nums mt-1">
+            <p className="text-xs text-muted uppercase tracking-widest">Change Due</p>
+            <p className="text-5xl font-bold text-accent font-mono tabular-nums mt-1">
               {fmt(result.changeDue)}
             </p>
           </div>
@@ -245,13 +245,13 @@ function SuccessScreen({
         {/* New Sale */}
         <button
           onClick={handleNewSale}
-          className="mt-8 h-12 w-full max-w-xs mx-auto rounded-xl bg-gray-800 border border-gray-700 text-gray-200 font-medium hover:bg-gray-700 transition-colors block"
+          className="mt-8 h-12 w-full max-w-xs mx-auto rounded-xl bg-surface border border-edge text-primary font-medium hover:bg-raised transition-colors block"
         >
           New Sale
         </button>
 
         {/* Countdown */}
-        <p className="text-xs text-gray-600 mt-3">
+        <p className="text-xs text-muted mt-3">
           Auto-closing in {Math.max(countdown, 0)}s
         </p>
       </div>

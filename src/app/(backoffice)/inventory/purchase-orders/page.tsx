@@ -25,11 +25,11 @@ interface Pagination {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-600/20 text-gray-300',
-  submitted: 'bg-blue-600/20 text-blue-400',
-  partial: 'bg-amber-600/20 text-amber-400',
-  received: 'bg-emerald-600/20 text-emerald-400',
-  cancelled: 'bg-red-600/20 text-red-400',
+  draft: 'bg-raised/20 text-secondary',
+  submitted: 'bg-info/20 text-info',
+  partial: 'bg-warning/20 text-warning',
+  received: 'bg-accent/20 text-accent',
+  cancelled: 'bg-danger/20 text-danger',
 }
 
 export default function PurchaseOrdersPage() {
@@ -99,11 +99,11 @@ export default function PurchaseOrdersPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Purchase Orders</h1>
+        <h1 className="text-xl font-bold text-primary">Purchase Orders</h1>
         <button
           onClick={createPO}
           disabled={creating}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50"
+          className="px-4 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50"
         >
           {creating ? 'Creating...' : 'Create PO'}
         </button>
@@ -114,7 +114,7 @@ export default function PurchaseOrdersPage() {
         <button
           onClick={() => { setTab('active'); setPagination(prev => ({ ...prev, page: 1 })) }}
           className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
-            tab === 'active' ? 'bg-gray-700 text-gray-50' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+            tab === 'active' ? 'bg-raised text-primary' : 'text-secondary hover:text-primary hover:bg-surface'
           }`}
         >
           Purchase Orders
@@ -122,7 +122,7 @@ export default function PurchaseOrdersPage() {
         <button
           onClick={() => { setTab('received'); setPagination(prev => ({ ...prev, page: 1 })) }}
           className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
-            tab === 'received' ? 'bg-gray-700 text-gray-50' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
+            tab === 'received' ? 'bg-raised text-primary' : 'text-secondary hover:text-primary hover:bg-surface'
           }`}
         >
           Received
@@ -138,16 +138,16 @@ export default function PurchaseOrdersPage() {
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             placeholder="Search by PO number or vendor name..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500"
+            className="w-full bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted"
           />
         </div>
-        <button onClick={handleSearch} className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600">
+        <button onClick={handleSearch} className="px-4 py-2 bg-raised text-secondary rounded-lg text-sm hover:bg-raised">
           Search
         </button>
         {search && (
           <button
             onClick={() => { setSearchInput(''); setSearch(''); setPagination(prev => ({ ...prev, page: 1 })) }}
-            className="px-3 py-2 text-sm text-gray-400 hover:text-gray-200"
+            className="px-3 py-2 text-sm text-secondary hover:text-primary"
           >
             Clear
           </button>
@@ -155,10 +155,10 @@ export default function PurchaseOrdersPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">PO Number</th>
               <th className="text-left px-4 py-3">Vendor</th>
               <th className="text-left px-4 py-3">Status</th>
@@ -171,48 +171,48 @@ export default function PurchaseOrdersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-muted">Loading...</td></tr>
             ) : orders.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-500">No purchase orders found</td></tr>
+              <tr><td colSpan={8} className="text-center py-8 text-muted">No purchase orders found</td></tr>
             ) : orders.map(po => (
               <tr
                 key={po.id}
                 onClick={() => router.push(`/inventory/purchase-orders/${po.id}`)}
-                className="border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer"
+                className="border-b border-edge/50 hover:bg-raised/30 cursor-pointer"
               >
-                <td className="px-4 py-2.5 text-gray-50 font-medium">{po.po_number}</td>
-                <td className="px-4 py-2.5 text-gray-300">{po.vendor_name ?? '\u2014'}</td>
+                <td className="px-4 py-2.5 text-primary font-medium">{po.po_number}</td>
+                <td className="px-4 py-2.5 text-secondary">{po.vendor_name ?? '\u2014'}</td>
                 <td className="px-4 py-2.5">
-                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded capitalize ${STATUS_COLORS[po.status] ?? 'bg-gray-700 text-gray-300'}`}>
+                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded capitalize ${STATUS_COLORS[po.status] ?? 'bg-raised text-secondary'}`}>
                     {po.status}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{po.line_count}</td>
-                <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{formatMoney(po.total_cost)}</td>
-                <td className="px-4 py-2.5 text-gray-300 text-xs">{formatDate(po.expected_delivery_date)}</td>
-                <td className="px-4 py-2.5 text-gray-300 text-xs">{po.created_by_name ?? '\u2014'}</td>
-                <td className="px-4 py-2.5 text-gray-300 text-xs">{formatDate(po.created_at)}</td>
+                <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{po.line_count}</td>
+                <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatMoney(po.total_cost)}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{formatDate(po.expected_delivery_date)}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{po.created_by_name ?? '\u2014'}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{formatDate(po.created_at)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         {pagination.total_pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
-            <span className="text-xs text-gray-400">{pagination.total} purchase orders</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
+            <span className="text-xs text-secondary">{pagination.total} purchase orders</span>
             <div className="flex gap-1">
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
                 disabled={pagination.page <= 1}
-                className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40"
+                className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40"
               >
                 Prev
               </button>
-              <span className="px-2 py-1 text-xs text-gray-400">{pagination.page} / {pagination.total_pages}</span>
+              <span className="px-2 py-1 text-xs text-secondary">{pagination.page} / {pagination.total_pages}</span>
               <button
                 onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.total_pages, prev.page + 1) }))}
                 disabled={pagination.page >= pagination.total_pages}
-                className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40"
+                className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40"
               >
                 Next
               </button>

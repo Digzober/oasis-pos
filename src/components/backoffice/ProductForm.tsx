@@ -586,7 +586,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
     setQuickAddSaving(false)
   }
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
   const selectCls = inputCls
 
   const tabs: { key: Tab; label: string }[] = [
@@ -644,7 +644,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
             {producers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button type="button" onClick={() => openQuickAdd('producer')}
-            className="shrink-0 px-2 py-1 text-xs bg-gray-700 text-emerald-400 rounded-lg hover:bg-gray-600 border border-gray-600">
+            className="shrink-0 px-2 py-1 text-xs bg-raised text-accent rounded-lg hover:bg-raised border border-edge-strong">
             + New
           </button>
         </div>
@@ -687,7 +687,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
             {brands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
           <button type="button" onClick={() => openQuickAdd('brand')}
-            className="shrink-0 px-2 py-1 text-xs bg-gray-700 text-emerald-400 rounded-lg hover:bg-gray-600 border border-gray-600">
+            className="shrink-0 px-2 py-1 text-xs bg-raised text-accent rounded-lg hover:bg-raised border border-edge-strong">
             + New
           </button>
         </div>
@@ -703,7 +703,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
             {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
           </select>
           <button type="button" onClick={() => openQuickAdd('vendor')}
-            className="shrink-0 px-2 py-1 text-xs bg-gray-700 text-emerald-400 rounded-lg hover:bg-gray-600 border border-gray-600">
+            className="shrink-0 px-2 py-1 text-xs bg-raised text-accent rounded-lg hover:bg-raised border border-edge-strong">
             + New
           </button>
         </div>
@@ -719,7 +719,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
             {strains.map(s => <option key={s.id} value={s.id}>{s.name}{s.strain_type ? ` (${s.strain_type})` : ''}</option>)}
           </select>
           <button type="button" onClick={() => openQuickAdd('strain')}
-            className="shrink-0 px-2 py-1 text-xs bg-gray-700 text-emerald-400 rounded-lg hover:bg-gray-600 border border-gray-600">
+            className="shrink-0 px-2 py-1 text-xs bg-raised text-accent rounded-lg hover:bg-raised border border-edge-strong">
             + New
           </button>
         </div>
@@ -878,34 +878,34 @@ export default function ProductForm({ productId }: { productId?: string }) {
     <form onSubmit={handleSubmit} className="max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-50">{isEdit ? 'Edit Product' : 'New Product'}</h1>
+        <h1 className="text-xl font-bold text-primary">{isEdit ? 'Edit Product' : 'New Product'}</h1>
         <div className="flex gap-2">
           {isEdit && (
             <button type="button" onClick={handleDeactivate}
-              className="text-sm px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/30">
+              className="text-sm px-3 py-1.5 bg-danger/20 text-danger rounded-lg hover:bg-danger/30">
               Deactivate
             </button>
           )}
           <button type="button" onClick={() => router.push('/products')}
-            className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Cancel</button>
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Cancel</button>
           <button type="submit" disabled={saving}
-            className="text-sm px-4 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+            className="text-sm px-4 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
             {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-      {deactivateError && <p className="text-red-400 text-sm">{deactivateError}</p>}
+      {error && <p className="text-danger text-sm">{error}</p>}
+      {deactivateError && <p className="text-danger text-sm">{deactivateError}</p>}
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-700">
+      <div className="flex gap-1 border-b border-edge">
         {tabs.map(tab => (
           <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === tab.key
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}>
             {tab.label}
           </button>
@@ -935,18 +935,18 @@ export default function ProductForm({ productId }: { productId?: string }) {
               </div>
             )}
             <div className="flex gap-4 items-center flex-wrap">
-              <label className="flex items-center gap-2 text-sm text-gray-300">
+              <label className="flex items-center gap-2 text-sm text-secondary">
                 <input type="checkbox" checked={form.isCannabis} onChange={e => set('isCannabis', e.target.checked)} className="rounded" />
                 Cannabis product
               </label>
               {fieldVisible('is_taxable') && (
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-secondary">
                   <input type="checkbox" checked={form.isTaxable} onChange={e => set('isTaxable', e.target.checked)} className="rounded" />
                   {fieldLabel('is_taxable', 'Taxable')}
                 </label>
               )}
               {fieldVisible('allow_automatic_discounts') && (
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-secondary">
                   <input type="checkbox" checked={form.allowAutomaticDiscounts} onChange={e => set('allowAutomaticDiscounts', e.target.checked)} className="rounded" />
                   {fieldLabel('allow_automatic_discounts', 'Allow Automatic Discounts')}
                 </label>
@@ -963,14 +963,14 @@ export default function ProductForm({ productId }: { productId?: string }) {
           {/* Tags */}
           <Section title="Tags">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-gray-400">Product Tags</span>
+              <span className="text-xs text-secondary">Product Tags</span>
               <button type="button" onClick={() => openQuickAdd('tag')}
-                className="px-2 py-0.5 text-xs bg-gray-700 text-emerald-400 rounded-lg hover:bg-gray-600 border border-gray-600">
+                className="px-2 py-0.5 text-xs bg-raised text-accent rounded-lg hover:bg-raised border border-edge-strong">
                 + New Tag
               </button>
             </div>
             {allTags.length === 0 ? (
-              <p className="text-gray-500 text-sm">No product tags defined. Create tags in Products &gt; Tags.</p>
+              <p className="text-muted text-sm">No product tags defined. Create tags in Products &gt; Tags.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {allTags.map(tag => {
@@ -979,8 +979,8 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     <button key={tag.id} type="button" onClick={() => toggleTag(tag.id)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         selected
-                          ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                          : 'border-gray-600 bg-gray-800 text-gray-400 hover:border-gray-500'
+                          ? 'border-accent bg-accent/20 text-accent'
+                          : 'border-edge-strong bg-surface text-secondary hover:border-edge-strong'
                       }`}
                       style={tag.color && selected ? { borderColor: tag.color, backgroundColor: `${tag.color}20`, color: tag.color } : undefined}>
                       {tag.name}
@@ -997,7 +997,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                 {pricingFields}
               </div>
               <div className="flex gap-4 items-end mt-2">
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-secondary">
                   <input type="checkbox" checked={form.isOnSale} onChange={e => set('isOnSale', e.target.checked)} className="rounded" />
                   On Sale
                 </label>
@@ -1046,9 +1046,9 @@ export default function ProductForm({ productId }: { productId?: string }) {
       {activeTab === 'locations' && (
         <div className="space-y-4">
           {!isEdit ? (
-            <p className="text-gray-500 text-sm">Save the product first, then configure per-location pricing.</p>
+            <p className="text-muted text-sm">Save the product first, then configure per-location pricing.</p>
           ) : locations.length === 0 ? (
-            <p className="text-gray-500 text-sm">No locations found.</p>
+            <p className="text-muted text-sm">No locations found.</p>
           ) : (
             locations.map(loc => {
               const lp = locationPrices.find(p => p.location_id === loc.id)
@@ -1092,12 +1092,12 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     </Field>
                   </div>
                   <div className="flex gap-6 mt-2">
-                    <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <label className="flex items-center gap-2 text-sm text-secondary">
                       <input type="checkbox" checked={lp?.is_pos_available ?? true}
                         onChange={e => updateLocationPrice(loc.id, 'is_pos_available', e.target.checked)} className="rounded" />
                       Available on POS
                     </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <label className="flex items-center gap-2 text-sm text-secondary">
                       <input type="checkbox" checked={lp?.is_online_available ?? false}
                         onChange={e => updateLocationPrice(loc.id, 'is_online_available', e.target.checked)} className="rounded" />
                       Available Online
@@ -1105,7 +1105,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                   </div>
                   <div className="flex justify-end mt-2">
                     <button type="button" onClick={() => saveLocationPrice(loc.id)}
-                      className="text-xs px-3 py-1.5 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600/30">
+                      className="text-xs px-3 py-1.5 bg-accent/20 text-accent rounded-lg hover:bg-accent/30">
                       Save Location Pricing
                     </button>
                   </div>
@@ -1148,36 +1148,36 @@ export default function ProductForm({ productId }: { productId?: string }) {
           </Section>
 
           <Section title="Product Images">
-            {imageError && <p className="text-red-400 text-sm mb-2">{imageError}</p>}
+            {imageError && <p className="text-danger text-sm mb-2">{imageError}</p>}
             {!isEdit ? (
-              <p className="text-gray-500 text-sm">Save the product first, then upload images.</p>
+              <p className="text-muted text-sm">Save the product first, then upload images.</p>
             ) : (
               <>
                 <div className="grid grid-cols-4 gap-4">
                   {images.map((img, idx) => (
-                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-gray-600 bg-gray-900">
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border border-edge-strong bg-bg">
                       <img src={img.image_url} alt={img.alt_text ?? ''} className="w-full h-32 object-cover" />
                       {img.is_primary && (
-                        <span className="absolute top-1 left-1 text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded">Primary</span>
+                        <span className="absolute top-1 left-1 text-[10px] bg-accent text-primary px-1.5 py-0.5 rounded">Primary</span>
                       )}
-                      <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] bg-gray-800/80 text-gray-300 px-1.5 py-0.5 rounded">
+                      <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[10px] bg-surface/80 text-secondary px-1.5 py-0.5 rounded">
                         #{img.sort_order}
                       </span>
                       <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {idx > 0 && (
                           <button type="button" onClick={() => handleImageReorder(idx, 'up')}
-                            className="w-6 h-6 bg-gray-700/90 text-gray-200 rounded text-xs flex items-center justify-center hover:bg-gray-600">
+                            className="w-6 h-6 bg-raised/90 text-primary rounded text-xs flex items-center justify-center hover:bg-raised">
                             &#x25B2;
                           </button>
                         )}
                         {idx < images.length - 1 && (
                           <button type="button" onClick={() => handleImageReorder(idx, 'down')}
-                            className="w-6 h-6 bg-gray-700/90 text-gray-200 rounded text-xs flex items-center justify-center hover:bg-gray-600">
+                            className="w-6 h-6 bg-raised/90 text-primary rounded text-xs flex items-center justify-center hover:bg-raised">
                             &#x25BC;
                           </button>
                         )}
                         <button type="button" onClick={() => handleImageDelete(img.id)}
-                          className="w-6 h-6 bg-red-600/80 text-white rounded text-xs flex items-center justify-center">
+                          className="w-6 h-6 bg-danger/80 text-primary rounded text-xs flex items-center justify-center">
                           X
                         </button>
                       </div>
@@ -1187,14 +1187,14 @@ export default function ProductForm({ productId }: { productId?: string }) {
                           defaultValue={img.alt_text ?? ''}
                           placeholder="Alt text..."
                           onBlur={e => handleImageAltTextSave(img.id, e.target.value)}
-                          className="w-full h-7 px-2 bg-gray-800 border border-gray-600 rounded text-gray-300 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-full h-7 px-2 bg-surface border border-edge-strong rounded text-secondary text-xs focus:outline-none focus:ring-1 focus:ring-accent"
                         />
                       </div>
                     </div>
                   ))}
-                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-gray-500 transition-colors">
-                    <span className="text-gray-500 text-2xl">+</span>
-                    <span className="text-gray-500 text-xs mt-1">{uploading ? 'Uploading...' : 'Add Image'}</span>
+                  <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-edge-strong rounded-lg cursor-pointer hover:border-edge-strong transition-colors">
+                    <span className="text-muted text-2xl">+</span>
+                    <span className="text-muted text-xs mt-1">{uploading ? 'Uploading...' : 'Add Image'}</span>
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                   </label>
                 </div>
@@ -1208,13 +1208,13 @@ export default function ProductForm({ productId }: { productId?: string }) {
       {activeTab === 'labels' && (
         <div className="space-y-6">
           <Section title="Auto-Print Label Settings">
-            <p className="text-xs text-gray-500 mb-4">Configure which label template to use when this product is sold to each customer type.</p>
+            <p className="text-xs text-muted mb-4">Configure which label template to use when this product is sold to each customer type.</p>
             {labelSettings.map((ls, idx) => (
-              <div key={ls.customer_type} className="flex items-center gap-4 py-3 border-b border-gray-700 last:border-0">
+              <div key={ls.customer_type} className="flex items-center gap-4 py-3 border-b border-edge last:border-0">
                 <label className="flex items-center gap-2 w-24">
                   <input type="checkbox" checked={ls.enabled}
                     onChange={e => updateLabelSetting(idx, 'enabled', e.target.checked)} className="rounded" />
-                  <span className="text-sm text-gray-300 capitalize">{ls.customer_type}</span>
+                  <span className="text-sm text-secondary capitalize">{ls.customer_type}</span>
                 </label>
                 <Field label="Template">
                   <select value={ls.label_template_id ?? ''}
@@ -1247,14 +1247,14 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
       {/* Quick-Add Modal */}
       {quickAddTarget && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-50">
+        <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-primary">
               New {quickAddTarget === 'brand' ? 'Brand' : quickAddTarget === 'vendor' ? 'Vendor' : quickAddTarget === 'producer' ? 'Producer' : quickAddTarget === 'strain' ? 'Strain' : 'Tag'}
             </h2>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Name *</span>
+              <span className="text-xs text-secondary">Name *</span>
               <input
                 value={quickAddForm.name ?? ''}
                 onChange={e => setQuickAddForm(prev => ({ ...prev, name: e.target.value }))}
@@ -1265,7 +1265,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
             {quickAddTarget === 'strain' && (
               <label className="block">
-                <span className="text-xs text-gray-400">Strain Type</span>
+                <span className="text-xs text-secondary">Strain Type</span>
                 <select
                   value={quickAddForm.strain_type ?? ''}
                   onChange={e => setQuickAddForm(prev => ({ ...prev, strain_type: e.target.value }))}
@@ -1282,7 +1282,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
             {(quickAddTarget === 'vendor' || quickAddTarget === 'producer') && (
               <>
                 <label className="block">
-                  <span className="text-xs text-gray-400">License Number</span>
+                  <span className="text-xs text-secondary">License Number</span>
                   <input
                     value={quickAddForm.license_number ?? ''}
                     onChange={e => setQuickAddForm(prev => ({ ...prev, license_number: e.target.value }))}
@@ -1290,7 +1290,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                   />
                 </label>
                 <label className="block">
-                  <span className="text-xs text-gray-400">Contact Name</span>
+                  <span className="text-xs text-secondary">Contact Name</span>
                   <input
                     value={quickAddForm.contact_name ?? ''}
                     onChange={e => setQuickAddForm(prev => ({ ...prev, contact_name: e.target.value }))}
@@ -1299,7 +1299,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <label className="block">
-                    <span className="text-xs text-gray-400">Email</span>
+                    <span className="text-xs text-secondary">Email</span>
                     <input
                       type="email"
                       value={quickAddForm.email ?? ''}
@@ -1308,7 +1308,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     />
                   </label>
                   <label className="block">
-                    <span className="text-xs text-gray-400">Phone</span>
+                    <span className="text-xs text-secondary">Phone</span>
                     <input
                       type="tel"
                       value={quickAddForm.phone ?? ''}
@@ -1322,7 +1322,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
             {quickAddTarget === 'tag' && (
               <label className="block">
-                <span className="text-xs text-gray-400">Color (hex)</span>
+                <span className="text-xs text-secondary">Color (hex)</span>
                 <div className="flex gap-2 items-center">
                   <input
                     value={quickAddForm.color ?? ''}
@@ -1331,21 +1331,21 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     placeholder="#10b981"
                   />
                   {quickAddForm.color && (
-                    <div className="w-10 h-10 rounded-lg border border-gray-600 shrink-0" style={{ backgroundColor: quickAddForm.color }} />
+                    <div className="w-10 h-10 rounded-lg border border-edge-strong shrink-0" style={{ backgroundColor: quickAddForm.color }} />
                   )}
                 </div>
               </label>
             )}
 
-            {quickAddError && <p className="text-red-400 text-sm">{quickAddError}</p>}
+            {quickAddError && <p className="text-danger text-sm">{quickAddError}</p>}
 
             <div className="flex gap-2 justify-end">
               <button type="button" onClick={() => setQuickAddTarget(null)}
-                className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600">
+                className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm hover:bg-raised">
                 Cancel
               </button>
               <button type="button" onClick={handleQuickAddSave} disabled={quickAddSaving}
-                className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50 hover:bg-emerald-500">
+                className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50 hover:bg-accent">
                 {quickAddSaving ? 'Saving...' : 'Save'}
               </button>
             </div>
@@ -1358,8 +1358,8 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">{title}</h3>
+    <div className="bg-surface rounded-xl border border-edge p-4">
+      <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   )
@@ -1368,7 +1368,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs text-gray-400 block mb-1">{label}</span>
+      <span className="text-xs text-secondary block mb-1">{label}</span>
       {children}
     </label>
   )

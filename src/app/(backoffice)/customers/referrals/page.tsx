@@ -24,21 +24,21 @@ export default function ReferralsPage() {
     setSaving(false)
   }
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm"
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Referral Program</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Referral Program</h1>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-4">
-        <h3 className="text-sm font-semibold text-gray-300 uppercase">Configuration</h3>
-        <label className="block"><span className="text-xs text-gray-400">Referrer Reward (points)</span>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-4">
+        <h3 className="text-sm font-semibold text-secondary uppercase">Configuration</h3>
+        <label className="block"><span className="text-xs text-secondary">Referrer Reward (points)</span>
           <input type="number" value={form.referrer_reward_points} onChange={e => setForm(p => ({ ...p, referrer_reward_points: e.target.value }))} className={inputCls} /></label>
-        <label className="block"><span className="text-xs text-gray-400">Referee Reward (points)</span>
+        <label className="block"><span className="text-xs text-secondary">Referee Reward (points)</span>
           <input type="number" value={form.referee_reward_points} onChange={e => setForm(p => ({ ...p, referee_reward_points: e.target.value }))} className={inputCls} /></label>
-        <label className="block"><span className="text-xs text-gray-400">Min Purchase Amount ($)</span>
+        <label className="block"><span className="text-xs text-secondary">Min Purchase Amount ($)</span>
           <input type="number" step="0.01" value={form.min_purchase_amount} onChange={e => setForm(p => ({ ...p, min_purchase_amount: e.target.value }))} className={inputCls} /></label>
-        <button onClick={save} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save Config'}</button>
+        <button onClick={save} disabled={saving} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save Config'}</button>
       </div>
     </div>
   )

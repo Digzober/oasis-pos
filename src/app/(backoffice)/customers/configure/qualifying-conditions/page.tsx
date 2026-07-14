@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 interface Condition {
   id: string
@@ -30,7 +30,7 @@ const TABS = [
 function ConfigureTabs() {
   const pathname = usePathname()
   return (
-    <nav className="flex gap-6 border-b border-gray-700 mb-6">
+    <nav className="flex gap-6 border-b border-edge mb-6">
       {TABS.map((tab) => {
         const isActive = pathname === tab.href
         return (
@@ -39,8 +39,8 @@ function ConfigureTabs() {
             href={tab.href}
             className={`pb-3 text-sm font-medium transition-colors ${
               isActive
-                ? 'text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'text-accent border-b-2 border-accent'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -152,8 +152,8 @@ export default function QualifyingConditionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <h1 className="text-2xl font-bold text-gray-50 mb-6">Customer Configuration</h1>
+    <div className="min-h-screen bg-bg p-6">
+      <h1 className="text-2xl font-bold text-primary mb-6">Customer Configuration</h1>
       <ConfigureTabs />
 
       {/* Search + Add */}
@@ -167,42 +167,42 @@ export default function QualifyingConditionsPage() {
         />
         <button
           onClick={openAdd}
-          className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+          className="h-10 px-4 bg-accent hover:bg-accent text-primary text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
         >
           Add Condition
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+      <div className="bg-surface border border-edge rounded-lg overflow-hidden">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-800 border-b border-gray-700">
+          <thead className="bg-surface border-b border-edge">
             <tr>
-              <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Condition Name</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Description</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase">Status</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-400 uppercase w-16">Actions</th>
+              <th className="px-4 py-3 text-xs font-medium text-secondary uppercase">Condition Name</th>
+              <th className="px-4 py-3 text-xs font-medium text-secondary uppercase">Description</th>
+              <th className="px-4 py-3 text-xs font-medium text-secondary uppercase">Status</th>
+              <th className="px-4 py-3 text-xs font-medium text-secondary uppercase w-16">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-edge">
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">Loading...</td>
+                <td colSpan={4} className="px-4 py-8 text-center text-secondary">Loading...</td>
               </tr>
             ) : conditions.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">No qualifying conditions found.</td>
+                <td colSpan={4} className="px-4 py-8 text-center text-secondary">No qualifying conditions found.</td>
               </tr>
             ) : (
               conditions.map((cond) => (
-                <tr key={cond.id} className="hover:bg-gray-750">
-                  <td className="px-4 py-3 text-gray-50">{cond.name}</td>
-                  <td className="px-4 py-3 text-gray-300">{truncate(cond.description, 80)}</td>
+                <tr key={cond.id} className="hover:bg-raised">
+                  <td className="px-4 py-3 text-primary">{cond.name}</td>
+                  <td className="px-4 py-3 text-secondary">{truncate(cond.description, 80)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       cond.is_active
-                        ? 'bg-emerald-900/50 text-emerald-400'
-                        : 'bg-red-900/50 text-red-400'
+                        ? 'bg-accent/50 text-accent'
+                        : 'bg-danger/50 text-danger'
                     }`}>
                       {cond.is_active ? 'Active' : 'Inactive'}
                     </span>
@@ -210,21 +210,21 @@ export default function QualifyingConditionsPage() {
                   <td className="px-4 py-3 relative">
                     <button
                       onClick={() => setOpenActions(openActions === cond.id ? null : cond.id)}
-                      className="text-gray-400 hover:text-gray-200 text-lg leading-none px-2"
+                      className="text-secondary hover:text-primary text-lg leading-none px-2"
                     >
                       ...
                     </button>
                     {openActions === cond.id && (
-                      <div className="absolute right-4 top-10 z-10 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-1 min-w-[120px]">
+                      <div className="absolute right-4 top-10 z-10 bg-surface border border-edge rounded-lg shadow-lg py-1 min-w-[120px]">
                         <button
                           onClick={() => openEdit(cond)}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                          className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-raised"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => { setDeleteTarget(cond); setOpenActions(null) }}
-                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                          className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-raised"
                         >
                           Delete
                         </button>
@@ -241,21 +241,21 @@ export default function QualifyingConditionsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-secondary">
             Page {page} of {totalPages} ({total} total)
           </span>
           <div className="flex gap-2">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-surface border border-edge rounded-lg text-secondary hover:bg-raised disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 text-sm bg-surface border border-edge rounded-lg text-secondary hover:bg-raised disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -265,9 +265,9 @@ export default function QualifyingConditionsPage() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-semibold text-gray-50 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface border border-edge rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-semibold text-primary mb-4">
               {editingCondition ? 'Edit Condition' : 'Add Condition'}
             </h2>
             <div className="space-y-4">
@@ -291,14 +291,14 @@ export default function QualifyingConditionsPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm text-secondary bg-raised hover:bg-raised rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name}
-                className="px-4 py-2 text-sm text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm text-primary bg-accent hover:bg-accent rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>
@@ -309,25 +309,25 @@ export default function QualifyingConditionsPage() {
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-sm shadow-xl">
-            <h2 className="text-lg font-semibold text-gray-50 mb-2">Delete Condition</h2>
-            <p className="text-sm text-gray-300 mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface border border-edge rounded-xl p-6 w-full max-w-sm shadow-xl">
+            <h2 className="text-lg font-semibold text-primary mb-2">Delete Condition</h2>
+            <p className="text-sm text-secondary mb-6">
               Are you sure you want to delete{' '}
-              <span className="text-gray-50 font-medium">{deleteTarget.name}</span>
+              <span className="text-primary font-medium">{deleteTarget.name}</span>
               ? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm text-secondary bg-raised hover:bg-raised rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-40"
+                className="px-4 py-2 text-sm text-primary bg-danger hover:bg-danger rounded-lg transition-colors disabled:opacity-40"
               >
                 {deleting ? 'Deleting...' : 'Delete'}
               </button>

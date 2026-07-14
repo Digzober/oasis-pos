@@ -34,26 +34,26 @@ export default function EmployeeListPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Employees</h1>
+        <h1 className="text-xl font-bold text-primary">Employees</h1>
         <div className="flex gap-2">
-          <Link href="/employees/permissions" className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Permissions</Link>
-          <Link href="/employees/time-clock" className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Time Clock</Link>
+          <Link href="/employees/permissions" className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Permissions</Link>
+          <Link href="/employees/time-clock" className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Time Clock</Link>
         </div>
       </div>
 
       <div className="flex gap-3 mb-4">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or email..."
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 w-64" />
-        <select value={role} onChange={e => setRole(e.target.value)} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50">
+          className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary w-64" />
+        <select value={role} onChange={e => setRole(e.target.value)} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary">
           <option value="">All Roles</option>
           {ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
         </select>
-        <span className="ml-auto text-sm text-gray-500 self-center">{total} employee{total !== 1 ? 's' : ''}</span>
+        <span className="ml-auto text-sm text-muted self-center">{total} employee{total !== 1 ? 's' : ''}</span>
       </div>
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+          <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-4 py-3">Role</th>
             <th className="text-left px-4 py-3">Email</th>
@@ -61,17 +61,17 @@ export default function EmployeeListPage() {
             <th className="text-left px-4 py-3">Groups</th>
           </tr></thead>
           <tbody>
-            {loading ? <tr><td colSpan={5} className="text-center py-8 text-gray-500">Loading...</td></tr>
-            : employees.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-gray-500">No employees</td></tr>
+            {loading ? <tr><td colSpan={5} className="text-center py-8 text-muted">Loading...</td></tr>
+            : employees.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-muted">No employees</td></tr>
             : employees.map((e: Emp) => (
-              <tr key={e.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <tr key={e.id} className="border-b border-edge/50 hover:bg-raised/30">
                 <td className="px-4 py-2.5">
-                  <Link href={`/employees/${e.id}`} className="text-gray-50 hover:text-emerald-400">{e.first_name} {e.last_name}</Link>
+                  <Link href={`/employees/${e.id}`} className="text-primary hover:text-accent">{e.first_name} {e.last_name}</Link>
                 </td>
-                <td className="px-4 py-2.5 text-gray-300 capitalize">{e.role?.replace('_', ' ')}</td>
-                <td className="px-4 py-2.5 text-gray-400 text-xs">{e.email ?? '—'}</td>
-                <td className="px-4 py-2.5 text-gray-400 text-xs">{e.employee_locations?.length ?? 0} locations</td>
-                <td className="px-4 py-2.5 text-gray-400 text-xs">
+                <td className="px-4 py-2.5 text-secondary capitalize">{e.role?.replace('_', ' ')}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{e.email ?? '—'}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">{e.employee_locations?.length ?? 0} locations</td>
+                <td className="px-4 py-2.5 text-secondary text-xs">
                   {(e.user_permission_groups ?? []).map((g: Emp) => g.permission_groups?.name).filter(Boolean).join(', ') || '—'}
                 </td>
               </tr>
@@ -81,13 +81,13 @@ export default function EmployeeListPage() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-gray-400">
+        <div className="flex items-center justify-between mt-4 text-sm text-secondary">
           <span>Page {page} of {totalPages}</span>
           <div className="flex gap-2">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600">Prev</button>
+              className="px-3 py-1 bg-raised text-secondary rounded-lg text-xs disabled:opacity-30 hover:bg-raised">Prev</button>
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}
-              className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-xs disabled:opacity-30 hover:bg-gray-600">Next</button>
+              className="px-3 py-1 bg-raised text-secondary rounded-lg text-xs disabled:opacity-30 hover:bg-raised">Next</button>
           </div>
         </div>
       )}

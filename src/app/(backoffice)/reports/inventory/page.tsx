@@ -40,10 +40,10 @@ export default function InventoryReportsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Inventory Reports</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Inventory Reports</h1>
       <div className="flex items-center justify-between mb-6">
       <div className="flex gap-2">{tabs.map(t => (
-        <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-lg text-sm ${tab === t.key ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-300'}`}>{t.label}</button>
+        <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2 rounded-lg text-sm ${tab === t.key ? 'bg-accent text-primary' : 'bg-raised text-secondary'}`}>{t.label}</button>
       ))}</div>
       <button onClick={() => {
         const date = new Date().toISOString().slice(0, 10)
@@ -56,7 +56,7 @@ export default function InventoryReportsPage() {
         } else if (tab === 'shrinkage' && shrinkage) {
           exportCSV(['Reason', 'Units Lost', 'Event Count'], (shrinkage.items ?? []).map((i: R) => [i.reason, String(i.units_lost), String(i.count)]), `inventory-report-${date}.csv`)
         }
-      }} className="px-4 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2">
+      }} className="px-4 py-2 text-sm bg-raised border border-edge-strong text-primary rounded-lg hover:bg-raised transition-colors flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
         Export CSV
       </button>
@@ -70,38 +70,38 @@ export default function InventoryReportsPage() {
       )}
 
       {tab === 'low' && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-          <table className="w-full text-sm"><thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+        <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+          <table className="w-full text-sm"><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Product</th><th className="text-left px-4 py-3">SKU</th><th className="text-right px-4 py-3">Available</th>
-          </tr></thead><tbody>{lowStock.length === 0 ? <tr><td colSpan={3} className="text-center py-8 text-gray-500">No low stock items</td></tr>
+          </tr></thead><tbody>{lowStock.length === 0 ? <tr><td colSpan={3} className="text-center py-8 text-muted">No low stock items</td></tr>
             : lowStock.map((i: R) => (
-            <tr key={i.id} className="border-b border-gray-700/50"><td className="px-4 py-2.5 text-gray-50">{i.product_name}</td><td className="px-4 py-2.5 text-gray-400 text-xs">{i.sku}</td>
-              <td className={`px-4 py-2.5 text-right font-medium tabular-nums ${i.available <= 0 ? 'text-red-400' : 'text-amber-400'}`}>{i.available}</td></tr>
+            <tr key={i.id} className="border-b border-edge/50"><td className="px-4 py-2.5 text-primary">{i.product_name}</td><td className="px-4 py-2.5 text-secondary text-xs">{i.sku}</td>
+              <td className={`px-4 py-2.5 text-right font-medium tabular-nums ${i.available <= 0 ? 'text-danger' : 'text-warning'}`}>{i.available}</td></tr>
           ))}</tbody></table>
         </div>
       )}
 
       {tab === 'expiring' && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-          <table className="w-full text-sm"><thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+        <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+          <table className="w-full text-sm"><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Product</th><th className="text-right px-4 py-3">Qty</th><th className="text-left px-4 py-3">Expires</th><th className="text-right px-4 py-3">Days Left</th>
-          </tr></thead><tbody>{expiring.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-gray-500">No expiring items</td></tr>
+          </tr></thead><tbody>{expiring.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-muted">No expiring items</td></tr>
             : expiring.map((i: R) => (
-            <tr key={i.id} className="border-b border-gray-700/50"><td className="px-4 py-2.5 text-gray-50">{i.product_name}</td><td className="px-4 py-2.5 text-right tabular-nums">{i.quantity}</td>
-              <td className="px-4 py-2.5 text-gray-400 text-xs">{i.expiration_date}</td><td className={`px-4 py-2.5 text-right font-medium ${i.days_until_expiry <= 7 ? 'text-red-400' : 'text-amber-400'}`}>{i.days_until_expiry}d</td></tr>
+            <tr key={i.id} className="border-b border-edge/50"><td className="px-4 py-2.5 text-primary">{i.product_name}</td><td className="px-4 py-2.5 text-right tabular-nums">{i.quantity}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs">{i.expiration_date}</td><td className={`px-4 py-2.5 text-right font-medium ${i.days_until_expiry <= 7 ? 'text-danger' : 'text-warning'}`}>{i.days_until_expiry}d</td></tr>
           ))}</tbody></table>
         </div>
       )}
 
       {tab === 'shrinkage' && shrinkage && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-          <p className="text-lg font-bold text-gray-50 mb-3">Total Units Lost: {shrinkage.total_units_lost}</p>
+        <div className="bg-surface rounded-xl border border-edge p-4">
+          <p className="text-lg font-bold text-primary mb-3">Total Units Lost: {shrinkage.total_units_lost}</p>
           {(shrinkage.items ?? []).map((i: R) => (
-            <div key={i.reason} className="flex justify-between py-1 text-sm"><span className="text-gray-300 capitalize">{i.reason.replace('_', ' ')}</span><span className="text-red-400 tabular-nums">{i.units_lost} units ({i.count} events)</span></div>
+            <div key={i.reason} className="flex justify-between py-1 text-sm"><span className="text-secondary capitalize">{i.reason.replace('_', ' ')}</span><span className="text-danger tabular-nums">{i.units_lost} units ({i.count} events)</span></div>
           ))}
         </div>
       )}
     </div>
   )
 }
-function Card({ label, value }: { label: string; value: string }) { return <div className="bg-gray-800 rounded-xl border border-gray-700 p-4"><p className="text-xs text-gray-400 uppercase">{label}</p><p className="text-2xl font-bold text-gray-50 mt-1 tabular-nums">{value}</p></div> }
+function Card({ label, value }: { label: string; value: string }) { return <div className="bg-surface rounded-xl border border-edge p-4"><p className="text-xs text-secondary uppercase">{label}</p><p className="text-2xl font-bold text-primary mt-1 tabular-nums">{value}</p></div> }

@@ -45,26 +45,26 @@ export default function LocationSettingsPage({ params }: { params: Promise<{ id:
     }, 500)
   }
 
-  if (!loaded) return <p className="text-gray-500">Loading...</p>
+  if (!loaded) return <p className="text-muted">Loading...</p>
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Location Settings</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Location Settings</h1>
       {SETTING_CATEGORIES.map(cat => (
-        <div key={cat.key} className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-4">
-          <h3 className="text-sm font-semibold text-gray-300 uppercase mb-3">{cat.label}</h3>
+        <div key={cat.key} className="bg-surface rounded-xl border border-edge p-4 mb-4">
+          <h3 className="text-sm font-semibold text-secondary uppercase mb-3">{cat.label}</h3>
           <div className="space-y-3">
             {cat.settings.map(s => (
               <div key={s.key} className="flex items-center justify-between">
-                <span className="text-sm text-gray-300">{s.label}</span>
+                <span className="text-sm text-secondary">{s.label}</span>
                 {s.type === 'toggle' ? (
                   <button onClick={() => updateSetting(s.key, !settings[s.key])}
-                    className={`w-10 h-6 rounded-full transition-colors ${settings[s.key] ? 'bg-emerald-600' : 'bg-gray-600'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full mx-1 transition-transform ${settings[s.key] ? 'translate-x-4' : ''}`} />
+                    className={`w-10 h-6 rounded-full transition-colors ${settings[s.key] ? 'bg-accent' : 'bg-raised'}`}>
+                    <div className={`w-4 h-4 bg-surface rounded-full mx-1 transition-transform ${settings[s.key] ? 'translate-x-4' : ''}`} />
                   </button>
                 ) : (
                   <input type="number" value={settings[s.key] ?? ''} onChange={e => updateSetting(s.key, Number(e.target.value))}
-                    className="w-20 h-8 px-2 bg-gray-900 border border-gray-600 rounded text-gray-50 text-sm text-right" />
+                    className="w-20 h-8 px-2 bg-bg border border-edge-strong rounded text-primary text-sm text-right" />
                 )}
               </div>
             ))}

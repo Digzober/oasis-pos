@@ -202,8 +202,8 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
     return (
       <div className="p-6 max-w-5xl mx-auto">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-700 rounded w-48" />
-          <div className="h-64 bg-gray-800/50 rounded-lg" />
+          <div className="h-8 bg-raised rounded w-48" />
+          <div className="h-64 bg-surface/50 rounded-lg" />
         </div>
       </div>
     )
@@ -211,9 +211,9 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
 
   if (!kit) {
     return (
-      <div className="p-6 max-w-5xl mx-auto text-center text-gray-400">
+      <div className="p-6 max-w-5xl mx-auto text-center text-secondary">
         <p>Kit not found</p>
-        <Link href="/products/kits" className="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block">
+        <Link href="/products/kits" className="text-accent hover:text-accent text-sm mt-2 inline-block">
           Back to kits
         </Link>
       </div>
@@ -227,20 +227,20 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
         <div className="flex items-center gap-3">
           <Link
             href="/products/kits"
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+            className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-raised transition-colors"
           >
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-50">{kit.name}</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <h1 className="text-2xl font-bold text-primary">{kit.name}</h1>
+            <p className="text-sm text-secondary mt-0.5">
               {kit.items.length} item{kit.items.length !== 1 ? 's' : ''} in kit
             </p>
           </div>
         </div>
         <button
           onClick={handleDeactivate}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm text-danger hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
         >
           <Trash2 size={14} />
           Deactivate
@@ -248,46 +248,46 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* Kit Info Form */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-6">
-        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Kit Details</h2>
+      <div className="bg-surface/50 border border-edge rounded-lg p-6 mb-6">
+        <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">Kit Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Name *</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Name *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">SKU</label>
+            <label className="block text-xs font-medium text-secondary mb-1">SKU</label>
             <input
               type="text"
               value={form.sku}
               onChange={(e) => setForm(f => ({ ...f, sku: e.target.value }))}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Price</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Price</label>
             <input
               type="number"
               step="0.01"
               min="0"
               value={form.price}
               onChange={(e) => setForm(f => ({ ...f, price: e.target.value }))}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               placeholder="0.00"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
+            <label className="block text-xs font-medium text-secondary mb-1">Description</label>
             <input
               type="text"
               value={form.description}
               onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
               placeholder="Optional"
             />
           </div>
@@ -296,13 +296,13 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-accent hover:bg-accent text-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             <Save size={14} />
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
           {saveMessage && (
-            <span className={`text-sm ${saveMessage.includes('success') ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text-sm ${saveMessage.includes('success') ? 'text-accent' : 'text-danger'}`}>
               {saveMessage}
             </span>
           )}
@@ -310,12 +310,12 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
       </div>
 
       {/* Kit Items */}
-      <div className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Kit Items</h2>
+      <div className="bg-surface/50 border border-edge rounded-lg overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider">Kit Items</h2>
           <button
             onClick={() => setShowAddProduct(true)}
-            className="flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-accent hover:text-accent transition-colors"
           >
             <Plus size={14} />
             Add Product
@@ -323,11 +323,11 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
         </div>
 
         {kit.items.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500">
+          <div className="px-6 py-12 text-center text-muted">
             <p>No items in this kit yet</p>
             <button
               onClick={() => setShowAddProduct(true)}
-              className="text-emerald-400 hover:text-emerald-300 text-sm mt-2 transition-colors"
+              className="text-accent hover:text-accent text-sm mt-2 transition-colors"
             >
               Add your first product
             </button>
@@ -335,7 +335,7 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
+              <tr className="border-b border-edge text-secondary text-xs uppercase tracking-wider">
                 <th className="w-8 px-2 py-3" />
                 <th className="text-left px-4 py-3">Product</th>
                 <th className="text-left px-4 py-3">SKU</th>
@@ -345,14 +345,14 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
                 <th className="w-12 px-2 py-3" />
               </tr>
             </thead>
-            <tbody className="text-gray-200">
+            <tbody className="text-primary">
               {kit.items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors">
-                  <td className="px-2 py-3 text-center text-gray-600">
+                <tr key={item.id} className="border-b border-edge/50 hover:bg-raised/20 transition-colors">
+                  <td className="px-2 py-3 text-center text-muted">
                     <GripVertical size={14} />
                   </td>
                   <td className="px-4 py-3 font-medium">{item.product_name}</td>
-                  <td className="px-4 py-3 text-gray-400 font-mono text-xs">
+                  <td className="px-4 py-3 text-secondary font-mono text-xs">
                     {item.product_sku ?? '\u2014'}
                   </td>
                   <td className="px-4 py-3 text-right">{fmt(item.product_price)}</td>
@@ -364,7 +364,7 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
                     <button
                       onClick={() => handleRemoveItem(item.id)}
                       disabled={removingItemId === item.id}
-                      className="p-1 text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                      className="p-1 text-muted hover:text-danger transition-colors disabled:opacity-50"
                       title="Remove item"
                     >
                       <Trash2 size={14} />
@@ -374,11 +374,11 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-gray-600">
-                <td colSpan={5} className="px-4 py-3 text-right font-medium text-gray-300">
+              <tr className="border-t border-edge-strong">
+                <td colSpan={5} className="px-4 py-3 text-right font-medium text-secondary">
                   Items Total
                 </td>
-                <td className="px-4 py-3 text-right font-semibold text-gray-50">
+                <td className="px-4 py-3 text-right font-semibold text-primary">
                   {fmt(
                     kit.items.reduce(
                       (sum, item) => sum + (item.product_price != null ? item.product_price * item.quantity : 0),
@@ -395,13 +395,13 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
 
       {/* Add Product Modal */}
       {showAddProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg mx-4">
-            <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-50">Add Product to Kit</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60 backdrop-blur-sm">
+          <div className="bg-surface border border-edge rounded-xl shadow-2xl w-full max-w-lg mx-4">
+            <div className="px-6 py-4 border-b border-edge flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-primary">Add Product to Kit</h2>
               <button
                 onClick={() => { setShowAddProduct(false); setSelectedProduct(null); setProductSearch(''); setAddQuantity('1') }}
-                className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                className="p-1 text-secondary hover:text-primary transition-colors"
               >
                 <X size={18} />
               </button>
@@ -409,35 +409,35 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
             <div className="px-6 py-4 space-y-4">
               {/* Product Search */}
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Search Product</label>
+                <label className="block text-xs font-medium text-secondary mb-1">Search Product</label>
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={productSearch}
                     onChange={(e) => { setProductSearch(e.target.value); setSelectedProduct(null) }}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full bg-bg border border-edge rounded-lg pl-9 pr-4 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                     placeholder="Type to search products..."
                     autoFocus
                   />
                 </div>
                 {/* Search Results */}
                 {productSearch.trim() && !selectedProduct && (
-                  <div className="mt-2 max-h-48 overflow-y-auto bg-gray-900 border border-gray-700 rounded-lg">
+                  <div className="mt-2 max-h-48 overflow-y-auto bg-bg border border-edge rounded-lg">
                     {searchingProducts && (
-                      <div className="px-4 py-3 text-xs text-gray-500">Searching...</div>
+                      <div className="px-4 py-3 text-xs text-muted">Searching...</div>
                     )}
                     {!searchingProducts && productResults.length === 0 && (
-                      <div className="px-4 py-3 text-xs text-gray-500">No products found</div>
+                      <div className="px-4 py-3 text-xs text-muted">No products found</div>
                     )}
                     {productResults.map((p) => (
                       <button
                         key={p.id}
                         onClick={() => { setSelectedProduct(p); setProductSearch(p.name) }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-gray-800 transition-colors border-b border-gray-800 last:border-0"
+                        className="w-full text-left px-4 py-2.5 hover:bg-surface transition-colors border-b border-edge last:border-0"
                       >
-                        <div className="text-sm text-gray-200 font-medium">{p.name}</div>
-                        <div className="text-xs text-gray-500 flex gap-3 mt-0.5">
+                        <div className="text-sm text-primary font-medium">{p.name}</div>
+                        <div className="text-xs text-muted flex gap-3 mt-0.5">
                           {p.sku && <span>SKU: {p.sku}</span>}
                           <span>{fmt(p.rec_price)}</span>
                         </div>
@@ -447,17 +447,17 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
                 )}
                 {/* Selected Product */}
                 {selectedProduct && (
-                  <div className="mt-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                  <div className="mt-2 bg-accent/10 border border-accent/20 rounded-lg px-4 py-2.5 flex items-center justify-between">
                     <div>
-                      <div className="text-sm text-emerald-300 font-medium">{selectedProduct.name}</div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-sm text-accent font-medium">{selectedProduct.name}</div>
+                      <div className="text-xs text-secondary">
                         {selectedProduct.sku && <span>SKU: {selectedProduct.sku} | </span>}
                         {fmt(selectedProduct.rec_price)}
                       </div>
                     </div>
                     <button
                       onClick={() => { setSelectedProduct(null); setProductSearch('') }}
-                      className="p-1 text-gray-400 hover:text-gray-200 transition-colors"
+                      className="p-1 text-secondary hover:text-primary transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -467,28 +467,28 @@ export default function KitDetailPage({ params }: { params: Promise<{ id: string
 
               {/* Quantity */}
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">Quantity</label>
+                <label className="block text-xs font-medium text-secondary mb-1">Quantity</label>
                 <input
                   type="number"
                   step="1"
                   min="1"
                   value={addQuantity}
                   onChange={(e) => setAddQuantity(e.target.value)}
-                  className="w-32 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-32 bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+            <div className="px-6 py-4 border-t border-edge flex justify-end gap-3">
               <button
                 onClick={() => { setShowAddProduct(false); setSelectedProduct(null); setProductSearch(''); setAddQuantity('1') }}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddItem}
                 disabled={!selectedProduct || addingItem || !addQuantity || parseFloat(addQuantity) <= 0}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-accent hover:bg-accent text-primary text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {addingItem ? 'Adding...' : 'Add to Kit'}
               </button>

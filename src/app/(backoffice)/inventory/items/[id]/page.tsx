@@ -77,10 +77,10 @@ interface InventoryItemDetail {
 /*  Styles                                                             */
 /* ------------------------------------------------------------------ */
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed'
-const selectCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
-const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed'
+const selectCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
+const sectionCls = 'bg-surface rounded-xl border border-edge p-6 space-y-4'
 
 /* ------------------------------------------------------------------ */
 /*  Tag Multi-Select                                                   */
@@ -108,36 +108,36 @@ function TagMultiSelect({
         onClick={() => setOpen(o => !o)}
         className={`${inputCls} text-left flex items-center justify-between`}
       >
-        <span className={selected.length > 0 ? 'text-gray-50' : 'text-gray-500'}>
+        <span className={selected.length > 0 ? 'text-primary' : 'text-muted'}>
           {selected.length === 0
             ? 'Select tags...'
             : `${selected.length} tag${selected.length > 1 ? 's' : ''} selected`}
         </span>
-        <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3 h-3 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-gray-800 border border-gray-700 rounded-lg shadow-xl">
+          <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-surface border border-edge rounded-lg shadow-xl">
             {selected.length > 0 && (
               <button
                 onClick={() => onChange([])}
-                className="w-full text-left px-3 py-2 text-xs text-gray-400 hover:bg-gray-700 border-b border-gray-700"
+                className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-raised border-b border-edge"
               >
                 Clear all
               </button>
             )}
             {options.map(opt => (
-              <label key={opt.id} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer">
+              <label key={opt.id} className="flex items-center gap-2 px-3 py-2 hover:bg-raised cursor-pointer">
                 <input
                   type="checkbox"
                   checked={selected.includes(opt.id)}
                   onChange={() => toggle(opt.id)}
-                  className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                  className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
                 />
-                <span className="flex items-center gap-1.5 text-sm text-gray-200">
+                <span className="flex items-center gap-1.5 text-sm text-primary">
                   {opt.color && (
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                   )}
@@ -146,7 +146,7 @@ function TagMultiSelect({
               </label>
             ))}
             {options.length === 0 && (
-              <p className="px-3 py-3 text-xs text-gray-500">No tags available</p>
+              <p className="px-3 py-3 text-xs text-muted">No tags available</p>
             )}
           </div>
         </>
@@ -314,7 +314,7 @@ export default function InventoryItemDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="w-6 h-6 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-edge border-t-emerald-400 rounded-full animate-spin" />
       </div>
     )
   }
@@ -322,8 +322,8 @@ export default function InventoryItemDetailPage() {
   if (error && !item) {
     return (
       <div className="text-center py-24">
-        <p className="text-red-400 mb-4">{error}</p>
-        <button onClick={() => router.push('/inventory')} className="text-emerald-400 hover:text-emerald-300 text-sm">
+        <p className="text-danger mb-4">{error}</p>
+        <button onClick={() => router.push('/inventory')} className="text-accent hover:text-accent text-sm">
           Back to Inventory
         </button>
       </div>
@@ -345,26 +345,26 @@ export default function InventoryItemDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.push('/inventory')}
-          className="p-2 rounded-lg bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+          className="p-2 rounded-lg bg-surface border border-edge hover:bg-raised text-secondary hover:text-primary transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-gray-50 truncate">{productName}</h1>
-          {brandName && <p className="text-sm text-gray-400">{brandName}</p>}
+          <h1 className="text-xl font-bold text-primary truncate">{productName}</h1>
+          {brandName && <p className="text-sm text-secondary">{brandName}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setShowHistory(true)}
-            className="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-3 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
           >
             History
           </button>
           <button
             onClick={() => setShowLabResults(true)}
-            className="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+            className="px-3 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
           >
             Lab Results
           </button>
@@ -378,19 +378,19 @@ export default function InventoryItemDetailPage() {
 
       {/* Success / Error banners */}
       {saveSuccess && (
-        <div className="mb-4 px-4 py-3 bg-emerald-900/40 border border-emerald-700 rounded-lg text-sm text-emerald-300">
+        <div className="mb-4 px-4 py-3 bg-accent/40 border border-accent rounded-lg text-sm text-accent">
           Changes saved successfully.
         </div>
       )}
       {error && item && (
-        <div className="mb-4 px-4 py-3 bg-red-900/40 border border-red-700 rounded-lg text-sm text-red-300">
+        <div className="mb-4 px-4 py-3 bg-danger/40 border border-danger rounded-lg text-sm text-danger">
           {error}
         </div>
       )}
 
       {/* Basic Info */}
       <div className={sectionCls}>
-        <h2 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Basic Information</h2>
+        <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">Basic Information</h2>
 
         <div className="grid grid-cols-2 gap-4">
           {/* SKU (read-only) */}
@@ -405,7 +405,7 @@ export default function InventoryItemDetailPage() {
             {item.product_id ? (
               <Link
                 href={`/products/${item.product_id}/edit`}
-                className="inline-flex items-center gap-1 h-10 px-3 text-sm text-emerald-400 hover:text-emerald-300"
+                className="inline-flex items-center gap-1 h-10 px-3 text-sm text-accent hover:text-accent"
               >
                 View catalog item
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -413,7 +413,7 @@ export default function InventoryItemDetailPage() {
                 </svg>
               </Link>
             ) : (
-              <span className="h-10 flex items-center text-sm text-gray-500">No linked product</span>
+              <span className="h-10 flex items-center text-sm text-muted">No linked product</span>
             )}
           </div>
 
@@ -578,7 +578,7 @@ export default function InventoryItemDetailPage() {
 
       {/* Weights Section */}
       <div className={`${sectionCls} mt-6`}>
-        <h2 className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Weights</h2>
+        <h2 className="text-sm font-semibold text-primary uppercase tracking-wide">Weights</h2>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Grams / Concentration */}
@@ -638,14 +638,14 @@ export default function InventoryItemDetailPage() {
       <div className="mt-6 flex items-center justify-end gap-3">
         <button
           onClick={() => router.push('/inventory')}
-          className="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+          className="px-4 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
         >
           Cancel
         </button>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+          className="px-6 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 transition-colors"
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>

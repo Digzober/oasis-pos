@@ -40,8 +40,8 @@ interface CustomerSearchResult {
 /* ------------------------------------------------------------------ */
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -60,9 +60,9 @@ function formatDate(iso: string): string {
 }
 
 function typeBadgeCls(type: string): string {
-  if (type === 'medical') return 'bg-blue-900/50 text-blue-400 border border-blue-700'
-  if (type === 'recreational') return 'bg-purple-900/50 text-purple-400 border border-purple-700'
-  return 'bg-gray-700 text-gray-300 border border-gray-600'
+  if (type === 'medical') return 'bg-info/50 text-info border border-info'
+  if (type === 'recreational') return 'bg-info/50 text-info border border-info'
+  return 'bg-raised text-secondary border border-edge-strong'
 }
 
 /* ------------------------------------------------------------------ */
@@ -186,7 +186,7 @@ export default function CustomerGroupDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <span className="text-gray-500 text-sm">Loading...</span>
+        <span className="text-muted text-sm">Loading...</span>
       </div>
     )
   }
@@ -194,7 +194,7 @@ export default function CustomerGroupDetailPage() {
   if (!group) {
     return (
       <div className="flex items-center justify-center py-20">
-        <span className="text-gray-500 text-sm">Group not found.</span>
+        <span className="text-muted text-sm">Group not found.</span>
       </div>
     )
   }
@@ -209,18 +209,18 @@ export default function CustomerGroupDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/customers/groups"
-          className="text-gray-400 hover:text-gray-200 transition-colors"
+          className="text-secondary hover:text-primary transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Link>
-        <h1 className="text-xl font-bold text-gray-50">{group.name}</h1>
+        <h1 className="text-xl font-bold text-primary">{group.name}</h1>
       </div>
 
       {/* Group Information */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide mb-4">
           Group Information
         </h2>
 
@@ -239,8 +239,8 @@ export default function CustomerGroupDetailPage() {
               onClick={() => setEditActive(prev => !prev)}
               className={`h-10 px-4 rounded-lg text-sm font-medium border transition-colors ${
                 editActive
-                  ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700 hover:bg-emerald-900/70'
-                  : 'bg-red-900/50 text-red-400 border-red-700 hover:bg-red-900/70'
+                  ? 'bg-accent/50 text-accent border-accent hover:bg-accent/70'
+                  : 'bg-danger/50 text-danger border-danger hover:bg-danger/70'
               }`}
             >
               {editActive ? 'Active' : 'Inactive'}
@@ -261,7 +261,7 @@ export default function CustomerGroupDetailPage() {
           <button
             onClick={handleSaveInfo}
             disabled={savingInfo || !editName.trim()}
-            className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 transition-colors"
           >
             {savingInfo ? 'Saving...' : 'Save Changes'}
           </button>
@@ -269,9 +269,9 @@ export default function CustomerGroupDetailPage() {
       </div>
 
       {/* Members */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide">
             Members ({members.length})
           </h2>
           <button
@@ -280,7 +280,7 @@ export default function CustomerGroupDetailPage() {
               setSearchResults([])
               setSearchQuery('')
             }}
-            className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
+            className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent transition-colors"
           >
             {showSearch ? 'Close Search' : '+ Add Member'}
           </button>
@@ -288,7 +288,7 @@ export default function CustomerGroupDetailPage() {
 
         {/* Inline customer search */}
         {showSearch && (
-          <div className="px-6 py-4 border-b border-gray-700 bg-gray-800/50">
+          <div className="px-6 py-4 border-b border-edge bg-surface/50">
             <div className="flex gap-2 mb-3">
               <input
                 value={searchQuery}
@@ -302,7 +302,7 @@ export default function CustomerGroupDetailPage() {
               <button
                 onClick={handleSearch}
                 disabled={searching || !searchQuery.trim()}
-                className="px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50 transition-colors shrink-0"
+                className="px-4 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised disabled:opacity-50 transition-colors shrink-0"
               >
                 {searching ? 'Searching...' : 'Search'}
               </button>
@@ -313,14 +313,14 @@ export default function CustomerGroupDetailPage() {
                 {searchResults.map(c => (
                   <div
                     key={c.id}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-raised/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-50 text-sm font-medium">
+                      <span className="text-primary text-sm font-medium">
                         {fullName(c.first_name, c.last_name)}
                       </span>
-                      {c.phone && <span className="text-gray-500 text-xs">{c.phone}</span>}
-                      {c.email && <span className="text-gray-500 text-xs">{c.email}</span>}
+                      {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
+                      {c.email && <span className="text-muted text-xs">{c.email}</span>}
                       <span
                         className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${typeBadgeCls(c.customer_type)}`}
                       >
@@ -329,7 +329,7 @@ export default function CustomerGroupDetailPage() {
                     </div>
                     <button
                       onClick={() => handleAddMember(c.id)}
-                      className="text-xs px-3 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
+                      className="text-xs px-3 py-1 bg-accent text-primary rounded-lg hover:bg-accent transition-colors"
                     >
                       Add
                     </button>
@@ -339,7 +339,7 @@ export default function CustomerGroupDetailPage() {
             )}
 
             {searchResults.length === 0 && searchQuery && !searching && (
-              <p className="text-gray-500 text-xs">No customers found.</p>
+              <p className="text-muted text-xs">No customers found.</p>
             )}
           </div>
         )}
@@ -347,7 +347,7 @@ export default function CustomerGroupDetailPage() {
         {/* Members table */}
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-6 py-3">Full Name</th>
               <th className="text-left px-4 py-3">Phone</th>
               <th className="text-left px-4 py-3">Email</th>
@@ -359,7 +359,7 @@ export default function CustomerGroupDetailPage() {
           <tbody>
             {members.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-8 text-center text-muted">
                   No members in this group yet.
                 </td>
               </tr>
@@ -367,18 +367,18 @@ export default function CustomerGroupDetailPage() {
             {members.map(m => (
               <tr
                 key={m.id}
-                className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                className="border-b border-edge/50 hover:bg-raised/30 transition-colors"
               >
                 <td className="px-6 py-3">
                   <Link
                     href={`/customers/${m.id}`}
-                    className="text-gray-50 hover:text-emerald-400 font-medium transition-colors"
+                    className="text-primary hover:text-accent font-medium transition-colors"
                   >
                     {fullName(m.first_name, m.last_name)}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-gray-400">{m.phone ?? '-'}</td>
-                <td className="px-4 py-3 text-gray-400">{m.email ?? '-'}</td>
+                <td className="px-4 py-3 text-secondary">{m.phone ?? '-'}</td>
+                <td className="px-4 py-3 text-secondary">{m.email ?? '-'}</td>
                 <td className="px-4 py-3 text-center">
                   <span
                     className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${typeBadgeCls(m.customer_type)}`}
@@ -386,11 +386,11 @@ export default function CustomerGroupDetailPage() {
                     {m.customer_type}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-400">{formatDate(m.joined_at)}</td>
+                <td className="px-4 py-3 text-secondary">{formatDate(m.joined_at)}</td>
                 <td className="px-6 py-3 text-right">
                   <button
                     onClick={() => handleRemoveMember(m.id)}
-                    className="text-red-400 hover:text-red-300 transition-colors text-sm font-medium"
+                    className="text-danger hover:text-danger transition-colors text-sm font-medium"
                     title="Remove member"
                   >
                     &#10005;

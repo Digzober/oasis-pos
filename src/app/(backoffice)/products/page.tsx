@@ -71,10 +71,10 @@ function getPrimaryImage(p: Product): string | null {
 
 function SkeletonRow({ cols }: { cols: number }) {
   return (
-    <tr className="border-b border-gray-700/50 animate-pulse">
+    <tr className="border-b border-edge/50 animate-pulse">
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-4 bg-raised rounded w-3/4" />
         </td>
       ))}
     </tr>
@@ -104,7 +104,7 @@ function SortHeader({
   const arrow = active ? (currentOrder === 'asc' ? ' \u25B2' : ' \u25BC') : ''
   return (
     <th
-      className={`${align === 'right' ? 'text-right' : 'text-left'} px-4 py-3 cursor-pointer select-none hover:text-gray-200 transition-colors ${active ? 'text-emerald-400' : ''}`}
+      className={`${align === 'right' ? 'text-right' : 'text-left'} px-4 py-3 cursor-pointer select-none hover:text-primary transition-colors ${active ? 'text-accent' : ''}`}
       onClick={() => onSort(field)}
     >
       {label}{arrow}
@@ -117,11 +117,11 @@ function SortHeader({
 /* ------------------------------------------------------------------ */
 
 function TagPill({ name, color }: { name: string; color: string | null }) {
-  const bg = color ?? '#4B5563'
+  const bg = color ?? 'var(--edge-strong)'
   return (
     <span
       className="inline-block text-xs font-medium px-2 py-0.5 rounded-full mr-1 mb-0.5 whitespace-nowrap"
-      style={{ backgroundColor: bg, color: '#fff' }}
+      style={{ backgroundColor: bg, color: 'var(--text-inverse)' }}
     >
       {name}
     </span>
@@ -161,32 +161,32 @@ function TagMultiSelect({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 min-w-[140px] text-left flex items-center justify-between gap-2"
+        className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary min-w-[140px] text-left flex items-center justify-between gap-2"
       >
         <span className="truncate">
           {selected.length === 0 ? 'All Tags' : `${selected.length} tag${selected.length > 1 ? 's' : ''}`}
         </span>
-        <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+        <svg className="w-3 h-3 text-secondary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-56 max-h-60 overflow-y-auto bg-gray-800 border border-gray-700 rounded-lg shadow-xl">
+        <div className="absolute z-50 mt-1 w-56 max-h-60 overflow-y-auto bg-surface border border-edge rounded-lg shadow-xl">
           {selected.length > 0 && (
             <button
               onClick={() => onChange([])}
-              className="w-full text-left px-3 py-2 text-xs text-gray-400 hover:bg-gray-700 border-b border-gray-700"
+              className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-raised border-b border-edge"
             >
               Clear all
             </button>
           )}
           {options.map(opt => (
-            <label key={opt.id} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer">
+            <label key={opt.id} className="flex items-center gap-2 px-3 py-2 hover:bg-raised cursor-pointer">
               <input
                 type="checkbox"
                 checked={selected.includes(opt.id)}
                 onChange={() => toggle(opt.id)}
-                className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
               />
-              <span className="flex items-center gap-1.5 text-sm text-gray-200">
+              <span className="flex items-center gap-1.5 text-sm text-primary">
                 {opt.color && (
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
                 )}
@@ -195,7 +195,7 @@ function TagMultiSelect({
             </label>
           ))}
           {options.length === 0 && (
-            <p className="px-3 py-3 text-xs text-gray-500">No tags found</p>
+            <p className="px-3 py-3 text-xs text-muted">No tags found</p>
           )}
         </div>
       )}
@@ -297,16 +297,16 @@ function BulkEditPanel({
     return acc
   }, {})
 
-  const inputCls = 'bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-50 w-full focus:outline-none focus:ring-1 focus:ring-emerald-500'
-  const selectFilterCls = 'bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-gray-50 w-full focus:outline-none focus:ring-1 focus:ring-emerald-500'
+  const inputCls = 'bg-bg border border-edge-strong rounded px-2 py-1.5 text-sm text-primary w-full focus:outline-none focus:ring-1 focus:ring-accent'
+  const selectFilterCls = 'bg-bg border border-edge-strong rounded px-2 py-1.5 text-sm text-primary w-full focus:outline-none focus:ring-1 focus:ring-accent'
 
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 mt-2 mb-4">
+    <div className="bg-surface border border-edge-strong rounded-lg p-4 mt-2 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-200">Bulk Edit {count} product{count !== 1 ? 's' : ''}</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-xs">Cancel</button>
+        <span className="text-sm font-medium text-primary">Bulk Edit {count} product{count !== 1 ? 's' : ''}</span>
+        <button onClick={onClose} className="text-secondary hover:text-primary text-xs">Cancel</button>
       </div>
-      <p className="text-xs text-gray-400 mb-4">Check the fields you want to update. Only checked fields will be changed.</p>
+      <p className="text-xs text-secondary mb-4">Check the fields you want to update. Only checked fields will be changed.</p>
 
       {/* Quick-add field picker */}
       <div className="flex gap-2 mb-4">
@@ -318,7 +318,7 @@ function BulkEditPanel({
         </select>
         {selectedField && (
           <button onClick={() => { toggleField(selectedField); setSelectedField('') }}
-            className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">
+            className="px-3 py-1.5 text-sm bg-accent text-primary rounded-lg hover:bg-accent">
             Add
           </button>
         )}
@@ -331,10 +331,10 @@ function BulkEditPanel({
             const field = BULK_EDIT_FIELDS.find(f => f.key === key)
             if (!field) return null
             return (
-              <div key={key} className="flex items-center gap-2 bg-gray-900 rounded-lg p-2 border border-gray-700">
-                <button onClick={() => toggleField(key)} className="text-red-400 hover:text-red-300 text-xs shrink-0">X</button>
+              <div key={key} className="flex items-center gap-2 bg-bg rounded-lg p-2 border border-edge">
+                <button onClick={() => toggleField(key)} className="text-danger hover:text-danger text-xs shrink-0">X</button>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-xs text-gray-400 mb-1">{field.label}</label>
+                  <label className="block text-xs text-secondary mb-1">{field.label}</label>
                   {field.type === 'checkbox' ? (
                     <select value={values[key] ?? ''} onChange={e => setValue(key, e.target.value)} className={inputCls}>
                       <option value="">Select...</option>
@@ -365,7 +365,7 @@ function BulkEditPanel({
 
       <button
         onClick={handleSubmit}
-        className="px-4 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-40"
+        className="px-4 py-1.5 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-40"
         disabled={enabledFields.size === 0}
       >
         Apply to {count} Product{count !== 1 ? 's' : ''}
@@ -396,24 +396,24 @@ function BulkTagPanel({
   }
 
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg p-4 mt-2">
+    <div className="bg-surface border border-edge-strong rounded-lg p-4 mt-2">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-medium text-gray-200">Assign Tags to {count} product{count !== 1 ? 's' : ''}</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-xs">Cancel</button>
+        <span className="text-sm font-medium text-primary">Assign Tags to {count} product{count !== 1 ? 's' : ''}</span>
+        <button onClick={onClose} className="text-secondary hover:text-primary text-xs">Cancel</button>
       </div>
-      <div className="max-h-48 overflow-y-auto mb-3 border border-gray-700 rounded-lg">
+      <div className="max-h-48 overflow-y-auto mb-3 border border-edge rounded-lg">
         {tags.length === 0 && (
-          <p className="px-3 py-3 text-xs text-gray-500">No tags available</p>
+          <p className="px-3 py-3 text-xs text-muted">No tags available</p>
         )}
         {tags.map(tag => (
-          <label key={tag.id} className="flex items-center gap-2 px-3 py-2 hover:bg-gray-700 cursor-pointer">
+          <label key={tag.id} className="flex items-center gap-2 px-3 py-2 hover:bg-raised cursor-pointer">
             <input
               type="checkbox"
               checked={selectedIds.includes(tag.id)}
               onChange={() => toggle(tag.id)}
-              className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+              className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
             />
-            <span className="flex items-center gap-1.5 text-sm text-gray-200">
+            <span className="flex items-center gap-1.5 text-sm text-primary">
               {tag.color && (
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
               )}
@@ -424,7 +424,7 @@ function BulkTagPanel({
       </div>
       <button
         onClick={() => onSubmit(selectedIds)}
-        className="px-4 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-40"
+        className="px-4 py-1.5 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-40"
         disabled={selectedIds.length === 0}
       >
         Assign {selectedIds.length} Tag{selectedIds.length !== 1 ? 's' : ''}
@@ -757,20 +757,20 @@ export default function ProductListPage() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const selectCls = "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50"
+  const selectCls = "bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary"
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Products</h1>
+        <h1 className="text-xl font-bold text-primary">Products</h1>
         <div className="flex gap-2">
-          <Link href="/products/brands" className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Brands</Link>
-          <Link href="/products/vendors" className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Vendors</Link>
-          <Link href="/products/strains" className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Strains</Link>
+          <Link href="/products/brands" className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Brands</Link>
+          <Link href="/products/vendors" className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Vendors</Link>
+          <Link href="/products/strains" className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Strains</Link>
           <button
             onClick={handleExportCsv}
-            className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 flex items-center gap-1.5"
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised flex items-center gap-1.5"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -779,7 +779,7 @@ export default function ProductListPage() {
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 flex items-center gap-1.5"
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised flex items-center gap-1.5"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -793,13 +793,13 @@ export default function ProductListPage() {
             onChange={handleImportCsv}
             className="hidden"
           />
-          <Link href="/products/new" className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New Product</Link>
+          <Link href="/products/new" className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New Product</Link>
         </div>
       </div>
 
       {/* Import result message */}
       {importMessage && (
-        <div className={`mb-4 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between ${importMessage.startsWith('Import complete') ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+        <div className={`mb-4 px-4 py-2.5 rounded-lg text-sm flex items-center justify-between ${importMessage.startsWith('Import complete') ? 'bg-accent/10 text-accent border border-accent/20' : 'bg-danger/10 text-danger border border-danger/20'}`}>
           <span>{importMessage}</span>
           <button onClick={() => setImportMessage(null)} className="text-xs ml-3 hover:opacity-70">Dismiss</button>
         </div>
@@ -809,7 +809,7 @@ export default function ProductListPage() {
       <div className="flex flex-wrap gap-3 mb-4 items-end">
         {/* Search */}
         <div className="relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
@@ -817,7 +817,7 @@ export default function ProductListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search name, SKU, or title..."
-            className="bg-gray-800 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-50 w-72 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="bg-surface border border-edge rounded-lg pl-9 pr-3 py-2 text-sm text-primary w-72 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
         </div>
 
@@ -869,7 +869,7 @@ export default function ProductListPage() {
 
         {/* Reset */}
         {hasActiveFilters && (
-          <button onClick={resetFilters} className="text-xs text-gray-400 hover:text-gray-200 px-2 py-2 underline underline-offset-2">
+          <button onClick={resetFilters} className="text-xs text-secondary hover:text-primary px-2 py-2 underline underline-offset-2">
             Reset filters
           </button>
         )}
@@ -877,38 +877,38 @@ export default function ProductListPage() {
 
       {/* Bulk Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="bg-gray-700 rounded-lg px-4 py-3 mb-4 flex items-center gap-3 flex-wrap sticky top-0 z-30">
-          <span className="text-sm font-medium text-gray-100">{selectedIds.size} selected</span>
-          <div className="h-5 w-px bg-gray-500" />
+        <div className="bg-raised rounded-lg px-4 py-3 mb-4 flex items-center gap-3 flex-wrap sticky top-0 z-30">
+          <span className="text-sm font-medium text-primary">{selectedIds.size} selected</span>
+          <div className="h-5 w-px bg-overlay" />
           <button
             onClick={handleBulkDeactivate}
             disabled={bulkLoading}
-            className="text-sm px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-500 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 bg-danger text-primary rounded-lg hover:bg-danger disabled:opacity-50"
           >
             Deactivate
           </button>
           <button
             onClick={() => { setShowPricePanel(p => !p); setShowTagPanel(false) }}
             disabled={bulkLoading}
-            className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50"
           >
             Bulk Edit
           </button>
           <button
             onClick={() => { setShowTagPanel(p => !p); setShowPricePanel(false) }}
             disabled={bulkLoading}
-            className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50"
           >
             Assign Tags
           </button>
-          <div className="h-5 w-px bg-gray-500" />
+          <div className="h-5 w-px bg-overlay" />
           <button
             onClick={clearSelection}
-            className="text-sm px-3 py-1.5 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-500"
+            className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-overlay"
           >
             Clear Selection
           </button>
-          {bulkLoading && <span className="text-xs text-gray-400 ml-2">Processing...</span>}
+          {bulkLoading && <span className="text-xs text-secondary ml-2">Processing...</span>}
         </div>
       )}
 
@@ -932,18 +932,18 @@ export default function ProductListPage() {
       )}
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 {/* Select All Checkbox */}
                 <th className="px-4 py-3 w-10">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
                     onChange={toggleSelectAll}
-                    className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                    className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
                     title="Select all"
                   />
                 </th>
@@ -969,7 +969,7 @@ export default function ProductListPage() {
                 Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} cols={COLUMN_COUNT} />)
               ) : displayProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMN_COUNT} className="text-center py-12 text-gray-500">
+                  <td colSpan={COLUMN_COUNT} className="text-center py-12 text-muted">
                     {hasActiveFilters ? 'No products match the current filters.' : 'No products found.'}
                   </td>
                 </tr>
@@ -981,14 +981,14 @@ export default function ProductListPage() {
                 const isSelected = selectedIds.has(p.id)
 
                 return (
-                  <tr key={p.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${isSelected ? 'bg-gray-700/20' : ''}`}>
+                  <tr key={p.id} className={`border-b border-edge/50 hover:bg-raised/30 transition-colors ${isSelected ? 'bg-raised/20' : ''}`}>
                     {/* Row Checkbox */}
                     <td className="px-4 py-2">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelect(p.id)}
-                        className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                        className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
                       />
                     </td>
 
@@ -1004,8 +1004,8 @@ export default function ProductListPage() {
                           unoptimized
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded bg-gray-700 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-9 h-9 rounded bg-raised flex items-center justify-center">
+                          <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
@@ -1014,54 +1014,54 @@ export default function ProductListPage() {
 
                     {/* Name */}
                     <td className="px-4 py-2.5">
-                      <Link href={`/products/${p.id}/edit`} className="text-gray-50 hover:text-emerald-400 font-medium">
+                      <Link href={`/products/${p.id}/edit`} className="text-primary hover:text-accent font-medium">
                         {p.name}
                       </Link>
                     </td>
 
                     {/* SKU */}
-                    <td className="px-4 py-2.5 text-gray-400 text-xs tabular-nums font-mono">{p.sku ?? '\u2014'}</td>
+                    <td className="px-4 py-2.5 text-secondary text-xs tabular-nums font-mono">{p.sku ?? '\u2014'}</td>
 
                     {/* Master Category */}
                     <td className="px-4 py-2.5">
                       {p.category?.master_category ? (
-                        <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300 capitalize">
+                        <span className="text-xs px-2 py-0.5 rounded bg-raised text-secondary capitalize">
                           {p.category.master_category}
                         </span>
                       ) : (
-                        <span className="text-gray-500">{'\u2014'}</span>
+                        <span className="text-muted">{'\u2014'}</span>
                       )}
                     </td>
 
                     {/* Category */}
-                    <td className="px-4 py-2.5 text-gray-300">{p.category?.name ?? '\u2014'}</td>
+                    <td className="px-4 py-2.5 text-secondary">{p.category?.name ?? '\u2014'}</td>
 
                     {/* Brand */}
-                    <td className="px-4 py-2.5 text-gray-300">{p.brand?.name ?? '\u2014'}</td>
+                    <td className="px-4 py-2.5 text-secondary">{p.brand?.name ?? '\u2014'}</td>
 
                     {/* Rec Price */}
-                    <td className="px-4 py-2.5 text-right text-gray-50 tabular-nums">{fmt(p.rec_price)}</td>
+                    <td className="px-4 py-2.5 text-right text-primary tabular-nums">{fmt(p.rec_price)}</td>
 
                     {/* Med Price */}
-                    <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{fmt(p.med_price)}</td>
+                    <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{fmt(p.med_price)}</td>
 
                     {/* Cost */}
-                    <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{fmt(p.cost_price)}</td>
+                    <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{fmt(p.cost_price)}</td>
 
                     {/* Available Qty */}
                     <td className="px-4 py-2.5 text-right tabular-nums">
-                      <span className={qty === 0 ? 'text-red-400 font-medium' : 'text-gray-50'}>
+                      <span className={qty === 0 ? 'text-danger font-medium' : 'text-primary'}>
                         {qty.toLocaleString()}
                       </span>
                       {qty === 0 && (
-                        <span className="ml-1.5 text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-medium">
+                        <span className="ml-1.5 text-xs bg-danger/20 text-danger px-1.5 py-0.5 rounded font-medium">
                           OOS
                         </span>
                       )}
                     </td>
 
                     {/* Packages (SKU count) */}
-                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-400 text-sm">
+                    <td className="px-4 py-2.5 text-right tabular-nums text-secondary text-sm">
                       {p.skuCount > 0 ? p.skuCount : '\u2014'}
                     </td>
 
@@ -1069,21 +1069,21 @@ export default function ProductListPage() {
                     <td className="px-4 py-2.5 text-right text-sm">
                       {p.rec_price && p.cost_price ? (() => {
                         const margin = ((p.rec_price - p.cost_price) / p.rec_price) * 100
-                        const color = margin >= 50 ? 'text-emerald-400' : margin >= 25 ? 'text-yellow-400' : 'text-red-400'
+                        const color = margin >= 50 ? 'text-accent' : margin >= 25 ? 'text-yellow-400' : 'text-danger'
                         return <span className={color}>{margin.toFixed(1)}%</span>
-                      })() : <span className="text-gray-600">—</span>}
+                      })() : <span className="text-muted">—</span>}
                     </td>
 
                     {/* Online */}
                     <td className="px-4 py-2.5 text-center">
                       {isOnline ? (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400" title="Available online">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-accent/20 text-accent" title="Available online">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                           </svg>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-gray-500" title="Not online">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-raised text-muted" title="Not online">
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -1098,14 +1098,14 @@ export default function ProductListPage() {
                           ? productTags.map(pt => (
                               <TagPill key={pt.id} name={pt.name} color={pt.color} />
                             ))
-                          : <span className="text-gray-500 text-xs">{'\u2014'}</span>
+                          : <span className="text-muted text-xs">{'\u2014'}</span>
                         }
                       </div>
                     </td>
 
                     {/* Status */}
                     <td className="px-4 py-2.5 text-center">
-                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${p.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${p.is_active ? 'bg-accent/20 text-accent' : 'bg-danger/20 text-danger'}`}>
                         {p.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -1117,15 +1117,15 @@ export default function ProductListPage() {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-secondary">
               {total.toLocaleString()} product{total !== 1 ? 's' : ''}
             </span>
             <select
               value={perPage}
               onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1) }}
-              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-300"
+              className="bg-bg border border-edge rounded px-2 py-1 text-xs text-secondary"
             >
               <option value={25}>25 / page</option>
               <option value={50}>50 / page</option>
@@ -1136,31 +1136,31 @@ export default function ProductListPage() {
             <button
               onClick={() => setPage(1)}
               disabled={page === 1}
-              className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 disabled:hover:bg-gray-700"
+              className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised disabled:hover:bg-raised"
             >
               First
             </button>
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 disabled:hover:bg-gray-700"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised disabled:hover:bg-raised"
             >
               Prev
             </button>
-            <span className="px-3 py-1 text-xs text-gray-400">
+            <span className="px-3 py-1 text-xs text-secondary">
               Page {page} of {Math.max(1, totalPages)}
             </span>
             <button
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 disabled:hover:bg-gray-700"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised disabled:hover:bg-raised"
             >
               Next
             </button>
             <button
               onClick={() => setPage(totalPages)}
               disabled={page >= totalPages}
-              className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40 hover:bg-gray-600 disabled:hover:bg-gray-700"
+              className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40 hover:bg-raised disabled:hover:bg-raised"
             >
               Last
             </button>

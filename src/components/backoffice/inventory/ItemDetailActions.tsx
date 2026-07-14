@@ -73,11 +73,11 @@ type ActiveModal =
 /*  Shared styles                                                      */
 /* ------------------------------------------------------------------ */
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const selectCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
-const btnPrimary = 'px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors'
-const btnSecondary = 'px-4 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const selectCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
+const btnPrimary = 'px-4 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 transition-colors'
+const btnSecondary = 'px-4 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised transition-colors'
 
 /* ------------------------------------------------------------------ */
 /*  Modal Shell                                                        */
@@ -94,15 +94,15 @@ function ModalShell({
 }) {
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-bg/60 z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
+          className="bg-surface border border-edge rounded-xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
-            <h2 className="text-lg font-semibold text-gray-50">{title}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-200 transition-colors">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-edge shrink-0">
+            <h2 className="text-lg font-semibold text-primary">{title}</h2>
+            <button onClick={onClose} className="text-secondary hover:text-primary transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -197,13 +197,13 @@ function AdjustModal({
           <label className={labelCls}>Adjustment Type</label>
           <div className="flex gap-4 mt-1">
             {(['set', 'increase', 'decrease'] as const).map(t => (
-              <label key={t} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+              <label key={t} className="flex items-center gap-2 text-sm text-secondary cursor-pointer">
                 <input
                   type="radio"
                   name="adjustmentType"
                   checked={adjustmentType === t}
                   onChange={() => { setAdjustmentType(t); setQuantity('') }}
-                  className="text-emerald-500 focus:ring-emerald-500"
+                  className="text-accent focus:ring-accent"
                 />
                 {t === 'set' ? 'Set to exact' : t === 'increase' ? 'Increase by' : 'Decrease by'}
               </label>
@@ -221,8 +221,8 @@ function AdjustModal({
             autoFocus
           />
           {quantity && (
-            <p className="mt-1 text-xs text-gray-400">
-              New quantity: <strong className="text-gray-200">{computeNewQty().toFixed(3)}</strong>
+            <p className="mt-1 text-xs text-secondary">
+              New quantity: <strong className="text-primary">{computeNewQty().toFixed(3)}</strong>
             </p>
           )}
         </div>
@@ -241,11 +241,11 @@ function AdjustModal({
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
             placeholder="Optional notes..."
           />
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <button onClick={onClose} className={btnSecondary}>Cancel</button>
           <button onClick={handleSubmit} disabled={submitting || !quantity} className={btnPrimary}>
@@ -332,7 +332,7 @@ function MoveModal({
             placeholder="Select subroom (optional)..."
           />
         </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <button onClick={onClose} className={btnSecondary}>Cancel</button>
           <button onClick={handleSubmit} disabled={submitting || !roomId} className={btnPrimary}>
@@ -425,12 +425,12 @@ function AssignStatusModal({
               value={reason}
               onChange={e => setReason(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
               placeholder="Reason for hold..."
             />
           </div>
         )}
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         <div className="flex justify-end gap-2 pt-2">
           <button onClick={onClose} className={btnSecondary}>Cancel</button>
           <button onClick={handleSubmit} disabled={submitting || !newStatus} className={btnPrimary}>
@@ -507,7 +507,7 @@ export default function ItemDetailActions({ itemId, item, onUpdate }: ItemDetail
       <div ref={dropdownRef} className="relative">
         <button
           onClick={() => setDropdownOpen(o => !o)}
-          className="px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-1"
+          className="px-3 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised transition-colors flex items-center gap-1"
         >
           Actions
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -516,14 +516,14 @@ export default function ItemDetailActions({ itemId, item, onUpdate }: ItemDetail
         </button>
 
         {dropdownOpen && (
-          <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-40 py-1 max-h-80 overflow-y-auto">
+          <div className="absolute right-0 mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl z-40 py-1 max-h-80 overflow-y-auto">
             {actions.map((a, idx) => (
               <div key={a.label}>
-                {a.separator && idx > 0 && <hr className="border-gray-700 my-1" />}
+                {a.separator && idx > 0 && <hr className="border-edge my-1" />}
                 <button
                   onClick={a.action}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition-colors ${
-                    a.danger ? 'text-red-400 hover:text-red-300' : 'text-gray-300 hover:text-gray-100'
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-raised transition-colors ${
+                    a.danger ? 'text-danger hover:text-danger' : 'text-secondary hover:text-primary'
                   }`}
                 >
                   {a.label}

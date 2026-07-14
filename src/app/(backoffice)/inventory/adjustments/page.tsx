@@ -96,39 +96,39 @@ export default function AdjustmentsPage() {
   }
 
   const delta = item ? parseFloat(newQty || '0') - item.quantity : 0
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Inventory Adjustment</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Inventory Adjustment</h1>
 
       {/* Search */}
       <div className="flex gap-2 mb-6">
         <input value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()}
           placeholder="Scan barcode or enter lot number..." className={inputCls} autoFocus />
-        <button onClick={search} disabled={searching} className="px-4 h-10 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 shrink-0">
+        <button onClick={search} disabled={searching} className="px-4 h-10 bg-raised text-secondary rounded-lg text-sm hover:bg-raised shrink-0">
           {searching ? '...' : 'Find'}
         </button>
       </div>
 
       {item && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 space-y-4">
+        <div className="bg-surface rounded-xl border border-edge p-6 space-y-4">
           {/* Item info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div><span className="text-gray-400">Product: </span><span className="text-gray-50">{item.products?.name ?? '—'}</span></div>
-            <div><span className="text-gray-400">Room: </span><span className="text-gray-50">{item.rooms?.name ?? '—'}</span></div>
-            <div><span className="text-gray-400">Barcode: </span><span className="text-gray-300 text-xs tabular-nums">{item.biotrack_barcode ?? '—'}</span></div>
-            <div><span className="text-gray-400">Current Qty: </span><span className="text-gray-50 font-bold">{item.quantity}</span></div>
+            <div><span className="text-secondary">Product: </span><span className="text-primary">{item.products?.name ?? '—'}</span></div>
+            <div><span className="text-secondary">Room: </span><span className="text-primary">{item.rooms?.name ?? '—'}</span></div>
+            <div><span className="text-secondary">Barcode: </span><span className="text-secondary text-xs tabular-nums">{item.biotrack_barcode ?? '—'}</span></div>
+            <div><span className="text-secondary">Current Qty: </span><span className="text-primary font-bold">{item.quantity}</span></div>
           </div>
 
           {/* Adjustment form */}
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
-              <span className="text-xs text-gray-400">New Quantity</span>
+              <span className="text-xs text-secondary">New Quantity</span>
               <input type="number" step="0.001" value={newQty} onChange={e => setNewQty(e.target.value)} className={inputCls} />
             </label>
             <label className="block">
-              <span className="text-xs text-gray-400">Type</span>
+              <span className="text-xs text-secondary">Type</span>
               <select value={adjType} onChange={e => setAdjType(e.target.value)} className={inputCls}>
                 {types.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -136,27 +136,27 @@ export default function AdjustmentsPage() {
           </div>
 
           {delta !== 0 && (
-            <p className={`text-lg font-bold ${delta > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className={`text-lg font-bold ${delta > 0 ? 'text-accent' : 'text-danger'}`}>
               Delta: {delta > 0 ? '+' : ''}{delta}
             </p>
           )}
 
           <label className="block">
-            <span className="text-xs text-gray-400">Reason *</span>
+            <span className="text-xs text-secondary">Reason *</span>
             <textarea value={reason} onChange={e => setReason(e.target.value)} className={inputCls + ' h-16'} placeholder="Required: explain the adjustment" />
           </label>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
-          {success && <p className="text-emerald-400 text-sm">{success}</p>}
+          {error && <p className="text-danger text-sm">{error}</p>}
+          {success && <p className="text-accent text-sm">{success}</p>}
 
           <button onClick={submit} disabled={saving || !reason.trim()}
-            className="w-full h-11 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 disabled:opacity-50 transition-colors">
+            className="w-full h-11 bg-accent text-primary rounded-lg font-medium hover:bg-accent disabled:opacity-50 transition-colors">
             {saving ? 'Adjusting...' : 'Submit Adjustment'}
           </button>
         </div>
       )}
 
-      {error && !item && <p className="text-red-400 text-sm">{error}</p>}
+      {error && !item && <p className="text-danger text-sm">{error}</p>}
     </div>
   )
 }

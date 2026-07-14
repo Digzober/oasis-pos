@@ -7,8 +7,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 const TABS = [
   { label: 'Guestlist Status', href: '/registers/configure/guestlist' },
@@ -51,17 +51,17 @@ function SortableStatusCard({ status, onEdit, onDelete }: { status: GuestlistSta
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-3 bg-gray-800 border border-gray-700 rounded-lg px-4 py-3">
-      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 shrink-0" aria-label="Drag to reorder">
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 bg-surface border border-edge rounded-lg px-4 py-3">
+      <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted hover:text-secondary shrink-0" aria-label="Drag to reorder">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" /></svg>
       </button>
       <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: status.color }} />
-      <span className="text-sm text-gray-50 flex-1">{status.name}</span>
+      <span className="text-sm text-primary flex-1">{status.name}</span>
       <div className="flex items-center gap-1">
-        <button onClick={onEdit} className="p-1 text-gray-400 hover:text-emerald-400" aria-label="Edit">
+        <button onClick={onEdit} className="p-1 text-secondary hover:text-accent" aria-label="Edit">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
         </button>
-        <button onClick={onDelete} className="p-1 text-gray-400 hover:text-red-400" aria-label="Delete">
+        <button onClick={onDelete} className="p-1 text-secondary hover:text-danger" aria-label="Delete">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
       </div>
@@ -172,15 +172,15 @@ export default function GuestlistStatusPage() {
   return (
     <div>
       {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-gray-700 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-edge mb-6 overflow-x-auto">
         {TABS.map(tab => (
           <Link
             key={tab.href}
             href={tab.href}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               pathname === tab.href
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -189,20 +189,20 @@ export default function GuestlistStatusPage() {
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-50">Guestlist Statuses</h1>
-        <button onClick={openAddModal} className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">
+        <h1 className="text-xl font-bold text-primary">Guestlist Statuses</h1>
+        <button onClick={openAddModal} className="px-4 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent">
           Add Status
         </button>
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted">Loading...</p>
       ) : (
         <>
           {/* Status Cards — Drag and Drop */}
           <div className="space-y-2 mb-8">
             {statuses.length === 0 ? (
-              <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-center text-gray-500">
+              <div className="bg-surface border border-edge rounded-lg p-6 text-center text-muted">
                 No statuses configured yet
               </div>
             ) : (
@@ -222,7 +222,7 @@ export default function GuestlistStatusPage() {
           </div>
 
           {/* Status Mappings */}
-          <h2 className="text-lg font-semibold text-gray-50 mb-4">Event Status Mappings</h2>
+          <h2 className="text-lg font-semibold text-primary mb-4">Event Status Mappings</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {STATUS_MAPPINGS.map(mapping => (
               <div key={mapping.key}>
@@ -240,7 +240,7 @@ export default function GuestlistStatusPage() {
               </div>
             ))}
           </div>
-          <button onClick={saveMappings} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+          <button onClick={saveMappings} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
             {saving ? 'Saving...' : 'Save Mappings'}
           </button>
         </>
@@ -248,9 +248,9 @@ export default function GuestlistStatusPage() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-50 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+          <div className="bg-surface border border-edge rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-primary mb-4">
               {editingStatus ? 'Edit Status' : 'Add Status'}
             </h3>
             <div className="mb-4">
@@ -270,7 +270,7 @@ export default function GuestlistStatusPage() {
                   <button
                     key={c}
                     onClick={() => setNewColor(c)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${newColor === c ? 'border-white scale-110' : 'border-transparent'}`}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${newColor === c ? 'border-edge scale-110' : 'border-transparent'}`}
                     style={{ backgroundColor: c }}
                     aria-label={c}
                   />
@@ -278,10 +278,10 @@ export default function GuestlistStatusPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-secondary hover:text-primary">
                 Cancel
               </button>
-              <button onClick={saveStatus} disabled={saving || !newName.trim()} className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+              <button onClick={saveStatus} disabled={saving || !newName.trim()} className="px-4 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
                 {saving ? 'Saving...' : editingStatus ? 'Update' : 'Create'}
               </button>
             </div>

@@ -10,9 +10,9 @@ function fmt(n: number) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  completed: 'text-emerald-400',
-  voided: 'text-red-400',
-  returned: 'text-amber-400',
+  completed: 'text-accent',
+  voided: 'text-danger',
+  returned: 'text-warning',
 }
 
 export default function TransactionLogPage() {
@@ -86,23 +86,23 @@ export default function TransactionLogPage() {
       )}
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Transaction Log</h1>
-        <button onClick={exportCsv} className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors">
+        <h1 className="text-xl font-bold text-primary">Transaction Log</h1>
+        <button onClick={exportCsv} className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised transition-colors">
           Export CSV
         </button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50" />
-        <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50" />
-        <select value={txType} onChange={(e) => { setTxType(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50">
+        <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary" />
+        <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary" />
+        <select value={txType} onChange={(e) => { setTxType(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary">
           <option value="">All Types</option>
           <option value="sale">Sales</option>
           <option value="return">Returns</option>
           <option value="void">Voids</option>
         </select>
-        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50">
+        <select value={status} onChange={(e) => { setStatus(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary">
           <option value="">All Status</option>
           <option value="completed">Completed</option>
           <option value="voided">Voided</option>
@@ -111,11 +111,11 @@ export default function TransactionLogPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">#</th>
                 <th className="text-left px-4 py-3">Time</th>
                 <th className="text-left px-4 py-3">Location</th>
@@ -130,27 +130,27 @@ export default function TransactionLogPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={10} className="text-center py-8 text-gray-500">Loading...</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-muted">Loading...</td></tr>
               ) : transactions.length === 0 ? (
-                <tr><td colSpan={10} className="text-center py-8 text-gray-500">No transactions found for this period</td></tr>
+                <tr><td colSpan={10} className="text-center py-8 text-muted">No transactions found for this period</td></tr>
               ) : (
                 transactions.map((tx) => (
                   <tr
                     key={tx.id}
                     onClick={() => setSelectedTxId(tx.id)}
-                    className="border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer transition-colors"
+                    className="border-b border-edge/50 hover:bg-raised/30 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-2.5 text-gray-50 tabular-nums">{tx.transaction_number}</td>
-                    <td className="px-4 py-2.5 text-gray-300 text-xs">{new Date(tx.created_at).toLocaleTimeString()}</td>
-                    <td className="px-4 py-2.5 text-gray-300 truncate max-w-[140px]">{tx.location_name}</td>
-                    <td className="px-4 py-2.5 text-gray-300">{tx.employee_name}</td>
-                    <td className="px-4 py-2.5 text-gray-400">{tx.customer_name ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-gray-300 capitalize">{tx.transaction_type}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{tx.item_count}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-50 font-medium tabular-nums">{fmt(tx.total)}</td>
-                    <td className={`px-4 py-2.5 text-center text-xs font-medium capitalize ${STATUS_COLORS[tx.status] ?? 'text-gray-400'}`}>{tx.status}</td>
+                    <td className="px-4 py-2.5 text-primary tabular-nums">{tx.transaction_number}</td>
+                    <td className="px-4 py-2.5 text-secondary text-xs">{new Date(tx.created_at).toLocaleTimeString()}</td>
+                    <td className="px-4 py-2.5 text-secondary truncate max-w-[140px]">{tx.location_name}</td>
+                    <td className="px-4 py-2.5 text-secondary">{tx.employee_name}</td>
+                    <td className="px-4 py-2.5 text-secondary">{tx.customer_name ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-secondary capitalize">{tx.transaction_type}</td>
+                    <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{tx.item_count}</td>
+                    <td className="px-4 py-2.5 text-right text-primary font-medium tabular-nums">{fmt(tx.total)}</td>
+                    <td className={`px-4 py-2.5 text-center text-xs font-medium capitalize ${STATUS_COLORS[tx.status] ?? 'text-secondary'}`}>{tx.status}</td>
                     <td className="px-4 py-2.5 text-center">
-                      <span className={`w-2 h-2 inline-block rounded-full ${tx.biotrack_synced ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                      <span className={`w-2 h-2 inline-block rounded-full ${tx.biotrack_synced ? 'bg-accent' : 'bg-warning'}`} />
                     </td>
                   </tr>
                 ))
@@ -161,23 +161,23 @@ export default function TransactionLogPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
-            <span className="text-xs text-gray-400">{totalCount} transactions</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
+            <span className="text-xs text-secondary">{totalCount} transactions</span>
             <div className="flex gap-1">
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40"
+                className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40"
               >
                 Prev
               </button>
-              <span className="px-3 py-1 text-xs text-gray-400">
+              <span className="px-3 py-1 text-xs text-secondary">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40"
+                className="px-3 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40"
               >
                 Next
               </button>

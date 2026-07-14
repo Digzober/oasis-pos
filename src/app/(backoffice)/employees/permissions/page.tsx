@@ -60,16 +60,16 @@ export default function PermissionGroupsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Permission Groups</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Permission Groups</h1>
 
       <div className="grid grid-cols-4 gap-6">
         {/* Group list */}
-        <div className="col-span-1 bg-gray-800 rounded-xl border border-gray-700 p-3 space-y-1">
+        <div className="col-span-1 bg-surface rounded-xl border border-edge p-3 space-y-1">
           {groups.map(g => (
             <button key={g.id} onClick={() => setSelectedId(g.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedId === g.id ? 'bg-gray-700 text-emerald-400' : 'text-gray-300 hover:bg-gray-700/50'}`}>
+              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${selectedId === g.id ? 'bg-raised text-accent' : 'text-secondary hover:bg-raised/50'}`}>
               {g.name}
-              <span className="text-xs text-gray-500 ml-1">({g.permission_group_permissions?.length ?? 0})</span>
+              <span className="text-xs text-muted ml-1">({g.permission_group_permissions?.length ?? 0})</span>
             </button>
           ))}
         </div>
@@ -77,14 +77,14 @@ export default function PermissionGroupsPage() {
         {/* Detail */}
         <div className="col-span-3">
           {!groupDetail ? (
-            <p className="text-gray-500 text-sm">Select a group to view permissions</p>
+            <p className="text-muted text-sm">Select a group to view permissions</p>
           ) : (
-            <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+            <div className="bg-surface rounded-xl border border-edge p-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-50">{groupDetail.name}</h2>
+                <h2 className="text-lg font-semibold text-primary">{groupDetail.name}</h2>
                 <div className="flex gap-2">
-                  <span className="text-xs text-gray-400">{selectedPerms.size} permissions selected</span>
-                  <button onClick={savePerms} disabled={saving} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500 disabled:opacity-50">
+                  <span className="text-xs text-secondary">{selectedPerms.size} permissions selected</span>
+                  <button onClick={savePerms} disabled={saving} className="px-3 py-1.5 bg-accent text-primary rounded-lg text-sm hover:bg-accent disabled:opacity-50">
                     {saving ? 'Saving...' : 'Save'}
                   </button>
                 </div>
@@ -93,11 +93,11 @@ export default function PermissionGroupsPage() {
               <div className="space-y-4 max-h-[60vh] overflow-y-auto">
                 {Array.from(permsByCategory.entries()).map(([cat, defs]) => (
                   <div key={cat}>
-                    <h4 className="text-xs text-gray-400 font-semibold uppercase mb-2">{cat} ({defs.length})</h4>
+                    <h4 className="text-xs text-secondary font-semibold uppercase mb-2">{cat} ({defs.length})</h4>
                     <div className="grid grid-cols-2 gap-1">
                       {defs.map((d: AnyR) => (
-                        <label key={d.id} className="flex items-center gap-2 text-sm text-gray-300 py-0.5 cursor-pointer hover:text-gray-50">
-                          <input type="checkbox" checked={selectedPerms.has(d.id)} onChange={() => togglePerm(d.id)} className="rounded border-gray-600" />
+                        <label key={d.id} className="flex items-center gap-2 text-sm text-secondary py-0.5 cursor-pointer hover:text-primary">
+                          <input type="checkbox" checked={selectedPerms.has(d.id)} onChange={() => togglePerm(d.id)} className="rounded border-edge-strong" />
                           {d.name}
                         </label>
                       ))}

@@ -167,10 +167,10 @@ function fmtQty(n: number | null | undefined): string {
 
 function statusBadge(status: string | null): { label: string; cls: string } {
   switch (status) {
-    case 'passed': return { label: 'Passed', cls: 'bg-emerald-900/50 text-emerald-400 border-emerald-700' }
-    case 'failed': return { label: 'Failed', cls: 'bg-red-900/50 text-red-400 border-red-700' }
-    case 'pending': return { label: 'Pending', cls: 'bg-amber-900/50 text-amber-400 border-amber-700' }
-    case 'untested': return { label: 'Untested', cls: 'bg-gray-700/50 text-gray-300 border-gray-600' }
+    case 'passed': return { label: 'Passed', cls: 'bg-accent/50 text-accent border-accent' }
+    case 'failed': return { label: 'Failed', cls: 'bg-danger/50 text-danger border-danger' }
+    case 'pending': return { label: 'Pending', cls: 'bg-warning/50 text-warning border-warning' }
+    case 'untested': return { label: 'Untested', cls: 'bg-raised/50 text-secondary border-edge-strong' }
     default: return { label: '\u2014', cls: '' }
   }
 }
@@ -282,13 +282,13 @@ function SummaryCard({ label, value, color, icon }: {
   icon: React.ReactNode
 }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 flex items-start gap-3">
-      <div className="p-2 rounded-lg bg-gray-700/50 text-gray-400 shrink-0">
+    <div className="bg-surface rounded-xl border border-edge p-4 flex items-start gap-3">
+      <div className="p-2 rounded-lg bg-raised/50 text-secondary shrink-0">
         {icon}
       </div>
       <div>
-        <p className="text-xs text-gray-400 uppercase tracking-wide">{label}</p>
-        <p className={`text-2xl font-bold mt-0.5 tabular-nums ${color ?? 'text-gray-50'}`}>{value}</p>
+        <p className="text-xs text-secondary uppercase tracking-wide">{label}</p>
+        <p className={`text-2xl font-bold mt-0.5 tabular-nums ${color ?? 'text-primary'}`}>{value}</p>
       </div>
     </div>
   )
@@ -308,7 +308,7 @@ function FilterDropdown({ label, options, value, onChange }: {
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none cursor-pointer min-w-[140px]"
+      className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 focus:ring-accent focus:border-accent appearance-none cursor-pointer min-w-[140px]"
     >
       <option value="">{label}</option>
       {options.map(o => (
@@ -331,11 +331,11 @@ function Modal({ title, open, onClose, children }: {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md p-6 z-10">
+      <div className="absolute inset-0 bg-bg/60" onClick={onClose} />
+      <div className="relative bg-surface border border-edge rounded-xl shadow-xl w-full max-w-md p-6 z-10">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-50">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200">
+          <h3 className="text-lg font-semibold text-primary">{title}</h3>
+          <button onClick={onClose} className="text-secondary hover:text-primary">
             <IconX />
           </button>
         </div>
@@ -376,18 +376,18 @@ function MoveModal({ open, onClose, rooms, selectedIds, onSuccess }: {
 
   return (
     <Modal title={`Move ${selectedIds.length} Item(s)`} open={open} onClose={onClose}>
-      <label className="block text-sm text-gray-400 mb-1">Destination Room</label>
+      <label className="block text-sm text-secondary mb-1">Destination Room</label>
       <select
         value={roomId}
         onChange={e => setRoomId(e.target.value)}
-        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm mb-4"
+        className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm mb-4"
       >
         <option value="">Select room...</option>
         {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
       </select>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-        <button onClick={handleSubmit} disabled={!roomId || saving} className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+        <button onClick={handleSubmit} disabled={!roomId || saving} className="px-4 py-2 text-sm bg-accent hover:bg-accent disabled:opacity-50 text-primary rounded-lg">
           {saving ? 'Moving...' : 'Move'}
         </button>
       </div>
@@ -432,18 +432,18 @@ function AssignStatusModal({ open, onClose, selectedIds, onSuccess }: {
 
   return (
     <Modal title={`Assign Status to ${selectedIds.length} Item(s)`} open={open} onClose={onClose}>
-      <label className="block text-sm text-gray-400 mb-1">Testing Status</label>
+      <label className="block text-sm text-secondary mb-1">Testing Status</label>
       <select
         value={status}
         onChange={e => setStatus(e.target.value)}
-        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm mb-4"
+        className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm mb-4"
       >
         <option value="">Select status...</option>
         {statuses.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-        <button onClick={handleSubmit} disabled={!status || saving} className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+        <button onClick={handleSubmit} disabled={!status || saving} className="px-4 py-2 text-sm bg-accent hover:bg-accent disabled:opacity-50 text-primary rounded-lg">
           {saving ? 'Saving...' : 'Assign'}
         </button>
       </div>
@@ -482,18 +482,18 @@ function ChangeVendorModal({ open, onClose, vendors, selectedIds, onSuccess }: {
 
   return (
     <Modal title={`Change Vendor for ${selectedIds.length} Item(s)`} open={open} onClose={onClose}>
-      <label className="block text-sm text-gray-400 mb-1">New Vendor</label>
+      <label className="block text-sm text-secondary mb-1">New Vendor</label>
       <select
         value={vendorId}
         onChange={e => setVendorId(e.target.value)}
-        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm mb-4"
+        className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm mb-4"
       >
         <option value="">Select vendor...</option>
         {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
       </select>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-        <button onClick={handleSubmit} disabled={!vendorId || saving} className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+        <button onClick={handleSubmit} disabled={!vendorId || saving} className="px-4 py-2 text-sm bg-accent hover:bg-accent disabled:opacity-50 text-primary rounded-lg">
           {saving ? 'Saving...' : 'Change Vendor'}
         </button>
       </div>
@@ -538,40 +538,40 @@ function AdjustModal({ open, onClose, selectedIds, onSuccess }: {
     <Modal title={`Adjust ${selectedIds.length} Item(s)`} open={open} onClose={onClose}>
       <div className="space-y-3 mb-4">
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Quantity Change (+/-)</label>
+          <label className="block text-sm text-secondary mb-1">Quantity Change (+/-)</label>
           <input
             type="number"
             step="any"
             value={delta}
             onChange={e => setDelta(e.target.value)}
             placeholder="e.g. -1 or +5"
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm"
+            className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Reason</label>
+          <label className="block text-sm text-secondary mb-1">Reason</label>
           <select
             value={reason}
             onChange={e => setReason(e.target.value)}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm"
+            className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm"
           >
             <option value="">Select reason...</option>
             {reasons.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-1">Notes (optional)</label>
+          <label className="block text-sm text-secondary mb-1">Notes (optional)</label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={2}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm resize-none"
+            className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm resize-none"
           />
         </div>
       </div>
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-        <button onClick={handleSubmit} disabled={!delta || !reason || saving} className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+        <button onClick={handleSubmit} disabled={!delta || !reason || saving} className="px-4 py-2 text-sm bg-accent hover:bg-accent disabled:opacity-50 text-primary rounded-lg">
           {saving ? 'Adjusting...' : 'Adjust'}
         </button>
       </div>
@@ -609,19 +609,19 @@ function DestroyModal({ open, onClose, selectedIds, onSuccess }: {
 
   return (
     <Modal title={`Destroy ${selectedIds.length} Item(s)`} open={open} onClose={onClose}>
-      <p className="text-sm text-gray-400 mb-3">
+      <p className="text-sm text-secondary mb-3">
         This will deactivate the selected inventory items. This action cannot be undone.
       </p>
-      <label className="block text-sm text-gray-400 mb-1">Type DESTROY to confirm</label>
+      <label className="block text-sm text-secondary mb-1">Type DESTROY to confirm</label>
       <input
         value={confirmText}
         onChange={e => setConfirmText(e.target.value)}
-        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-200 text-sm mb-4"
+        className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-primary text-sm mb-4"
         placeholder="DESTROY"
       />
       <div className="flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
-        <button onClick={handleSubmit} disabled={confirmText !== 'DESTROY' || saving} className="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg">
+        <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
+        <button onClick={handleSubmit} disabled={confirmText !== 'DESTROY' || saving} className="px-4 py-2 text-sm bg-danger hover:bg-danger disabled:opacity-50 text-primary rounded-lg">
           {saving ? 'Destroying...' : 'Destroy'}
         </button>
       </div>
@@ -668,12 +668,12 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-bg/60 z-50" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="bg-surface border border-edge rounded-xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-50">Edit Tags ({selectedIds.length} items)</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-200">
+            <h3 className="text-lg font-semibold text-primary">Edit Tags ({selectedIds.length} items)</h3>
+            <button onClick={onClose} className="text-secondary hover:text-primary">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -681,7 +681,7 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
           </div>
           <div className="space-y-4 mb-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Add Tags</label>
+              <label className="block text-sm text-secondary mb-2">Add Tags</label>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {tags.map(tag => (
                   <button
@@ -689,8 +689,8 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
                     onClick={() => toggleTag(tag.id, addTags, setAddTags)}
                     className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                       addTags.includes(tag.id)
-                        ? 'bg-emerald-900/50 text-emerald-300 border-emerald-700'
-                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                        ? 'bg-accent/50 text-accent border-accent'
+                        : 'bg-raised text-secondary border-edge-strong hover:border-edge-strong'
                     }`}
                   >
                     {tag.name}
@@ -699,7 +699,7 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
               </div>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-2">Remove Tags</label>
+              <label className="block text-sm text-secondary mb-2">Remove Tags</label>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {tags.map(tag => (
                   <button
@@ -707,8 +707,8 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
                     onClick={() => toggleTag(tag.id, removeTags, setRemoveTags)}
                     className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
                       removeTags.includes(tag.id)
-                        ? 'bg-red-900/50 text-red-300 border-red-700'
-                        : 'bg-gray-700 text-gray-300 border-gray-600 hover:border-gray-500'
+                        ? 'bg-danger/50 text-danger border-danger'
+                        : 'bg-raised text-secondary border-edge-strong hover:border-edge-strong'
                     }`}
                   >
                     {tag.name}
@@ -718,11 +718,11 @@ function EditTagsModal({ selectedIds, onClose, onSuccess }: {
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 text-sm text-secondary hover:text-primary">Cancel</button>
             <button
               onClick={handleSubmit}
               disabled={saving || (addTags.length === 0 && removeTags.length === 0)}
-              className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg"
+              className="px-4 py-2 text-sm bg-accent hover:bg-accent disabled:opacity-50 text-primary rounded-lg"
             >
               {saving ? 'Saving...' : 'Apply Tags'}
             </button>
@@ -1096,62 +1096,62 @@ export default function InventoryListPage() {
         return (
           <Link
             href={`/inventory/items/${item.id}`}
-            className="text-emerald-400 hover:text-emerald-300 hover:underline font-mono text-xs"
+            className="text-accent hover:text-accent hover:underline font-mono text-xs"
           >
             {item.products?.sku ?? '\u2014'}
           </Link>
         )
       case 'product':
-        return <span className="text-gray-200 text-sm">{item.products?.name ?? '\u2014'}</span>
+        return <span className="text-primary text-sm">{item.products?.name ?? '\u2014'}</span>
       case 'brand':
-        return <span className="text-gray-300 text-sm">{item.products?.brands?.name ?? '\u2014'}</span>
+        return <span className="text-secondary text-sm">{item.products?.brands?.name ?? '\u2014'}</span>
       case 'available': {
         const isLow = item.quantity > 0 && item.quantity <= 5
         return (
-          <span className={`text-sm font-medium tabular-nums ${isLow ? 'text-amber-400' : 'text-gray-200'}`}>
+          <span className={`text-sm font-medium tabular-nums ${isLow ? 'text-warning' : 'text-primary'}`}>
             {fmtQty(item.quantity)}
           </span>
         )
       }
       case 'room':
-        return <span className="text-gray-300 text-sm">{item.rooms?.name ?? '\u2014'}</span>
+        return <span className="text-secondary text-sm">{item.rooms?.name ?? '\u2014'}</span>
       case 'cost':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmt(item.cost_per_unit)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmt(item.cost_per_unit)}</span>
       case 'rec_price':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmt(item.products?.rec_price)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmt(item.products?.rec_price)}</span>
       case 'med_price':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmt(item.products?.med_price)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmt(item.products?.med_price)}</span>
       case 'thc_pct':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.thc_percentage ?? item.products?.thc_percentage)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmtPct(item.thc_percentage ?? item.products?.thc_percentage)}</span>
       case 'cbd_pct':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmtPct(item.cbd_percentage ?? item.products?.cbd_percentage)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmtPct(item.cbd_percentage ?? item.products?.cbd_percentage)}</span>
       case 'thc_mg':
-        return <span className="text-gray-300 text-sm tabular-nums">{item.products?.thc_content_mg != null ? `${item.products.thc_content_mg}mg` : '\u2014'}</span>
+        return <span className="text-secondary text-sm tabular-nums">{item.products?.thc_content_mg != null ? `${item.products.thc_content_mg}mg` : '\u2014'}</span>
       case 'category':
-        return <span className="text-gray-300 text-sm">{item.products?.product_categories?.name ?? '\u2014'}</span>
+        return <span className="text-secondary text-sm">{item.products?.product_categories?.name ?? '\u2014'}</span>
       case 'vendor':
-        return <span className="text-gray-300 text-sm">{item.products?.vendors?.name ?? '\u2014'}</span>
+        return <span className="text-secondary text-sm">{item.products?.vendors?.name ?? '\u2014'}</span>
       case 'strain':
-        return <span className="text-gray-300 text-sm">{item.products?.strains?.name ?? '\u2014'}</span>
+        return <span className="text-secondary text-sm">{item.products?.strains?.name ?? '\u2014'}</span>
       case 'expiration':
-        return <span className="text-gray-300 text-sm">{fmtDate(item.expiration_date)}</span>
+        return <span className="text-secondary text-sm">{fmtDate(item.expiration_date)}</span>
       case 'received':
-        return <span className="text-gray-300 text-sm">{fmtDate(item.received_at)}</span>
+        return <span className="text-secondary text-sm">{fmtDate(item.received_at)}</span>
       case 'package_id':
-        return <span className="text-gray-400 text-xs font-mono truncate max-w-[120px] block">{item.biotrack_barcode ?? '\u2014'}</span>
+        return <span className="text-secondary text-xs font-mono truncate max-w-[120px] block">{item.biotrack_barcode ?? '\u2014'}</span>
       case 'batch':
-        return <span className="text-gray-400 text-xs font-mono truncate max-w-[100px] block">{item.batch_id ?? '\u2014'}</span>
+        return <span className="text-secondary text-xs font-mono truncate max-w-[100px] block">{item.batch_id ?? '\u2014'}</span>
       case 'reserved':
-        return <span className="text-gray-300 text-sm tabular-nums">{fmtQty(item.quantity_reserved)}</span>
+        return <span className="text-secondary text-sm tabular-nums">{fmtQty(item.quantity_reserved)}</span>
       case 'flower_eq':
-        return <span className="text-gray-300 text-sm tabular-nums">{item.flower_equivalent_grams != null ? `${item.flower_equivalent_grams}g` : (item.products?.flower_equivalent != null ? `${item.products.flower_equivalent}g` : '\u2014')}</span>
+        return <span className="text-secondary text-sm tabular-nums">{item.flower_equivalent_grams != null ? `${item.flower_equivalent_grams}g` : (item.products?.flower_equivalent != null ? `${item.products.flower_equivalent}g` : '\u2014')}</span>
       case 'on_hold':
         return item.is_on_hold
-          ? <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full border bg-red-900/50 text-red-400 border-red-700">Hold</span>
-          : <span className="text-gray-500 text-sm">\u2014</span>
+          ? <span className="inline-flex px-2 py-0.5 text-xs font-medium rounded-full border bg-danger/50 text-danger border-danger">Hold</span>
+          : <span className="text-muted text-sm">\u2014</span>
       case 'testing': {
         const badge = statusBadge(item.testing_status)
-        if (!badge.cls) return <span className="text-gray-500 text-sm">{badge.label}</span>
+        if (!badge.cls) return <span className="text-muted text-sm">{badge.label}</span>
         return (
           <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${badge.cls}`}>
             {badge.label}
@@ -1163,32 +1163,32 @@ export default function InventoryListPage() {
           <div className="relative" data-row-menu>
             <button
               onClick={e => { e.stopPropagation(); setOpenRowMenu(openRowMenu === item.id ? null : item.id) }}
-              className="p-1 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+              className="p-1 rounded hover:bg-raised text-secondary hover:text-primary"
             >
               <IconDots />
             </button>
             {openRowMenu === item.id && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-30 py-1 max-h-80 overflow-y-auto">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl z-30 py-1 max-h-80 overflow-y-auto">
                 <Link
                   href={`/inventory/items/${item.id}`}
-                  className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100"
+                  className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary"
                 >
                   View Details
                 </Link>
-                <button onClick={() => handleSingleAction('adjust', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Adjust</button>
-                <button onClick={() => handleSingleAction('move', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Move</button>
-                <button onClick={() => handleSingleAction('status', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Assign Status</button>
-                <button onClick={() => handleSingleAction('assign-vendor', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Assign Vendor</button>
-                <button onClick={() => handleSingleAction('change-product', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Change Product</button>
-                <button onClick={() => handleSingleAction('assign-batch', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Assign Batch</button>
-                <button onClick={() => handleSingleAction('sublot', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Sublot</button>
-                <button onClick={() => handleSingleAction('convert', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Convert</button>
-                <button onClick={() => handleSingleAction('lab-sample', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Lab Sample</button>
-                <button onClick={() => handleSingleAction('print', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Print Label</button>
-                <hr className="border-gray-700 my-1" />
-                <button onClick={() => handleSingleAction('transactions', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">View Transactions</button>
-                <button onClick={() => handleSingleAction('audit', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100">Audit Package</button>
-                <button onClick={() => handleSingleAction('destroy', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-gray-700 hover:text-red-300">Destroy</button>
+                <button onClick={() => handleSingleAction('adjust', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Adjust</button>
+                <button onClick={() => handleSingleAction('move', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Move</button>
+                <button onClick={() => handleSingleAction('status', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Assign Status</button>
+                <button onClick={() => handleSingleAction('assign-vendor', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Assign Vendor</button>
+                <button onClick={() => handleSingleAction('change-product', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Change Product</button>
+                <button onClick={() => handleSingleAction('assign-batch', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Assign Batch</button>
+                <button onClick={() => handleSingleAction('sublot', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Sublot</button>
+                <button onClick={() => handleSingleAction('convert', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Convert</button>
+                <button onClick={() => handleSingleAction('lab-sample', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Lab Sample</button>
+                <button onClick={() => handleSingleAction('print', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Print Label</button>
+                <hr className="border-edge my-1" />
+                <button onClick={() => handleSingleAction('transactions', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">View Transactions</button>
+                <button onClick={() => handleSingleAction('audit', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary">Audit Package</button>
+                <button onClick={() => handleSingleAction('destroy', item.id)} className="block w-full text-left px-3 py-1.5 text-sm text-danger hover:bg-raised hover:text-danger">Destroy</button>
               </div>
             )}
           </div>
@@ -1224,22 +1224,22 @@ export default function InventoryListPage() {
     <div className="space-y-4">
       {/* ---- Header ---- */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-50">Inventory</h1>
+        <h1 className="text-xl font-bold text-primary">Inventory</h1>
         <div className="flex items-center gap-2">
           {/* Actions dropdown */}
           <div className="relative" ref={actionsDropRef}>
             <button
               onClick={() => setShowActionsDropdown(!showActionsDropdown)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 border border-gray-600"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-raised text-secondary rounded-lg hover:bg-raised border border-edge-strong"
             >
               Actions
               <IconChevronDown />
             </button>
             {showActionsDropdown && (
-              <div className="absolute right-0 top-full mt-1 w-44 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 py-1">
+              <div className="absolute right-0 top-full mt-1 w-44 bg-surface border border-edge rounded-lg shadow-xl z-20 py-1">
                 <button
                   onClick={() => { exportCSV(); setShowActionsDropdown(false) }}
-                  className="block w-full text-left px-3 py-1.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100"
+                  className="block w-full text-left px-3 py-1.5 text-sm text-secondary hover:bg-raised hover:text-primary"
                 >
                   Export CSV
                 </button>
@@ -1248,13 +1248,13 @@ export default function InventoryListPage() {
           </div>
           <Link
             href="/inventory/receive-history"
-            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg font-medium border border-gray-600"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-raised hover:bg-raised text-primary rounded-lg font-medium border border-edge-strong"
           >
             Receive History
           </Link>
           <Link
             href="/inventory/receive"
-            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
+            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-accent hover:bg-accent text-primary rounded-lg font-medium"
           >
             Receive Inventory
           </Link>
@@ -1271,36 +1271,36 @@ export default function InventoryListPage() {
         <SummaryCard
           label="Total Value"
           value={summaryStats.totalValue.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
-          color="text-emerald-400"
+          color="text-accent"
           icon={<IconDollar />}
         />
         <SummaryCard
           label="Low Stock"
           value={String(summaryStats.lowStock)}
-          color={summaryStats.lowStock > 0 ? 'text-amber-400' : 'text-gray-50'}
+          color={summaryStats.lowStock > 0 ? 'text-warning' : 'text-primary'}
           icon={<IconAlert />}
         />
         <SummaryCard
           label="On Hold"
           value={String(summaryStats.onHold)}
-          color={summaryStats.onHold > 0 ? 'text-red-400' : 'text-gray-50'}
+          color={summaryStats.onHold > 0 ? 'text-danger' : 'text-primary'}
           icon={<IconPause />}
         />
       </div>
 
       {/* ---- Search & Filters ---- */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[240px]">
-            <div className="absolute inset-y-0 left-3 flex items-center text-gray-500">
+            <div className="absolute inset-y-0 left-3 flex items-center text-muted">
               <IconSearch />
             </div>
             <input
               value={searchInput}
               onChange={e => handleSearchInput(e.target.value)}
               placeholder="Search by SKU, product, package ID, batch, strain, or barcode"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full bg-bg border border-edge rounded-lg pl-9 pr-3 py-2 text-sm text-primary placeholder:text-muted focus:ring-accent focus:border-accent"
             />
           </div>
 
@@ -1312,7 +1312,7 @@ export default function InventoryListPage() {
           <select
             value={testingFilter}
             onChange={e => { setTestingFilter(e.target.value); setPage(1) }}
-            className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none cursor-pointer min-w-[140px]"
+            className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 focus:ring-accent focus:border-accent appearance-none cursor-pointer min-w-[140px]"
           >
             <option value="">All Testing</option>
             <option value="passed">Passed</option>
@@ -1323,7 +1323,7 @@ export default function InventoryListPage() {
           <select
             value={onHoldFilter}
             onChange={e => { setOnHoldFilter(e.target.value); setPage(1) }}
-            className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none cursor-pointer min-w-[120px]"
+            className="bg-surface border border-edge text-primary text-sm rounded-lg px-3 py-2 focus:ring-accent focus:border-accent appearance-none cursor-pointer min-w-[120px]"
           >
             <option value="">Hold Status</option>
             <option value="true">On Hold</option>
@@ -1334,23 +1334,23 @@ export default function InventoryListPage() {
           <div className="relative" ref={colConfigRef}>
             <button
               onClick={() => setShowColConfig(!showColConfig)}
-              className="p-2 rounded-lg border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700"
+              className="p-2 rounded-lg border border-edge text-secondary hover:text-primary hover:bg-raised"
               title="Configure columns"
             >
               <IconGear />
             </button>
             {showColConfig && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-20 py-2 px-3 max-h-80 overflow-y-auto">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Visible Columns</p>
+              <div className="absolute right-0 top-full mt-1 w-56 bg-surface border border-edge rounded-lg shadow-xl z-20 py-2 px-3 max-h-80 overflow-y-auto">
+                <p className="text-xs text-muted uppercase tracking-wide mb-2">Visible Columns</p>
                 {ALL_COLUMNS.filter(c => c.key !== 'actions').map(col => (
                   <label key={col.key} className="flex items-center gap-2 py-1 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={colVis[col.key] !== false}
                       onChange={() => toggleColumn(col.key)}
-                      className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500"
+                      className="rounded border-edge-strong bg-bg text-accent focus:ring-accent"
                     />
-                    <span className="text-sm text-gray-300">{col.label}</span>
+                    <span className="text-sm text-secondary">{col.label}</span>
                   </label>
                 ))}
               </div>
@@ -1361,14 +1361,14 @@ export default function InventoryListPage() {
         {/* Active filter chips */}
         {activeFilters.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-gray-500 uppercase">Active:</span>
+            <span className="text-xs text-muted uppercase">Active:</span>
             {activeFilters.map(f => (
               <span
                 key={f.key}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-900/40 text-emerald-300 border border-emerald-800 text-xs"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/40 text-accent border border-accent text-xs"
               >
                 {f.label}: {f.valueLabel}
-                <button onClick={() => clearFilter(f.key)} className="hover:text-white">
+                <button onClick={() => clearFilter(f.key)} className="hover:text-primary">
                   <IconX />
                 </button>
               </span>
@@ -1383,7 +1383,7 @@ export default function InventoryListPage() {
                 setOnHoldFilter('')
                 setPage(1)
               }}
-              className="text-xs text-gray-500 hover:text-gray-300 underline"
+              className="text-xs text-muted hover:text-secondary underline"
             >
               Clear all
             </button>
@@ -1393,45 +1393,45 @@ export default function InventoryListPage() {
 
       {/* ---- Bulk Actions Bar ---- */}
       {selectedIds.size > 0 && (
-        <div className="bg-emerald-900/30 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-between">
-          <span className="text-sm text-emerald-300 font-medium">
+        <div className="bg-accent/30 border border-accent rounded-xl px-4 py-3 flex items-center justify-between">
+          <span className="text-sm text-accent font-medium">
             {selectedIds.size} item{selectedIds.size > 1 ? 's' : ''} selected
           </span>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowMoveModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Move</button>
-            <button onClick={() => setShowStatusModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Assign Status</button>
-            <button onClick={() => setShowVendorModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Change Vendor</button>
-            <button onClick={() => setShowAdjustModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Adjust</button>
-            <button onClick={() => setShowEditTagsModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Edit Tags</button>
-            <button onClick={() => setShowCombineModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Combine</button>
-            <button onClick={() => setShowPrintModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Print Labels</button>
-            <button onClick={() => setShowAuditModal(true)} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Audit</button>
-            <button onClick={exportSelectedCSV} className="px-3 py-1.5 text-xs bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600">Export Selected</button>
-            <button onClick={() => setShowDestroyModal(true)} className="px-3 py-1.5 text-xs bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900/70 border border-red-800">Destroy</button>
-            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-300">Clear</button>
+            <button onClick={() => setShowMoveModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Move</button>
+            <button onClick={() => setShowStatusModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Assign Status</button>
+            <button onClick={() => setShowVendorModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Change Vendor</button>
+            <button onClick={() => setShowAdjustModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Adjust</button>
+            <button onClick={() => setShowEditTagsModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Edit Tags</button>
+            <button onClick={() => setShowCombineModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Combine</button>
+            <button onClick={() => setShowPrintModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Print Labels</button>
+            <button onClick={() => setShowAuditModal(true)} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Audit</button>
+            <button onClick={exportSelectedCSV} className="px-3 py-1.5 text-xs bg-raised text-primary rounded-lg hover:bg-raised">Export Selected</button>
+            <button onClick={() => setShowDestroyModal(true)} className="px-3 py-1.5 text-xs bg-danger/50 text-danger rounded-lg hover:bg-danger/70 border border-danger">Destroy</button>
+            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1.5 text-xs text-muted hover:text-secondary">Clear</button>
           </div>
         </div>
       )}
 
       {/* ---- Table ---- */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-gray-700 bg-gray-800/80">
+              <tr className="border-b border-edge bg-surface/80">
                 {/* Checkbox column */}
                 <th className="w-10 px-3 py-3">
                   <input
                     type="checkbox"
                     checked={allOnPageSelected}
                     onChange={toggleSelectAll}
-                    className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500"
+                    className="rounded border-edge-strong bg-bg text-accent focus:ring-accent"
                   />
                 </th>
                 {visibleColumns.map(col => (
                   <th
                     key={col.key}
-                    className={`px-3 py-3 text-xs font-medium text-gray-400 uppercase tracking-wide whitespace-nowrap ${col.align === 'right' ? 'text-right' : 'text-left'} ${col.sortable ? 'cursor-pointer select-none hover:text-gray-200' : ''}`}
+                    className={`px-3 py-3 text-xs font-medium text-secondary uppercase tracking-wide whitespace-nowrap ${col.align === 'right' ? 'text-right' : 'text-left'} ${col.sortable ? 'cursor-pointer select-none hover:text-primary' : ''}`}
                     onClick={() => col.sortable && handleSort(col.key)}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -1444,19 +1444,19 @@ export default function InventoryListPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700/50">
+            <tbody className="divide-y divide-edge/50">
               {loading && items.length === 0 ? (
                 <tr>
-                  <td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-gray-500">
+                  <td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-muted">
                     <div className="flex flex-col items-center gap-2">
-                      <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
                       <span className="text-sm">Loading inventory...</span>
                     </div>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-gray-500">
+                  <td colSpan={visibleColumns.length + 1} className="px-3 py-16 text-center text-muted">
                     <div className="flex flex-col items-center gap-2">
                       <IconPackage />
                       <span className="text-sm">No inventory items found</span>
@@ -1473,7 +1473,7 @@ export default function InventoryListPage() {
                             setOnHoldFilter('')
                             setPage(1)
                           }}
-                          className="text-xs text-emerald-400 hover:text-emerald-300 underline"
+                          className="text-xs text-accent hover:text-accent underline"
                         >
                           Clear all filters
                         </button>
@@ -1490,8 +1490,8 @@ export default function InventoryListPage() {
                       key={item.id}
                       className={`
                         transition-colors
-                        ${isLow ? 'bg-amber-900/10 hover:bg-amber-900/20' : 'hover:bg-gray-700/30'}
-                        ${isSelected ? 'bg-emerald-900/15' : ''}
+                        ${isLow ? 'bg-warning/10 hover:bg-warning/20' : 'hover:bg-raised/30'}
+                        ${isSelected ? 'bg-accent/15' : ''}
                       `}
                     >
                       <td className="w-10 px-3 py-2.5">
@@ -1499,7 +1499,7 @@ export default function InventoryListPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectItem(item.id)}
-                          className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500"
+                          className="rounded border-edge-strong bg-bg text-accent focus:ring-accent"
                         />
                       </td>
                       {visibleColumns.map(col => (
@@ -1520,15 +1520,15 @@ export default function InventoryListPage() {
 
         {/* ---- Pagination ---- */}
         {pagination.total > 0 && (
-          <div className="border-t border-gray-700 px-4 py-3 flex items-center justify-between">
+          <div className="border-t border-edge px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-secondary">
                 Showing {showingFrom}-{showingTo} of {pagination.total.toLocaleString()}
               </span>
               <select
                 value={perPage}
                 onChange={e => { setPerPage(Number(e.target.value)); setPage(1) }}
-                className="bg-gray-900 border border-gray-700 text-gray-300 text-xs rounded-lg px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500"
+                className="bg-bg border border-edge text-secondary text-xs rounded-lg px-2 py-1 focus:ring-accent focus:border-accent"
               >
                 <option value={25}>25 / page</option>
                 <option value={50}>50 / page</option>
@@ -1539,18 +1539,18 @@ export default function InventoryListPage() {
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-2 py-1 text-xs rounded border border-edge text-secondary hover:text-primary hover:bg-raised disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Prev
               </button>
               {pageButtons.map((p, idx) =>
                 typeof p === 'string' ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-gray-500">...</span>
+                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-muted">...</span>
                 ) : (
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700'}`}
+                    className={`px-2.5 py-1 text-xs rounded border ${p === page ? 'bg-accent border-accent text-primary' : 'border-edge text-secondary hover:text-primary hover:bg-raised'}`}
                   >
                     {p}
                   </button>
@@ -1559,7 +1559,7 @@ export default function InventoryListPage() {
               <button
                 onClick={() => setPage(p => Math.min(pagination.total_pages, p + 1))}
                 disabled={page >= pagination.total_pages}
-                className="px-2 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-2 py-1 text-xs rounded border border-edge text-secondary hover:text-primary hover:bg-raised disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Next
               </button>

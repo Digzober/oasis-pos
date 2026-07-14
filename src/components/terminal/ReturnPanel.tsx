@@ -108,26 +108,26 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
 
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl text-white">↩</span>
+      <div className="fixed inset-0 bg-bg/80 z-50 flex items-center justify-center">
+        <div className="bg-surface rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-warning rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl text-primary">↩</span>
           </div>
-          <h2 className="text-xl font-bold text-gray-50 mb-2">Return Processed</h2>
-          <p className="text-gray-400 text-sm mb-2">Return #{success.txNumber}</p>
-          <p className="text-2xl font-bold text-amber-400 tabular-nums mb-6">Refund: {fmt(success.refundAmount)}</p>
-          <button onClick={onClose} className="w-full h-11 bg-gray-700 text-gray-300 rounded-lg font-medium hover:bg-gray-600 transition-colors">Close</button>
+          <h2 className="text-xl font-bold text-primary mb-2">Return Processed</h2>
+          <p className="text-secondary text-sm mb-2">Return #{success.txNumber}</p>
+          <p className="text-2xl font-bold text-warning tabular-nums mb-6">Refund: {fmt(success.refundAmount)}</p>
+          <button onClick={onClose} className="w-full h-11 bg-raised text-secondary rounded-lg font-medium hover:bg-raised transition-colors">Close</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[85vh]">
-        <div className="px-6 pt-5 pb-4 border-b border-gray-700 flex items-center justify-between shrink-0">
-          <h2 className="text-lg font-bold text-amber-400">Process Return</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200">✕</button>
+    <div className="fixed inset-0 bg-bg/80 z-50 flex items-center justify-center">
+      <div className="bg-surface border border-edge rounded-2xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[85vh]">
+        <div className="px-6 pt-5 pb-4 border-b border-edge flex items-center justify-between shrink-0">
+          <h2 className="text-lg font-bold text-warning">Process Return</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary">✕</button>
         </div>
 
         <div className="px-6 py-4 flex-1 overflow-y-auto space-y-4">
@@ -135,8 +135,8 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
           <div className="flex gap-2">
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
-              placeholder="Transaction number..." className="flex-1 h-11 px-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
-            <button onClick={search} disabled={isSearching} className="h-11 px-4 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 transition-colors">
+              placeholder="Transaction number..." className="flex-1 h-11 px-4 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-warning" />
+            <button onClick={search} disabled={isSearching} className="h-11 px-4 bg-raised text-secondary rounded-lg text-sm hover:bg-raised transition-colors">
               {isSearching ? '...' : 'Find'}
             </button>
           </div>
@@ -144,25 +144,25 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
           {/* Line items */}
           {returnLines.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-400 uppercase font-semibold">Select items to return</p>
+              <p className="text-xs text-secondary uppercase font-semibold">Select items to return</p>
               {returnLines.map((l) => (
-                <div key={l.lineId} className="bg-gray-900 rounded-lg p-3">
+                <div key={l.lineId} className="bg-bg rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-50 truncate">{l.productName}</span>
-                    <span className="text-sm text-gray-400 tabular-nums">{fmt(l.unitRefund)}/ea</span>
+                    <span className="text-sm text-primary truncate">{l.productName}</span>
+                    <span className="text-sm text-secondary tabular-nums">{fmt(l.unitRefund)}/ea</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center border border-gray-600 rounded-lg">
+                    <div className="flex items-center border border-edge-strong rounded-lg">
                       <button onClick={() => updateReturnQty(l.lineId, l.returnQty - 1)}
-                        className="w-8 h-8 flex items-center justify-center text-gray-300 hover:bg-gray-700 rounded-l-lg">−</button>
-                      <span className="w-10 text-center text-sm text-gray-50 tabular-nums">{l.returnQty}</span>
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-raised rounded-l-lg">−</button>
+                      <span className="w-10 text-center text-sm text-primary tabular-nums">{l.returnQty}</span>
                       <button onClick={() => updateReturnQty(l.lineId, l.returnQty + 1)}
-                        className="w-8 h-8 flex items-center justify-center text-gray-300 hover:bg-gray-700 rounded-r-lg">+</button>
+                        className="w-8 h-8 flex items-center justify-center text-secondary hover:bg-raised rounded-r-lg">+</button>
                     </div>
-                    <span className="text-xs text-gray-500">of {l.originalQty}</span>
-                    <label className="flex items-center gap-1.5 ml-auto text-xs text-gray-400 cursor-pointer">
+                    <span className="text-xs text-muted">of {l.originalQty}</span>
+                    <label className="flex items-center gap-1.5 ml-auto text-xs text-secondary cursor-pointer">
                       <input type="checkbox" checked={l.restoreToInventory} onChange={() => toggleRestore(l.lineId)}
-                        className="rounded border-gray-600" />
+                        className="rounded border-edge-strong" />
                       Restock
                     </label>
                   </div>
@@ -175,25 +175,25 @@ export default function ReturnPanel({ onClose }: { onClose: () => void }) {
           {selectedLines.length > 0 && (
             <>
               <div>
-                <label className="text-sm text-gray-400 block mb-1">Return Reason *</label>
+                <label className="text-sm text-secondary block mb-1">Return Reason *</label>
                 <input type="text" value={reason} onChange={(e) => setReason(e.target.value)}
-                  placeholder="e.g., Defective product" className="w-full h-11 px-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" />
+                  placeholder="e.g., Defective product" className="w-full h-11 px-4 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-warning" />
               </div>
-              <div className="bg-gray-900 rounded-lg p-3 flex justify-between items-center">
-                <span className="text-gray-400 text-sm">Refund Amount</span>
-                <span className="text-xl font-bold text-amber-400 tabular-nums">{fmt(refundTotal)}</span>
+              <div className="bg-bg rounded-lg p-3 flex justify-between items-center">
+                <span className="text-secondary text-sm">Refund Amount</span>
+                <span className="text-xl font-bold text-warning tabular-nums">{fmt(refundTotal)}</span>
               </div>
             </>
           )}
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-danger text-sm">{error}</p>}
         </div>
 
         {selectedLines.length > 0 && (
-          <div className="px-6 py-4 border-t border-gray-700 flex gap-3 shrink-0">
-            <button onClick={onClose} className="flex-1 h-11 bg-gray-700 text-gray-300 rounded-lg font-medium hover:bg-gray-600 transition-colors">Cancel</button>
+          <div className="px-6 py-4 border-t border-edge flex gap-3 shrink-0">
+            <button onClick={onClose} className="flex-1 h-11 bg-raised text-secondary rounded-lg font-medium hover:bg-raised transition-colors">Cancel</button>
             <button onClick={handleReturn} disabled={!reason.trim() || isProcessing}
-              className="flex-1 h-11 bg-amber-600 text-white rounded-lg font-bold hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="flex-1 h-11 bg-warning text-primary rounded-lg font-bold hover:bg-warning disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               {isProcessing ? 'Processing...' : 'Process Return'}
             </button>
           </div>

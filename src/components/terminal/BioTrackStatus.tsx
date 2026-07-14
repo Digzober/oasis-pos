@@ -25,21 +25,21 @@ export default function BioTrackStatus() {
 
   const color =
     unsyncedCount === 0
-      ? 'bg-emerald-400'
+      ? 'bg-accent'
       : unsyncedCount <= 5
-        ? 'bg-amber-400'
-        : 'bg-red-500'
+        ? 'bg-warning'
+        : 'bg-danger'
 
   return (
     <div className="relative">
       <button
         onClick={() => setShowDetails(!showDetails)}
-        className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+        className="flex items-center gap-1.5 text-xs text-secondary hover:text-secondary transition-colors"
       >
         <span className={`w-2 h-2 rounded-full ${color}`} />
         BT
         {unsyncedCount > 0 && (
-          <span className="bg-gray-600 text-gray-300 text-[10px] px-1 rounded">
+          <span className="bg-raised text-secondary text-[10px] px-1 rounded">
             {unsyncedCount}
           </span>
         )}
@@ -48,12 +48,12 @@ export default function BioTrackStatus() {
       {showDetails && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowDetails(false)} />
-          <div className="absolute bottom-full left-0 mb-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 p-3">
-            <p className="text-xs text-gray-400 font-semibold mb-1">BioTrack Sync</p>
+          <div className="absolute bottom-full left-0 mb-2 w-56 bg-surface border border-edge rounded-lg shadow-xl z-50 p-3">
+            <p className="text-xs text-secondary font-semibold mb-1">BioTrack Sync</p>
             {unsyncedCount === 0 ? (
-              <p className="text-xs text-emerald-400">All sales synced</p>
+              <p className="text-xs text-accent">All sales synced</p>
             ) : (
-              <p className="text-xs text-amber-400">
+              <p className="text-xs text-warning">
                 {unsyncedCount} sale{unsyncedCount > 1 ? 's' : ''} pending sync
               </p>
             )}

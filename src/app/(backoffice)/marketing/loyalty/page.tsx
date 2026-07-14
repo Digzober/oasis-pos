@@ -48,18 +48,18 @@ export default function LoyaltyConfigPage() {
     setTiers(prev => prev.filter((t: R) => t.id !== id))
   }
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Loyalty Program</h1>
-        {saving && <span className="text-xs text-gray-400">Saving...</span>}
+        <h1 className="text-xl font-bold text-primary">Loyalty Program</h1>
+        {saving && <span className="text-xs text-secondary">Saving...</span>}
       </div>
 
-      <div className="flex gap-1 mb-4 border-b border-gray-700">
+      <div className="flex gap-1 mb-4 border-b border-edge">
         {['settings', 'adjustment-reasons', 'referrals'].map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm capitalize ${tab === t ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400'}`}>{t.replace('-', ' ')}</button>
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm capitalize ${tab === t ? 'text-accent border-b-2 border-accent' : 'text-secondary'}`}>{t.replace('-', ' ')}</button>
         ))}
       </div>
 
@@ -67,48 +67,48 @@ export default function LoyaltyConfigPage() {
         <div className="space-y-6">
           <Section title="General">
             <div className="grid grid-cols-2 gap-4">
-              <label className="block"><span className="text-xs text-gray-400">Accrual Rate (pts per $1)</span>
+              <label className="block"><span className="text-xs text-secondary">Accrual Rate (pts per $1)</span>
                 <input type="number" step="0.1" value={config.accrual_rate ?? 1} onChange={e => updateField('accrual_rate', parseFloat(e.target.value))} className={inputCls} /></label>
-              <label className="block"><span className="text-xs text-gray-400">Signup Bonus Points</span>
+              <label className="block"><span className="text-xs text-secondary">Signup Bonus Points</span>
                 <input type="number" value={config.initial_signup_reward ?? 0} onChange={e => updateField('initial_signup_reward', parseInt(e.target.value))} className={inputCls} /></label>
             </div>
-            <label className="block"><span className="text-xs text-gray-400">Enrollment Type</span>
+            <label className="block"><span className="text-xs text-secondary">Enrollment Type</span>
               <select value={config.enrollment_type ?? 'opt_in'} onChange={e => updateField('enrollment_type', e.target.value)} className={inputCls}>
                 <option value="opt_in">Opt-in</option><option value="auto_enroll">Auto-enroll</option>
               </select></label>
-            <label className="block"><span className="text-xs text-gray-400">Online Description (144 chars max)</span>
+            <label className="block"><span className="text-xs text-secondary">Online Description (144 chars max)</span>
               <textarea value={config.online_description ?? ''} maxLength={144} onChange={e => updateField('online_description', e.target.value)} className={inputCls + ' h-16'} /></label>
           </Section>
 
           <Section title="Redemptions">
             <div className="space-y-2">
               {REDEMPTION_METHODS.map(m => (
-                <label key={m.value} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                  <input type="radio" name="redemption" checked={config.redemption_method === m.value} onChange={() => updateField('redemption_method', m.value)} className="text-emerald-500" />
+                <label key={m.value} className="flex items-center gap-2 text-sm text-secondary cursor-pointer">
+                  <input type="radio" name="redemption" checked={config.redemption_method === m.value} onChange={() => updateField('redemption_method', m.value)} className="text-accent" />
                   {m.label}
                 </label>
               ))}
             </div>
-            <label className="block mt-3"><span className="text-xs text-gray-400">Point Expiration (days, 0 = never)</span>
+            <label className="block mt-3"><span className="text-xs text-secondary">Point Expiration (days, 0 = never)</span>
               <input type="number" value={config.point_expiration_days ?? 365} onChange={e => updateField('point_expiration_days', parseInt(e.target.value) || null)} className={inputCls + ' w-32'} /></label>
           </Section>
 
           <Section title="Tiers">
-            <label className="flex items-center gap-2 text-sm text-gray-300 mb-3">
+            <label className="flex items-center gap-2 text-sm text-secondary mb-3">
               <input type="checkbox" checked={config.tiers_enabled ?? false} onChange={e => updateField('tiers_enabled', e.target.checked)} className="rounded" /> Enable loyalty tiers
             </label>
             {config.tiers_enabled && (
               <>
                 <table className="w-full text-sm mb-3">
-                  <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+                  <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
                     <th className="text-left py-2">Name</th><th className="text-right py-2">Min Points</th><th className="text-right py-2">Multiplier</th><th className="text-right py-2" />
                   </tr></thead>
                   <tbody>{tiers.map((t: R) => (
-                    <tr key={t.id} className="border-b border-gray-700/50">
-                      <td className="py-2 text-gray-50">{t.name}</td>
-                      <td className="py-2 text-right text-gray-300 tabular-nums">{t.min_points}</td>
-                      <td className="py-2 text-right text-gray-300 tabular-nums">{t.multiplier}x</td>
-                      <td className="py-2 text-right"><button onClick={() => deleteTier(t.id)} className="text-xs text-gray-400 hover:text-red-400">Remove</button></td>
+                    <tr key={t.id} className="border-b border-edge/50">
+                      <td className="py-2 text-primary">{t.name}</td>
+                      <td className="py-2 text-right text-secondary tabular-nums">{t.min_points}</td>
+                      <td className="py-2 text-right text-secondary tabular-nums">{t.multiplier}x</td>
+                      <td className="py-2 text-right"><button onClick={() => deleteTier(t.id)} className="text-xs text-secondary hover:text-danger">Remove</button></td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -116,7 +116,7 @@ export default function LoyaltyConfigPage() {
                   <input value={newTier.name} onChange={e => setNewTier(p => ({ ...p, name: e.target.value }))} placeholder="Tier name" className={inputCls + ' w-32'} />
                   <input type="number" value={newTier.min_points} onChange={e => setNewTier(p => ({ ...p, min_points: e.target.value }))} placeholder="Min pts" className={inputCls + ' w-24'} />
                   <input type="number" step="0.1" value={newTier.multiplier} onChange={e => setNewTier(p => ({ ...p, multiplier: e.target.value }))} placeholder="Mult" className={inputCls + ' w-20'} />
-                  <button onClick={addTier} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm">Add</button>
+                  <button onClick={addTier} className="px-3 py-1.5 bg-accent text-primary rounded-lg text-sm">Add</button>
                 </div>
               </>
             )}
@@ -125,16 +125,16 @@ export default function LoyaltyConfigPage() {
       )}
 
       {tab === 'adjustment-reasons' && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 text-center">
-          <p className="text-gray-400 mb-2">Manage loyalty adjustment reasons</p>
-          <Link href="/customers/segments" className="text-emerald-400 text-sm">Go to Adjustment Reasons</Link>
+        <div className="bg-surface rounded-xl border border-edge p-6 text-center">
+          <p className="text-secondary mb-2">Manage loyalty adjustment reasons</p>
+          <Link href="/customers/segments" className="text-accent text-sm">Go to Adjustment Reasons</Link>
         </div>
       )}
 
       {tab === 'referrals' && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 text-center">
-          <p className="text-gray-400 mb-2">Manage referral program settings</p>
-          <Link href="/customers/referrals" className="text-emerald-400 text-sm">Go to Referral Config</Link>
+        <div className="bg-surface rounded-xl border border-edge p-6 text-center">
+          <p className="text-secondary mb-2">Manage referral program settings</p>
+          <Link href="/customers/referrals" className="text-accent text-sm">Go to Referral Config</Link>
         </div>
       )}
     </div>
@@ -143,8 +143,8 @@ export default function LoyaltyConfigPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase mb-3">{title}</h3>
+    <div className="bg-surface rounded-xl border border-edge p-4">
+      <h3 className="text-sm font-semibold text-secondary uppercase mb-3">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   )

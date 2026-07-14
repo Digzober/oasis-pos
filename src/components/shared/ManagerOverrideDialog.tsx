@@ -63,28 +63,28 @@ export function ManagerOverrideDialog({ open, onOpenChange, permission, descript
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 z-50" onClick={() => { onDenied(); onOpenChange(false) }} />
+      <div className="fixed inset-0 bg-bg/60 z-50" onClick={() => { onDenied(); onOpenChange(false) }} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-sm p-6 space-y-4">
-          <h2 className="text-lg font-semibold text-gray-50">Manager Override</h2>
-          <p className="text-sm text-gray-400">{description}</p>
+        <div className="bg-surface border border-edge rounded-2xl w-full max-w-sm p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-primary">Manager Override</h2>
+          <p className="text-sm text-secondary">{description}</p>
 
           <div>
-            <label className="text-xs text-gray-400 block mb-1">Manager PIN</label>
+            <label className="text-xs text-secondary block mb-1">Manager PIN</label>
             <input ref={inputRef} type="password" maxLength={4} value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className="w-full h-12 text-center text-2xl tracking-widest bg-gray-900 border border-gray-600 rounded-lg text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full h-12 text-center text-2xl tracking-widest bg-bg border border-edge-strong rounded-lg text-primary focus:outline-none focus:ring-2 focus:ring-accent"
               placeholder="••••" />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-danger text-sm">{error}</p>}
 
           <div className="flex gap-2">
             <button onClick={() => { onDenied(); onOpenChange(false) }}
-              className="flex-1 h-10 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600">Cancel</button>
+              className="flex-1 h-10 bg-raised text-secondary rounded-lg text-sm hover:bg-raised">Cancel</button>
             <button onClick={handleSubmit} disabled={loading || pin.length !== 4}
-              className="flex-1 h-10 bg-emerald-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-emerald-500">
+              className="flex-1 h-10 bg-accent text-primary rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-accent">
               {loading ? 'Verifying...' : 'Approve'}
             </button>
           </div>

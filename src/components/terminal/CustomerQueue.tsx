@@ -45,9 +45,9 @@ function formatWaitTime(minutes: number): string {
 }
 
 function getWaitColor(minutes: number): string {
-  if (minutes < 5) return 'text-emerald-400'
-  if (minutes <= 15) return 'text-amber-400'
-  return 'text-red-400'
+  if (minutes < 5) return 'text-accent'
+  if (minutes <= 15) return 'text-warning'
+  return 'text-danger'
 }
 
 function getWaitBorderColor(minutes: number): string {
@@ -182,22 +182,22 @@ export default function CustomerQueue({
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
+      <div className="bg-surface rounded-xl border border-edge p-4">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-gray-500 animate-pulse" />
-          <span className="text-sm text-gray-400">Loading queue...</span>
+          <div className="h-2 w-2 rounded-full bg-overlay animate-pulse" />
+          <span className="text-sm text-secondary">Loading queue...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 flex flex-col">
+    <div className="bg-surface rounded-xl border border-edge flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-edge">
         <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${waiting.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
-          <h3 className="text-sm font-semibold text-gray-50 uppercase tracking-wide">
+          <div className={`h-2 w-2 rounded-full ${waiting.length > 0 ? 'bg-accent animate-pulse' : 'bg-overlay'}`} />
+          <h3 className="text-sm font-semibold text-primary uppercase tracking-wide">
             {waiting.length} customer{waiting.length !== 1 ? 's' : ''} waiting
           </h3>
         </div>
@@ -205,7 +205,7 @@ export default function CustomerQueue({
           <button
             onClick={() => markServing(oldestUnclaimed.id)}
             disabled={claimingId !== null}
-            className="text-xs font-medium px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="text-xs font-medium px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Claim Next
           </button>
@@ -215,7 +215,7 @@ export default function CustomerQueue({
       {/* Waiting List */}
       <div className="flex-1 overflow-y-auto max-h-[400px] p-2 space-y-1.5">
         {waiting.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+          <div className="flex flex-col items-center justify-center py-8 text-muted">
             <svg className="w-8 h-8 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -234,18 +234,18 @@ export default function CustomerQueue({
               <div
                 key={entry.id}
                 className={`relative border-l-4 ${getWaitBorderColor(waitMin)} rounded-lg px-3 py-2.5 ${
-                  isClaimed ? 'bg-gray-900/60 opacity-60' : 'bg-gray-900/40'
-                } hover:bg-gray-700/40 transition-colors group`}
+                  isClaimed ? 'bg-bg/60 opacity-60' : 'bg-bg/40'
+                } hover:bg-raised/40 transition-colors group`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5 min-w-0">
                     {/* Position */}
-                    <span className="text-xs font-mono text-gray-500 w-5 text-right flex-shrink-0">
+                    <span className="text-xs font-mono text-muted w-5 text-right flex-shrink-0">
                       #{index + 1}
                     </span>
 
                     {/* Name */}
-                    <span className="text-sm font-medium text-gray-50 truncate">
+                    <span className="text-sm font-medium text-primary truncate">
                       {getDisplayName(entry)}
                     </span>
 
@@ -253,8 +253,8 @@ export default function CustomerQueue({
                     <span
                       className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                         type === 'medical'
-                          ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
-                          : 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
+                          ? 'bg-info/50 text-info border border-info/50'
+                          : 'bg-accent/50 text-accent border border-accent/50'
                       }`}
                     >
                       {type === 'medical' ? 'MED' : 'REC'}
@@ -262,7 +262,7 @@ export default function CustomerQueue({
 
                     {/* Party size if > 1 */}
                     {entry.party_size > 1 && (
-                      <span className="text-[10px] text-gray-400 flex-shrink-0">
+                      <span className="text-[10px] text-secondary flex-shrink-0">
                         +{entry.party_size - 1}
                       </span>
                     )}
@@ -270,7 +270,7 @@ export default function CustomerQueue({
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Source */}
-                    <span className="text-[10px] text-gray-500 hidden sm:inline">
+                    <span className="text-[10px] text-muted hidden sm:inline">
                       {SOURCE_LABELS[entry.source] ?? entry.source}
                     </span>
 
@@ -284,12 +284,12 @@ export default function CustomerQueue({
                       <button
                         onClick={() => markServing(entry.id)}
                         disabled={claimingId !== null}
-                        className="text-[10px] font-medium px-2 py-1 bg-emerald-600/80 text-white rounded hover:bg-emerald-500 disabled:opacity-50 transition-colors opacity-0 group-hover:opacity-100"
+                        className="text-[10px] font-medium px-2 py-1 bg-accent/80 text-primary rounded hover:bg-accent disabled:opacity-50 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         Claim
                       </button>
                     ) : (
-                      <span className="text-[10px] text-gray-500 italic">
+                      <span className="text-[10px] text-muted italic">
                         {budtenderName ?? 'Claimed'}
                       </span>
                     )}
@@ -298,7 +298,7 @@ export default function CustomerQueue({
 
                 {/* Notes */}
                 {entry.notes && (
-                  <p className="text-[10px] text-gray-500 mt-1 ml-7 truncate">{entry.notes}</p>
+                  <p className="text-[10px] text-muted mt-1 ml-7 truncate">{entry.notes}</p>
                 )}
               </div>
             )
@@ -308,10 +308,10 @@ export default function CustomerQueue({
 
       {/* Now Serving Section */}
       {serving.length > 0 && (
-        <div className="border-t border-gray-700">
+        <div className="border-t border-edge">
           <button
             onClick={() => setShowServing(!showServing)}
-            className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-400 hover:text-gray-300 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2 text-xs text-secondary hover:text-secondary transition-colors"
           >
             <span className="uppercase tracking-wide font-semibold">
               Now Serving ({serving.length})
@@ -338,35 +338,35 @@ export default function CustomerQueue({
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 bg-emerald-900/20 border border-emerald-800/30"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 bg-accent/20 border border-accent/30"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
-                      <span className="text-sm text-gray-200 truncate">{getDisplayName(entry)}</span>
+                      <div className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0" />
+                      <span className="text-sm text-primary truncate">{getDisplayName(entry)}</span>
                       <span
                         className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                           type === 'medical'
-                            ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
-                            : 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
+                            ? 'bg-info/50 text-info border border-info/50'
+                            : 'bg-accent/50 text-accent border border-accent/50'
                         }`}
                       >
                         {type === 'medical' ? 'MED' : 'REC'}
                       </span>
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[10px] text-muted">
                         w/ {budtenderName}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[10px] text-gray-500 font-mono">{formatWaitTime(serveMin)}</span>
+                      <span className="text-[10px] text-muted font-mono">{formatWaitTime(serveMin)}</span>
                       <button
                         onClick={() => completeEntry(entry.id)}
-                        className="text-[10px] font-medium px-2 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
+                        className="text-[10px] font-medium px-2 py-1 bg-raised text-secondary rounded hover:bg-raised transition-colors"
                       >
                         Done
                       </button>
                       <button
                         onClick={() => removeEntry(entry.id)}
-                        className="text-[10px] font-medium px-1.5 py-1 text-gray-500 hover:text-red-400 transition-colors"
+                        className="text-[10px] font-medium px-1.5 py-1 text-muted hover:text-danger transition-colors"
                       >
                         ✕
                       </button>

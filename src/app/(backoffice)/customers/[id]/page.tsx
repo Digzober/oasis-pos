@@ -39,12 +39,12 @@ interface Transaction { id: string; created_at: string; transaction_type: string
 /*  Style constants                                                    */
 /* ------------------------------------------------------------------ */
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
-const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-6'
-const tabCls = (active: boolean) => `px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${active ? 'text-emerald-400 border-emerald-400' : 'text-gray-400 border-transparent hover:text-gray-200'}`
-const btnPrimary = 'px-4 h-10 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50'
-const btnSecondary = 'px-4 h-10 bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium rounded-lg transition-colors'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent disabled:opacity-50'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
+const sectionCls = 'bg-surface rounded-xl border border-edge p-6'
+const tabCls = (active: boolean) => `px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${active ? 'text-accent border-accent' : 'text-secondary border-transparent hover:text-primary'}`
+const btnPrimary = 'px-4 h-10 bg-accent hover:bg-accent text-primary text-sm font-medium rounded-lg transition-colors disabled:opacity-50'
+const btnSecondary = 'px-4 h-10 bg-raised hover:bg-raised text-primary text-sm font-medium rounded-lg transition-colors'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -78,9 +78,9 @@ function BadgesSection({ customerId }: { customerId: string }) {
   const [badges, setBadges] = useState<Badge[]>([])
   const [allBadges, setAllBadges] = useState<Badge[]>([])
   const loaded = useRef(false)
-  const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-6'
-  const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-  const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  const sectionCls = 'bg-surface rounded-xl border border-edge p-6'
+  const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+  const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
   useEffect(() => {
     if (loaded.current) return
@@ -117,13 +117,13 @@ function BadgesSection({ customerId }: { customerId: string }) {
       <h3 className="text-lg font-semibold mb-4">Badges</h3>
       <div className="flex flex-wrap gap-2 mb-4">
         {badges.map(b => (
-          <span key={b.id} className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border border-gray-600" style={{ backgroundColor: `${b.color}20`, color: b.color, borderColor: `${b.color}50` }}>
+          <span key={b.id} className="inline-flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border border-edge-strong" style={{ backgroundColor: `${b.color}20`, color: b.color, borderColor: `${b.color}50` }}>
             {b.icon && <span>{b.icon}</span>}
             {b.name}
             <button onClick={() => removeBadge(b.id)} className="ml-1 opacity-60 hover:opacity-100">&times;</button>
           </span>
         ))}
-        {badges.length === 0 && <span className="text-gray-500 text-sm">No badges assigned</span>}
+        {badges.length === 0 && <span className="text-muted text-sm">No badges assigned</span>}
       </div>
       {available.length > 0 && (
         <div className="flex items-end gap-3">
@@ -321,7 +321,7 @@ export default function CustomerDetailPage() {
     </div>
   )
 
-  if (loading || !customer) return <div className="min-h-screen bg-gray-900 flex items-center justify-center"><div className="text-gray-400">Loading...</div></div>
+  if (loading || !customer) return <div className="min-h-screen bg-bg flex items-center justify-center"><div className="text-secondary">Loading...</div></div>
 
   const medExpired = customer.medical_card_expiration ? new Date(customer.medical_card_expiration) < new Date() : false
   const TAB_LABELS = ['Details', 'ID & Address', ...(isMedical ? ['Caregiver'] : []), 'Loyalty & Groups', 'Purchase History', 'Transaction History']
@@ -334,23 +334,23 @@ export default function CustomerDetailPage() {
 
   const typeBadge = (t: string | null | undefined) => {
     const label = t || 'recreational'
-    const cls = label === 'medical' ? 'bg-blue-900/50 text-blue-300 border-blue-700' : 'bg-emerald-900/50 text-emerald-300 border-emerald-700'
+    const cls = label === 'medical' ? 'bg-info/50 text-info border-info' : 'bg-accent/50 text-accent border-accent'
     return <span className={`text-xs px-2 py-0.5 rounded-full border ${cls}`}>{label.charAt(0).toUpperCase() + label.slice(1)}</span>
   }
 
   const statusBadge = (s: string | null | undefined) => {
     const label = s || 'active'
-    const m: Record<string, string> = { active: 'bg-emerald-900/50 text-emerald-300', banned: 'bg-red-900/50 text-red-300', inactive: 'bg-gray-700 text-gray-400' }
+    const m: Record<string, string> = { active: 'bg-accent/50 text-accent', banned: 'bg-danger/50 text-danger', inactive: 'bg-raised text-secondary' }
     return <span className={`text-xs px-2 py-0.5 rounded-full ${m[label] ?? m.inactive}`}>{label.charAt(0).toUpperCase() + label.slice(1)}</span>
   }
 
   /* ================================================================== */
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-50 p-6 space-y-6">
+    <div className="min-h-screen bg-bg text-primary p-6 space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => router.push('/customers')} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors">
+          <button onClick={() => router.push('/customers')} className="p-2 rounded-lg hover:bg-surface text-secondary hover:text-primary transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
           <div>
@@ -364,12 +364,12 @@ export default function CustomerDetailPage() {
           <div className="relative">
             <button className={btnSecondary} onClick={() => setActionsOpen(p => !p)}>Actions <span className="ml-1">&#9662;</span></button>
             {actionsOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50">
+              <div className="absolute right-0 mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl z-50">
                 {customer.status === 'banned'
-                  ? <button className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-t-lg" onClick={() => { unbanCustomer(); setActionsOpen(false) }}>Unban Customer</button>
-                  : <button className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-t-lg" onClick={() => { banCustomer(); setActionsOpen(false) }}>Ban Customer</button>
+                  ? <button className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-raised rounded-t-lg" onClick={() => { unbanCustomer(); setActionsOpen(false) }}>Unban Customer</button>
+                  : <button className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-raised rounded-t-lg" onClick={() => { banCustomer(); setActionsOpen(false) }}>Ban Customer</button>
                 }
-                <button className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-b-lg" onClick={() => { archiveCustomer(); setActionsOpen(false) }}>Archive</button>
+                <button className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-raised rounded-b-lg" onClick={() => { archiveCustomer(); setActionsOpen(false) }}>Archive</button>
               </div>
             )}
           </div>
@@ -386,15 +386,15 @@ export default function CustomerDetailPage() {
           { label: 'Customer Since', value: fmtDate(customer.created_at) },
           { label: 'Medical Card', value: isMedical ? (medExpired ? 'Expired' : 'Valid') : 'N/A' },
         ].map(c => (
-          <div key={c.label} className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-            <p className="text-xs text-gray-400 uppercase">{c.label}</p>
+          <div key={c.label} className="bg-surface rounded-xl border border-edge p-4">
+            <p className="text-xs text-secondary uppercase">{c.label}</p>
             <p className="text-lg font-semibold mt-1">{c.value}</p>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-700 flex gap-1">
+      <div className="border-b border-edge flex gap-1">
         {TAB_LABELS.map((l, i) => <button key={l} className={tabCls(tab === i)} onClick={() => setTab(i)}>{l}</button>)}
       </div>
 
@@ -478,8 +478,8 @@ export default function CustomerDetailPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold">Loyalty Points</h3>
-                <p className="text-3xl font-bold text-emerald-400 mt-1">{customer.loyalty_points}
-                  {customer.loyalty_tier && <span className="ml-2 text-sm bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded-full">{customer.loyalty_tier}</span>}
+                <p className="text-3xl font-bold text-accent mt-1">{customer.loyalty_points}
+                  {customer.loyalty_tier && <span className="ml-2 text-sm bg-accent/50 text-accent border border-accent px-2 py-0.5 rounded-full">{customer.loyalty_tier}</span>}
                 </p>
               </div>
             </div>
@@ -495,24 +495,24 @@ export default function CustomerDetailPage() {
               <button className={btnPrimary} onClick={adjustPoints} disabled={saving}>Adjust</button>
             </div>
             {/* History table */}
-            <h4 className="text-sm font-medium text-gray-400 uppercase mb-2">Point History</h4>
+            <h4 className="text-sm font-medium text-secondary uppercase mb-2">Point History</h4>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="text-left text-gray-400 border-b border-gray-700">
+                <thead><tr className="text-left text-secondary border-b border-edge">
                   <th className="pb-2 pr-4">Date</th><th className="pb-2 pr-4">Type</th><th className="pb-2 pr-4 text-right">Points</th><th className="pb-2 pr-4 text-right">Balance After</th><th className="pb-2">Reason</th>
                 </tr></thead>
                 <tbody>
                   {loyaltyHistory?.map(h => (
-                    <tr key={h.id} className="border-b border-gray-700/50">
+                    <tr key={h.id} className="border-b border-edge/50">
                       <td className="py-2 pr-4">{fmtDate(h.created_at)}</td>
-                      <td className="py-2 pr-4">{h.points_change > 0 ? <span className="text-emerald-400">Earn</span> : <span className="text-red-400">{h.reason?.toLowerCase().includes('redeem') ? 'Redeem' : 'Adjust'}</span>}</td>
+                      <td className="py-2 pr-4">{h.points_change > 0 ? <span className="text-accent">Earn</span> : <span className="text-danger">{h.reason?.toLowerCase().includes('redeem') ? 'Redeem' : 'Adjust'}</span>}</td>
                       <td className="py-2 pr-4 text-right">{h.points_change > 0 ? '+' : ''}{h.points_change}</td>
                       <td className="py-2 pr-4 text-right">{h.balance_after}</td>
-                      <td className="py-2 text-gray-400">{h.reason ?? '--'}</td>
+                      <td className="py-2 text-secondary">{h.reason ?? '--'}</td>
                     </tr>
                   ))}
-                  {loyaltyHistory?.length === 0 && <tr><td colSpan={5} className="py-4 text-center text-gray-500">No point history</td></tr>}
-                  {!loyaltyHistory && <tr><td colSpan={5} className="py-4 text-center text-gray-500">Loading...</td></tr>}
+                  {loyaltyHistory?.length === 0 && <tr><td colSpan={5} className="py-4 text-center text-muted">No point history</td></tr>}
+                  {!loyaltyHistory && <tr><td colSpan={5} className="py-4 text-center text-muted">Loading...</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -523,12 +523,12 @@ export default function CustomerDetailPage() {
             <h3 className="text-lg font-semibold mb-4">Groups</h3>
             <div className="flex flex-wrap gap-2 mb-4">
               {customer.groups.map(g => (
-                <span key={g.id} className="inline-flex items-center gap-1 bg-gray-700 text-gray-200 text-sm px-3 py-1 rounded-full">
+                <span key={g.id} className="inline-flex items-center gap-1 bg-raised text-primary text-sm px-3 py-1 rounded-full">
                   {g.name}
-                  <button onClick={() => removeGroup(g.id)} className="ml-1 text-gray-400 hover:text-red-400">&times;</button>
+                  <button onClick={() => removeGroup(g.id)} className="ml-1 text-secondary hover:text-danger">&times;</button>
                 </span>
               ))}
-              {customer.groups.length === 0 && <span className="text-gray-500 text-sm">No groups assigned</span>}
+              {customer.groups.length === 0 && <span className="text-muted text-sm">No groups assigned</span>}
             </div>
             <div className="flex items-end gap-3">
               <div className="flex-1">
@@ -553,31 +553,31 @@ export default function CustomerDetailPage() {
         <div className={sectionCls}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-400 border-b border-gray-700">
+              <thead><tr className="text-left text-secondary border-b border-edge">
                 <th className="pb-2 pr-4">Date</th><th className="pb-2 pr-4">Product</th><th className="pb-2 pr-4">SKU</th><th className="pb-2 pr-4 text-right">Qty</th><th className="pb-2 pr-4 text-right">Price</th><th className="pb-2 text-right">Total</th>
               </tr></thead>
               <tbody>
                 {purchases?.map(p => (
-                  <tr key={p.id} className="border-b border-gray-700/50">
+                  <tr key={p.id} className="border-b border-edge/50">
                     <td className="py-2 pr-4">{fmtDate(p.created_at)}</td>
                     <td className="py-2 pr-4">{p.product_name}</td>
-                    <td className="py-2 pr-4 text-gray-400">{p.sku ?? '--'}</td>
+                    <td className="py-2 pr-4 text-secondary">{p.sku ?? '--'}</td>
                     <td className="py-2 pr-4 text-right">{p.quantity}</td>
                     <td className="py-2 pr-4 text-right">{fmtMoney(p.unit_price)}</td>
                     <td className="py-2 text-right">{fmtMoney(p.total)}</td>
                   </tr>
                 ))}
-                {purchases?.length === 0 && <tr><td colSpan={6} className="py-4 text-center text-gray-500">No purchase history</td></tr>}
-                {!purchases && <tr><td colSpan={6} className="py-4 text-center text-gray-500">Loading...</td></tr>}
+                {purchases?.length === 0 && <tr><td colSpan={6} className="py-4 text-center text-muted">No purchase history</td></tr>}
+                {!purchases && <tr><td colSpan={6} className="py-4 text-center text-muted">Loading...</td></tr>}
               </tbody>
             </table>
           </div>
           {purchaseTotal > 20 && (
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-400">{purchaseTotal} total items</span>
+              <span className="text-sm text-secondary">{purchaseTotal} total items</span>
               <div className="flex gap-2">
                 <button className={btnSecondary} disabled={purchasePage <= 1} onClick={() => fetchPurchases(purchasePage - 1)}>Prev</button>
-                <span className="text-sm text-gray-400 self-center">Page {purchasePage} of {Math.ceil(purchaseTotal / 20)}</span>
+                <span className="text-sm text-secondary self-center">Page {purchasePage} of {Math.ceil(purchaseTotal / 20)}</span>
                 <button className={btnSecondary} disabled={purchasePage >= Math.ceil(purchaseTotal / 20)} onClick={() => fetchPurchases(purchasePage + 1)}>Next</button>
               </div>
             </div>
@@ -590,31 +590,31 @@ export default function CustomerDetailPage() {
         <div className={sectionCls}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="text-left text-gray-400 border-b border-gray-700">
+              <thead><tr className="text-left text-secondary border-b border-edge">
                 <th className="pb-2 pr-4">Date</th><th className="pb-2 pr-4">Type</th><th className="pb-2 pr-4 text-right">Items</th><th className="pb-2 pr-4 text-right">Total</th><th className="pb-2 pr-4">Status</th><th className="pb-2">Payment</th>
               </tr></thead>
               <tbody>
                 {transactions?.map(t => (
-                  <tr key={t.id} className="border-b border-gray-700/50 cursor-pointer hover:bg-gray-700/30" onClick={() => router.push('/reports/transactions')}>
+                  <tr key={t.id} className="border-b border-edge/50 cursor-pointer hover:bg-raised/30" onClick={() => router.push('/reports/transactions')}>
                     <td className="py-2 pr-4">{fmtDate(t.created_at)}</td>
                     <td className="py-2 pr-4 capitalize">{t.transaction_type}</td>
                     <td className="py-2 pr-4 text-right">{t.line_count}</td>
                     <td className="py-2 pr-4 text-right">{fmtMoney(t.total)}</td>
                     <td className="py-2 pr-4">{statusBadge(t.status)}</td>
-                    <td className="py-2 text-gray-400">{t.payment_method ?? '--'}</td>
+                    <td className="py-2 text-secondary">{t.payment_method ?? '--'}</td>
                   </tr>
                 ))}
-                {transactions?.length === 0 && <tr><td colSpan={6} className="py-4 text-center text-gray-500">No transaction history</td></tr>}
-                {!transactions && <tr><td colSpan={6} className="py-4 text-center text-gray-500">Loading...</td></tr>}
+                {transactions?.length === 0 && <tr><td colSpan={6} className="py-4 text-center text-muted">No transaction history</td></tr>}
+                {!transactions && <tr><td colSpan={6} className="py-4 text-center text-muted">Loading...</td></tr>}
               </tbody>
             </table>
           </div>
           {txTotal > 20 && (
             <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-400">{txTotal} total transactions</span>
+              <span className="text-sm text-secondary">{txTotal} total transactions</span>
               <div className="flex gap-2">
                 <button className={btnSecondary} disabled={txPage <= 1} onClick={() => fetchTransactions(txPage - 1)}>Prev</button>
-                <span className="text-sm text-gray-400 self-center">Page {txPage} of {Math.ceil(txTotal / 20)}</span>
+                <span className="text-sm text-secondary self-center">Page {txPage} of {Math.ceil(txTotal / 20)}</span>
                 <button className={btnSecondary} disabled={txPage >= Math.ceil(txTotal / 20)} onClick={() => fetchTransactions(txPage + 1)}>Next</button>
               </div>
             </div>

@@ -21,8 +21,8 @@ interface CustomerGroup {
 /* ------------------------------------------------------------------ */
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -126,8 +126,8 @@ export default function CustomerGroupsPage() {
 
   /* ---- Sort indicator ---- */
   const sortIcon = (key: SortKey) => {
-    if (sortKey !== key) return <span className="ml-1 text-gray-600">{'\u2195'}</span>
-    return <span className="ml-1 text-emerald-400">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+    if (sortKey !== key) return <span className="ml-1 text-muted">{'\u2195'}</span>
+    return <span className="ml-1 text-accent">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
   }
 
   /* ---------------------------------------------------------------- */
@@ -138,20 +138,20 @@ export default function CustomerGroupsPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Customer Groups</h1>
+        <h1 className="text-xl font-bold text-primary">Customer Groups</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="text-sm px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
+          className="text-sm px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent transition-colors"
         >
           + Add Group
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th
                 className="text-left px-4 py-3 cursor-pointer select-none"
                 onClick={() => toggleSort('name')}
@@ -177,14 +177,14 @@ export default function CustomerGroupsPage() {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-muted">
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && sorted.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-muted">
                   No customer groups yet.
                 </td>
               </tr>
@@ -193,48 +193,48 @@ export default function CustomerGroupsPage() {
               sorted.map(g => (
                 <tr
                   key={g.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                  className="border-b border-edge/50 hover:bg-raised/30 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <Link
                       href={`/customers/groups/${g.id}`}
-                      className="text-gray-50 hover:text-emerald-400 font-medium transition-colors"
+                      className="text-primary hover:text-accent font-medium transition-colors"
                     >
                       {g.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-right text-gray-300">{g.member_count}</td>
+                  <td className="px-4 py-3 text-right text-secondary">{g.member_count}</td>
                   <td className="px-4 py-3 text-center">
                     <span
                       className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                         g.is_active
-                          ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-700'
-                          : 'bg-red-900/50 text-red-400 border border-red-700'
+                          ? 'bg-accent/50 text-accent border border-accent'
+                          : 'bg-danger/50 text-danger border border-danger'
                       }`}
                     >
                       {g.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400">{formatDate(g.created_at)}</td>
+                  <td className="px-4 py-3 text-secondary">{formatDate(g.created_at)}</td>
                   <td className="px-4 py-3 text-right relative">
                     <button
                       onClick={() => setActionsOpenId(actionsOpenId === g.id ? null : g.id)}
-                      className="text-gray-400 hover:text-gray-200 px-2 py-1 rounded transition-colors"
+                      className="text-secondary hover:text-primary px-2 py-1 rounded transition-colors"
                     >
                       &#8943;
                     </button>
                     {actionsOpenId === g.id && (
-                      <div className="absolute right-4 top-10 z-20 w-36 bg-gray-800 border border-gray-600 rounded-lg shadow-xl overflow-hidden">
+                      <div className="absolute right-4 top-10 z-20 w-36 bg-surface border border-edge-strong rounded-lg shadow-xl overflow-hidden">
                         <Link
                           href={`/customers/groups/${g.id}`}
-                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                          className="block px-4 py-2 text-sm text-secondary hover:bg-raised transition-colors"
                           onClick={() => setActionsOpenId(null)}
                         >
                           Edit
                         </Link>
                         <button
                           onClick={() => handleDelete(g.id)}
-                          className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors"
+                          className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-raised transition-colors"
                         >
                           Delete
                         </button>
@@ -251,11 +251,11 @@ export default function CustomerGroupsPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-bg/60"
             onClick={() => setShowModal(false)}
           />
-          <div className="relative z-10 w-full max-w-md bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-2xl">
-            <h2 className="text-lg font-bold text-gray-50 mb-4">Add Customer Group</h2>
+          <div className="relative z-10 w-full max-w-md bg-surface border border-edge rounded-xl p-6 shadow-2xl">
+            <h2 className="text-lg font-bold text-primary mb-4">Add Customer Group</h2>
 
             <div className="space-y-4">
               <div>
@@ -282,14 +282,14 @@ export default function CustomerGroupsPage() {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreate}
                 disabled={saving || !newName.trim()}
-                className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Creating...' : 'Create Group'}
               </button>

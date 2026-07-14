@@ -74,16 +74,16 @@ function StockBar({ quantity }: { quantity: number }) {
   const pct = Math.min((quantity / max) * 100, 100)
   const color =
     quantity === 0
-      ? 'bg-red-500'
+      ? 'bg-danger'
       : quantity <= 10
-        ? 'bg-amber-500'
-        : 'bg-emerald-500'
+        ? 'bg-warning'
+        : 'bg-accent'
   const trackColor =
     quantity === 0
-      ? 'bg-red-500/20'
+      ? 'bg-danger/20'
       : quantity <= 10
-        ? 'bg-amber-500/20'
-        : 'bg-emerald-500/20'
+        ? 'bg-warning/20'
+        : 'bg-accent/20'
 
   return (
     <div className={`w-full h-0.5 rounded-full ${trackColor}`}>
@@ -97,15 +97,15 @@ function StockBar({ quantity }: { quantity: number }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-3 animate-pulse">
+    <div className="bg-bg border border-edge rounded-xl p-3 animate-pulse">
       <div className="flex items-center justify-between mb-1.5">
-        <div className="h-3 w-16 bg-gray-800 rounded" />
-        <div className="h-4 w-12 bg-gray-800 rounded" />
+        <div className="h-3 w-16 bg-surface rounded" />
+        <div className="h-4 w-12 bg-surface rounded" />
       </div>
-      <div className="h-4 w-full bg-gray-800 rounded mb-1" />
-      <div className="h-3 w-3/4 bg-gray-800 rounded mb-2.5" />
-      <div className="h-3 w-2/3 bg-gray-800 rounded mb-2" />
-      <div className="h-0.5 w-full bg-gray-800 rounded" />
+      <div className="h-4 w-full bg-surface rounded mb-1" />
+      <div className="h-3 w-3/4 bg-surface rounded mb-2.5" />
+      <div className="h-3 w-2/3 bg-surface rounded mb-2" />
+      <div className="h-0.5 w-full bg-surface rounded" />
     </div>
   )
 }
@@ -277,8 +277,8 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
         <div
           className={`fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm font-medium z-50 shadow-xl border transition-opacity ${
             toast.type === 'success'
-              ? 'bg-gray-800 border-emerald-500/30 text-gray-50'
-              : 'bg-gray-800 border-red-500/30 text-gray-50'
+              ? 'bg-surface border-accent/30 text-primary'
+              : 'bg-surface border-danger/30 text-primary'
           }`}
         >
           {toast.message}
@@ -295,15 +295,15 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           placeholder="Search products, scan barcode..."
-          className="w-full h-12 bg-gray-900 border border-gray-800 rounded-xl px-4 pr-12 text-gray-50 placeholder-gray-600 text-sm shadow-inner focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+          className="w-full h-12 bg-bg border border-edge rounded-xl px-4 pr-12 text-primary placeholder:text-muted text-sm shadow-inner focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors"
         />
         {isLoading ? (
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-gray-600 border-t-emerald-400 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-edge-strong border-t-emerald-400 rounded-full animate-spin" />
           </div>
         ) : isScanning ? (
           <svg
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400 pointer-events-none"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-accent pointer-events-none"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -312,7 +312,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
           </svg>
         ) : (
           <svg
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted pointer-events-none"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -333,8 +333,8 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
             }}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
               categoryFilter === cat
-                ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                : 'bg-gray-800/80 text-gray-400 border border-gray-700/50 hover:border-gray-600'
+                ? 'bg-accent/15 text-accent border border-accent/30'
+                : 'bg-surface/80 text-secondary border border-edge/50 hover:border-edge-strong'
             }`}
           >
             {cat}
@@ -365,17 +365,17 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
               <button
                 key={r.id}
                 onClick={() => !isOutOfStock && selectResult(r)}
-                className={`relative bg-gray-900 border rounded-xl p-3 text-left transition-all duration-150 ${
+                className={`relative bg-bg border rounded-xl p-3 text-left transition-all duration-150 ${
                   isOutOfStock
-                    ? 'opacity-40 pointer-events-none border-gray-800'
+                    ? 'opacity-40 pointer-events-none border-edge'
                     : idx === selectedIndex
-                      ? 'border-emerald-500/60 bg-gray-800/60'
-                      : 'border-gray-800 cursor-pointer hover:border-emerald-500/40 hover:bg-gray-800/60 active:scale-[0.97] active:border-emerald-500/60'
+                      ? 'border-accent/60 bg-surface/60'
+                      : 'border-edge cursor-pointer hover:border-accent/40 hover:bg-surface/60 active:scale-[0.97] active:border-accent/60'
                 }`}
               >
                 {isOutOfStock && (
                   <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <span className="text-xs font-semibold text-red-400 bg-gray-900/80 px-2 py-0.5 rounded">Out of Stock</span>
+                    <span className="text-xs font-semibold text-danger bg-bg/80 px-2 py-0.5 rounded">Out of Stock</span>
                   </div>
                 )}
 
@@ -383,25 +383,25 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5 min-w-0">
                     {r.is_cannabis && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
                     )}
-                    <span className="text-[11px] text-gray-500 truncate">
+                    <span className="text-[11px] text-muted truncate">
                       {r.brand_name ?? 'Unbranded'}
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-gray-50 tabular-nums shrink-0 ml-2">
+                  <span className="text-sm font-semibold text-primary tabular-nums shrink-0 ml-2">
                     ${r.rec_price.toFixed(2)}
                   </span>
                 </div>
 
                 {/* Product Name */}
-                <p className="text-sm font-medium text-gray-200 line-clamp-2 mb-1.5 leading-snug">
+                <p className="text-sm font-medium text-primary line-clamp-2 mb-1.5 leading-snug">
                   {r.name}
                 </p>
 
                 {/* Metadata */}
                 {metaParts.length > 0 && (
-                  <p className="text-[11px] text-gray-500 truncate mb-2.5">
+                  <p className="text-[11px] text-muted truncate mb-2.5">
                     {metaParts.join(' \u00b7 ')}
                   </p>
                 )}
@@ -411,10 +411,10 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
                   <StockBar quantity={r.quantity_available} />
                   <p className={`text-[11px] mt-1 tabular-nums ${
                     r.quantity_available === 0
-                      ? 'text-red-400'
+                      ? 'text-danger'
                       : r.quantity_available <= 10
-                        ? 'text-amber-400'
-                        : 'text-gray-500'
+                        ? 'text-warning'
+                        : 'text-muted'
                   }`}>
                     {r.quantity_available} in stock
                   </p>
@@ -427,7 +427,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
 
       {/* Empty State */}
       {isOpen && !isLoading && filteredResults.length === 0 && (query.length >= 2 || categoryFilter !== 'All') && (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-600">
+        <div className="flex flex-col items-center justify-center py-16 text-muted">
           <svg
             className="w-10 h-10 mb-3 opacity-30"
             fill="none"
@@ -437,7 +437,7 @@ export default function ProductSearch({ onSelect, onBarcodeScan, locationId, cat
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <p className="text-sm">No products found</p>
-          <p className="text-xs mt-1 text-gray-700">Try a different search or scan a barcode</p>
+          <p className="text-xs mt-1 text-muted">Try a different search or scan a barcode</p>
         </div>
       )}
     </div>

@@ -62,7 +62,7 @@ export default function LabSampleModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Sample Quantity
           </label>
           <input
@@ -74,15 +74,15 @@ export default function LabSampleModal({
             value={sampleQuantity}
             onChange={(e) => setSampleQuantity(e.target.value)}
             placeholder={`Max: ${currentQty}`}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-muted">
             Available: {currentQty}
           </p>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Lab Name
           </label>
           <input
@@ -90,24 +90,24 @@ export default function LabSampleModal({
             value={labName}
             onChange={(e) => setLabName(e.target.value)}
             placeholder="Optional"
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Sample Date
           </label>
           <input
             type="date"
             value={sampleDate}
             onChange={(e) => setSampleDate(e.target.value)}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Notes
           </label>
           <textarea
@@ -115,7 +115,7 @@ export default function LabSampleModal({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Optional"
             rows={3}
-            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+            className="w-full px-3 py-2 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
           />
         </div>
       </div>

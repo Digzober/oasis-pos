@@ -21,7 +21,7 @@ const TABS = [
 function ConfigureTabs() {
   const pathname = usePathname()
   return (
-    <nav className="flex gap-6 border-b border-gray-700 mb-6">
+    <nav className="flex gap-6 border-b border-edge mb-6">
       {TABS.map((tab) => {
         const isActive = pathname === tab.href
         return (
@@ -30,8 +30,8 @@ function ConfigureTabs() {
             href={tab.href}
             className={`pb-3 text-sm font-medium transition-colors ${
               isActive
-                ? 'text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'text-accent border-b-2 border-accent'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -110,55 +110,55 @@ export default function BadgePriorityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <h1 className="text-2xl font-bold text-gray-50 mb-6">Customer Configuration</h1>
+    <div className="min-h-screen bg-bg p-6">
+      <h1 className="text-2xl font-bold text-primary mb-6">Customer Configuration</h1>
       <ConfigureTabs />
 
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-1">Badge Priority</h2>
-        <p className="text-sm text-gray-400">
+        <h2 className="text-lg font-semibold text-primary mb-1">Badge Priority</h2>
+        <p className="text-sm text-secondary">
           Set the display priority for customer segment badges. When a customer belongs to multiple segments,
           the badge with the highest priority (lowest number) will be shown on the POS terminal.
         </p>
       </div>
 
       {loading ? (
-        <div className="text-gray-400 text-sm py-8 text-center">Loading badge configuration...</div>
+        <div className="text-secondary text-sm py-8 text-center">Loading badge configuration...</div>
       ) : badges.length === 0 ? (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-8 text-center">
-          <p className="text-gray-400 text-sm">No segment badges configured yet. Create segments first to set badge priority.</p>
+        <div className="bg-surface border border-edge rounded-lg p-8 text-center">
+          <p className="text-secondary text-sm">No segment badges configured yet. Create segments first to set badge priority.</p>
         </div>
       ) : (
         <>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <div className="divide-y divide-gray-700">
+          <div className="bg-surface border border-edge rounded-lg overflow-hidden">
+            <div className="divide-y divide-edge">
               {badges.map((badge, index) => (
                 <div
                   key={badge.id}
-                  className="flex items-center gap-4 px-4 py-3 hover:bg-gray-750 transition-colors"
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-raised transition-colors"
                 >
                   {/* Priority number */}
-                  <span className="w-8 text-center text-sm font-mono text-gray-400">
+                  <span className="w-8 text-center text-sm font-mono text-secondary">
                     {index + 1}
                   </span>
 
                   {/* Badge pill */}
                   <span
-                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-white"
-                    style={{ backgroundColor: badge.color || '#6b7280' }}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium text-primary"
+                      style={{ backgroundColor: badge.color || 'var(--text-muted)' }}
                   >
                     {badge.name}
                   </span>
 
                   {/* Segment name */}
-                  <span className="flex-1 text-sm text-gray-200">{badge.name}</span>
+                  <span className="flex-1 text-sm text-primary">{badge.name}</span>
 
                   {/* Reorder buttons */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => moveUp(index)}
                       disabled={index === 0}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-raised disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Move up"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,7 +168,7 @@ export default function BadgePriorityPage() {
                     <button
                       onClick={() => moveDown(index)}
                       disabled={index === badges.length - 1}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-raised disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title="Move down"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,12 +185,12 @@ export default function BadgePriorityPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 text-sm font-medium text-primary bg-accent hover:bg-accent rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Priority'}
             </button>
             {saved && (
-              <span className="text-sm text-emerald-400">Priority saved successfully.</span>
+              <span className="text-sm text-accent">Priority saved successfully.</span>
             )}
           </div>
         </>

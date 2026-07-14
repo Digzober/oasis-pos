@@ -53,22 +53,22 @@ export default function SegmentsPage() {
     setSaving(false)
   }
 
-  const inputCls = "h-9 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm"
+  const inputCls = "h-9 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm"
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Customer Segments</h1>
-        <button onClick={() => setShowBuilder(true)} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New Segment</button>
+        <h1 className="text-xl font-bold text-primary">Customer Segments</h1>
+        <button onClick={() => setShowBuilder(true)} className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New Segment</button>
       </div>
 
       {showBuilder && (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 mb-6 space-y-4">
+        <div className="bg-surface rounded-xl border border-edge p-4 mb-6 space-y-4">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Segment name" className={inputCls + ' w-full'} />
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className={inputCls + ' w-full'} />
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Match</span>
+            <span className="text-sm text-secondary">Match</span>
             <select value={operator} onChange={e => setOperator(e.target.value as 'AND' | 'OR')} className={inputCls}>
               <option value="AND">ALL conditions (AND)</option><option value="OR">ANY condition (OR)</option>
             </select>
@@ -79,35 +79,35 @@ export default function SegmentsPage() {
               <select value={c.field} onChange={e => updateCondition(i, 'field', e.target.value)} className={inputCls}>{FIELDS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}</select>
               <select value={c.op} onChange={e => updateCondition(i, 'op', e.target.value)} className={inputCls}>{OPS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
               <input value={c.value} onChange={e => updateCondition(i, 'value', e.target.value)} className={inputCls + ' w-32'} />
-              <button onClick={() => removeCondition(i)} className="text-red-400 text-xs">Remove</button>
+              <button onClick={() => removeCondition(i)} className="text-danger text-xs">Remove</button>
             </div>
           ))}
-          <button onClick={addCondition} className="text-xs text-emerald-400">+ Add Condition</button>
+          <button onClick={addCondition} className="text-xs text-accent">+ Add Condition</button>
 
           <div className="flex gap-2">
-            <button onClick={preview} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Preview</button>
-            <button onClick={save} disabled={saving || !name} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save Segment'}</button>
+            <button onClick={preview} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm">Preview</button>
+            <button onClick={save} disabled={saving || !name} className="px-3 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save Segment'}</button>
           </div>
 
           {previewResult && (
-            <div className="bg-gray-900 rounded-lg p-3">
-              <p className="text-sm text-gray-50 font-medium">{previewResult.count} customers match</p>
-              {previewResult.sample.map((s: Seg) => <p key={s.id} className="text-xs text-gray-400">{s.name} — ${s.lifetime_spend}</p>)}
+            <div className="bg-bg rounded-lg p-3">
+              <p className="text-sm text-primary font-medium">{previewResult.count} customers match</p>
+              {previewResult.sample.map((s: Seg) => <p key={s.id} className="text-xs text-secondary">{s.name} — ${s.lifetime_spend}</p>)}
             </div>
           )}
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+          <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Description</th><th className="text-left px-4 py-3">Rules</th>
           </tr></thead>
           <tbody>{segments.map((s: Seg) => (
-            <tr key={s.id} className="border-b border-gray-700/50">
-              <td className="px-4 py-2.5 text-gray-50">{s.name}</td>
-              <td className="px-4 py-2.5 text-gray-400 text-xs">{s.description ?? '—'}</td>
-              <td className="px-4 py-2.5 text-gray-400 text-xs">{JSON.stringify(s.rules).slice(0, 60)}...</td>
+            <tr key={s.id} className="border-b border-edge/50">
+              <td className="px-4 py-2.5 text-primary">{s.name}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs">{s.description ?? '—'}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs">{JSON.stringify(s.rules).slice(0, 60)}...</td>
             </tr>
           ))}</tbody>
         </table>

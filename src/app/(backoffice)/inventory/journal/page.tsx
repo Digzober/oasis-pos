@@ -97,8 +97,8 @@ export default function InventoryJournalPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Inventory Journal</h1>
-        <button onClick={exportCsv} className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600">Export CSV</button>
+        <h1 className="text-xl font-bold text-primary">Inventory Journal</h1>
+        <button onClick={exportCsv} className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised">Export CSV</button>
       </div>
 
       {/* Search bar */}
@@ -110,31 +110,31 @@ export default function InventoryJournalPage() {
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             placeholder="Search by Package ID, Batch ID, or SKU..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 pr-8"
+            className="w-full bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted pr-8"
           />
           {searchInput && (
-            <button onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-sm">
+            <button onClick={clearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-secondary text-sm">
               ✕
             </button>
           )}
         </div>
-        <button onClick={handleSearch} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500">
+        <button onClick={handleSearch} className="px-4 py-2 bg-accent text-primary rounded-lg text-sm hover:bg-accent">
           Search
         </button>
       </div>
 
       {/* Filters row */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50" />
-        <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50" />
-        <select value={actionType} onChange={e => { setActionType(e.target.value); setPage(1) }} className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50">
+        <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary" />
+        <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary" />
+        <select value={actionType} onChange={e => { setActionType(e.target.value); setPage(1) }} className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary">
           <option value="">All Actions</option>
           {ACTION_TYPES.map(a => <option key={a} value={a}>{a.replace('_', ' ')}</option>)}
         </select>
         <select
           value={locationId}
           onChange={e => { setLocationId(e.target.value); setPage(1) }}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50"
+          className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary"
         >
           <option value="">All Locations</option>
           {locations.map(loc => (
@@ -146,41 +146,41 @@ export default function InventoryJournalPage() {
       </div>
 
       {search && (
-        <div className="mb-3 text-xs text-gray-400">
+        <div className="mb-3 text-xs text-secondary">
           Showing results for &quot;{search}&quot;
-          <button onClick={clearSearch} className="ml-2 text-emerald-400 hover:text-emerald-300">Clear</button>
+          <button onClick={clearSearch} className="ml-2 text-accent hover:text-accent">Clear</button>
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
-          <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+          <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Date/Time</th><th className="text-left px-4 py-3">Action</th>
             <th className="text-left px-4 py-3">Employee</th><th className="text-right px-4 py-3">Change</th>
             <th className="text-right px-4 py-3">New Qty</th><th className="text-left px-4 py-3">Reason</th>
           </tr></thead>
-          <tbody>{loading ? <tr><td colSpan={6} className="text-center py-8 text-gray-500">Loading...</td></tr>
-            : entries.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-gray-500">No journal entries</td></tr>
+          <tbody>{loading ? <tr><td colSpan={6} className="text-center py-8 text-muted">Loading...</td></tr>
+            : entries.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-muted">No journal entries</td></tr>
             : entries.map((e: J) => (
-            <tr key={e.id} className="border-b border-gray-700/50">
-              <td className="px-4 py-2.5 text-gray-300 text-xs">{new Date(e.timestamp).toLocaleString()}</td>
-              <td className="px-4 py-2.5"><span className="text-[10px] font-medium px-2 py-0.5 rounded bg-gray-700 text-gray-300 capitalize">{e.action?.replace('_', ' ')}</span></td>
-              <td className="px-4 py-2.5 text-gray-300">{e.employee_name}</td>
-              <td className={`px-4 py-2.5 text-right font-medium tabular-nums ${e.delta > 0 ? 'text-emerald-400' : e.delta < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+            <tr key={e.id} className="border-b border-edge/50">
+              <td className="px-4 py-2.5 text-secondary text-xs">{new Date(e.timestamp).toLocaleString()}</td>
+              <td className="px-4 py-2.5"><span className="text-[10px] font-medium px-2 py-0.5 rounded bg-raised text-secondary capitalize">{e.action?.replace('_', ' ')}</span></td>
+              <td className="px-4 py-2.5 text-secondary">{e.employee_name}</td>
+              <td className={`px-4 py-2.5 text-right font-medium tabular-nums ${e.delta > 0 ? 'text-accent' : e.delta < 0 ? 'text-danger' : 'text-secondary'}`}>
                 {e.delta != null ? (e.delta > 0 ? `+${e.delta}` : String(e.delta)) : '\u2014'}
               </td>
-              <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{e.new_quantity ?? '\u2014'}</td>
-              <td className="px-4 py-2.5 text-gray-400 text-xs truncate max-w-[200px]">{e.reason ?? e.notes ?? '\u2014'}</td>
+              <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{e.new_quantity ?? '\u2014'}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs truncate max-w-[200px]">{e.reason ?? e.notes ?? '\u2014'}</td>
             </tr>
           ))}</tbody>
         </table>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700">
-            <span className="text-xs text-gray-400">{total} entries</span>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-edge">
+            <span className="text-xs text-secondary">{total} entries</span>
             <div className="flex gap-1">
-              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40">Prev</button>
-              <span className="px-2 py-1 text-xs text-gray-400">{page} / {totalPages}</span>
-              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded disabled:opacity-40">Next</button>
+              <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40">Prev</button>
+              <span className="px-2 py-1 text-xs text-secondary">{page} / {totalPages}</span>
+              <button onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page >= totalPages} className="px-2 py-1 text-xs bg-raised text-secondary rounded disabled:opacity-40">Next</button>
             </div>
           </div>
         )}

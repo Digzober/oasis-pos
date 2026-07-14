@@ -24,25 +24,25 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-gray-900 flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-gray-700 border-t-emerald-400 rounded-full animate-spin" />
+      <div className="h-screen bg-bg flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-edge border-t-emerald-400 rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!session) {
     return (
-      <div className="h-screen bg-gray-900 flex items-center justify-center">
+      <div className="h-screen bg-bg flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-400 mb-4">Please log in to access the backoffice</p>
-          <a href="/login" className="text-emerald-400 hover:text-emerald-300">Go to Login</a>
+          <p className="text-secondary mb-4">Please log in to access the backoffice</p>
+          <a href="/login" className="text-accent hover:text-accent">Go to Login</a>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen bg-gray-900 flex flex-col overflow-hidden">
+    <div className="h-screen bg-bg flex flex-col overflow-hidden">
       <BackofficeHeader onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 min-h-0">
         <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />

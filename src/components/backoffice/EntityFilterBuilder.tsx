@@ -55,15 +55,15 @@ export default function EntityFilterBuilder({ value, onChange }: Props) {
   const selectedIds = currentTab ? value[currentTab.filterKey] as string[] : []
 
   return (
-    <div className="border border-gray-700 rounded-lg overflow-hidden">
+    <div className="border border-edge rounded-lg overflow-hidden">
       {/* Tabs */}
-      <div className="flex border-b border-gray-700 overflow-x-auto">
+      <div className="flex border-b border-edge overflow-x-auto">
         {TABS.map(t => {
           const count = (value[t.filterKey] as string[]).length
           return (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`px-3 py-2 text-xs whitespace-nowrap ${tab === t.key ? 'bg-gray-700 text-emerald-400' : 'text-gray-400 hover:bg-gray-700/50'}`}>
-              {t.label}{count > 0 && <span className="ml-1 bg-emerald-600 text-white px-1 rounded text-[10px]">{count}</span>}
+              className={`px-3 py-2 text-xs whitespace-nowrap ${tab === t.key ? 'bg-raised text-accent' : 'text-secondary hover:bg-raised/50'}`}>
+              {t.label}{count > 0 && <span className="ml-1 bg-accent text-primary px-1 rounded text-[10px]">{count}</span>}
             </button>
           )
         })}
@@ -72,12 +72,12 @@ export default function EntityFilterBuilder({ value, onChange }: Props) {
       {/* Content */}
       <div className="p-3 max-h-48 overflow-y-auto">
         {currentItems.length === 0 ? (
-          <p className="text-gray-500 text-xs">No options available</p>
+          <p className="text-muted text-xs">No options available</p>
         ) : (
           <div className="space-y-1">
             {currentItems.map(item => (
-              <label key={item.id} className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer hover:text-gray-50">
-                <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => currentTab && toggleItem(currentTab.filterKey, item.id)} className="rounded border-gray-600" />
+              <label key={item.id} className="flex items-center gap-2 text-sm text-secondary cursor-pointer hover:text-primary">
+                <input type="checkbox" checked={selectedIds.includes(item.id)} onChange={() => currentTab && toggleItem(currentTab.filterKey, item.id)} className="rounded border-edge-strong" />
                 {item.name}
               </label>
             ))}
@@ -91,9 +91,9 @@ export default function EntityFilterBuilder({ value, onChange }: Props) {
           {selectedIds.map(id => {
             const item = currentItems.find(i => i.id === id)
             return (
-              <span key={id} className="inline-flex items-center gap-1 text-[10px] bg-emerald-600/20 text-emerald-400 px-1.5 py-0.5 rounded">
+              <span key={id} className="inline-flex items-center gap-1 text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded">
                 {item?.name ?? id}
-                <button onClick={() => currentTab && toggleItem(currentTab.filterKey, id)} className="hover:text-red-400">×</button>
+                <button onClick={() => currentTab && toggleItem(currentTab.filterKey, id)} className="hover:text-danger">×</button>
               </span>
             )
           })}

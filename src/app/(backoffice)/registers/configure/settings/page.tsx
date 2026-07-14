@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 const TABS = [
   { label: 'Guestlist Status', href: '/registers/configure/guestlist' },
@@ -57,15 +57,15 @@ export default function TransactionSettingsPage() {
   return (
     <div>
       {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-gray-700 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-edge mb-6 overflow-x-auto">
         {TABS.map(tab => (
           <Link
             key={tab.href}
             href={tab.href}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               pathname === tab.href
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -73,23 +73,23 @@ export default function TransactionSettingsPage() {
         ))}
       </div>
 
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Transaction Settings</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Transaction Settings</h1>
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted">Loading...</p>
       ) : (
         <>
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 mb-6">
+          <div className="bg-surface border border-edge rounded-xl p-5 mb-6">
             <label className="flex items-center gap-3 cursor-pointer mb-4">
               <input
                 type="checkbox"
                 checked={restrictTransactions}
                 onChange={e => setRestrictTransactions(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                className="w-4 h-4 rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
               />
               <div>
-                <span className="text-sm font-medium text-gray-50">Restrict Transactions</span>
-                <p className="text-xs text-gray-400 mt-0.5">Prevent transactions outside specified hours</p>
+                <span className="text-sm font-medium text-primary">Restrict Transactions</span>
+                <p className="text-xs text-secondary mt-0.5">Prevent transactions outside specified hours</p>
               </div>
             </label>
 
@@ -117,7 +117,7 @@ export default function TransactionSettingsPage() {
             )}
           </div>
 
-          <button onClick={save} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+          <button onClick={save} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
             {saving ? 'Saving...' : 'Save'}
           </button>
         </>

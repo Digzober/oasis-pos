@@ -4,10 +4,10 @@ import { useState } from 'react'
 import BaseActionModal from './BaseActionModal'
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 const selectCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface SourceItem {
   id: string
@@ -86,44 +86,44 @@ export default function CombineModal({
     >
       <div className="space-y-6">
         {validationError && (
-          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3">
-            <p className="text-sm text-red-400">{validationError}</p>
+          <div className="bg-danger/30 border border-danger rounded-lg p-3">
+            <p className="text-sm text-danger">{validationError}</p>
           </div>
         )}
 
         {/* FROM section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
             Source Packages
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-700">
-                  <th className="text-left py-2 px-2 text-xs font-medium text-gray-400 uppercase">
+                <tr className="border-b border-edge">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-secondary uppercase">
                     Package ID
                   </th>
-                  <th className="text-left py-2 px-2 text-xs font-medium text-gray-400 uppercase">
+                  <th className="text-left py-2 px-2 text-xs font-medium text-secondary uppercase">
                     Product
                   </th>
-                  <th className="text-right py-2 px-2 text-xs font-medium text-gray-400 uppercase">
+                  <th className="text-right py-2 px-2 text-xs font-medium text-secondary uppercase">
                     Available
                   </th>
-                  <th className="text-right py-2 px-2 text-xs font-medium text-gray-400 uppercase">
+                  <th className="text-right py-2 px-2 text-xs font-medium text-secondary uppercase">
                     Qty to Combine
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {sourceItems.map((item) => (
-                  <tr key={item.id} className="border-b border-gray-700/50">
-                    <td className="py-2 px-2 text-gray-300 font-mono text-xs">
+                  <tr key={item.id} className="border-b border-edge/50">
+                    <td className="py-2 px-2 text-secondary font-mono text-xs">
                       {item.packageId ?? 'N/A'}
                     </td>
-                    <td className="py-2 px-2 text-gray-200">
+                    <td className="py-2 px-2 text-primary">
                       {item.productName}
                     </td>
-                    <td className="py-2 px-2 text-right text-gray-400">
+                    <td className="py-2 px-2 text-right text-secondary">
                       {item.quantity}
                     </td>
                     <td className="py-2 px-2 text-right">
@@ -136,7 +136,7 @@ export default function CombineModal({
                         min={0}
                         max={item.quantity}
                         step="any"
-                        className="w-24 h-8 px-2 bg-gray-900 border border-gray-600 rounded text-sm text-gray-50 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="w-24 h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary text-right focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                       />
                     </td>
                   </tr>
@@ -148,7 +148,7 @@ export default function CombineModal({
 
         {/* TO section */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
             Target Package
           </h3>
           <div>

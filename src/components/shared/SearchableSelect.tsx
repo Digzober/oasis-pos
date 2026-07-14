@@ -39,39 +39,39 @@ export function SearchableSelect({
   return (
     <div className="relative">
       <button type="button" onClick={() => !disabled && setOpen(!open)} disabled={disabled}
-        className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-left flex items-center justify-between text-gray-50 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-        <span className={selectedOption ? 'text-gray-50' : 'text-gray-500'}>{selectedOption?.label ?? placeholder}</span>
-        <span className="text-gray-500 text-xs">▾</span>
+        className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-left flex items-center justify-between text-primary disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent">
+        <span className={selectedOption ? 'text-primary' : 'text-muted'}>{selectedOption?.label ?? placeholder}</span>
+        <span className="text-muted text-xs">▾</span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-60 overflow-hidden flex flex-col">
-            <div className="p-2 border-b border-gray-700">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-edge rounded-lg shadow-xl z-50 max-h-60 overflow-hidden flex flex-col">
+            <div className="p-2 border-b border-edge">
               <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder}
-                className="w-full h-8 px-2 bg-gray-900 border border-gray-600 rounded text-sm text-gray-50 focus:outline-none" />
+                className="w-full h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary focus:outline-none" />
             </div>
             <div className="overflow-y-auto flex-1">
-              {loading ? <p className="p-3 text-gray-500 text-xs">Loading...</p>
+              {loading ? <p className="p-3 text-muted text-xs">Loading...</p>
                 : filtered.length === 0 ? (
                   <div className="p-3">
-                    <p className="text-gray-500 text-xs">{emptyMessage}</p>
+                    <p className="text-muted text-xs">{emptyMessage}</p>
                     {allowCreate && query && (
                       <button onClick={() => { onCreateNew?.(query); setOpen(false); setQuery('') }}
-                        className="mt-1 text-xs text-emerald-400 hover:text-emerald-300">+ {createLabel} &quot;{query}&quot;</button>
+                        className="mt-1 text-xs text-accent hover:text-accent">+ {createLabel} &quot;{query}&quot;</button>
                     )}
                   </div>
                 ) : filtered.map((opt) => (
                   <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); setQuery('') }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 ${opt.value === value ? 'text-emerald-400' : 'text-gray-300'}`}>
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-raised ${opt.value === value ? 'text-accent' : 'text-secondary'}`}>
                     {opt.label}
-                    {opt.description && <span className="text-xs text-gray-500 ml-2">{opt.description}</span>}
+                    {opt.description && <span className="text-xs text-muted ml-2">{opt.description}</span>}
                   </button>
                 ))}
               {allowCreate && query && filtered.length > 0 && (
                 <button onClick={() => { onCreateNew?.(query); setOpen(false); setQuery('') }}
-                  className="w-full text-left px-3 py-2 text-xs text-emerald-400 hover:bg-gray-700 border-t border-gray-700">+ {createLabel} &quot;{query}&quot;</button>
+                  className="w-full text-left px-3 py-2 text-xs text-accent hover:bg-raised border-t border-edge">+ {createLabel} &quot;{query}&quot;</button>
               )}
             </div>
           </div>

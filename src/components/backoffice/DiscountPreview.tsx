@@ -46,10 +46,10 @@ export default function DiscountPreview(props: Props) {
   parts.push(props.isStackable ? 'Stacks with other discounts' : 'Does not stack')
 
   return (
-    <div className="bg-gray-900 rounded-lg p-3 text-sm text-gray-300">
-      <p className="font-medium text-gray-50 mb-1">{props.name || 'Untitled Discount'}</p>
+    <div className="bg-bg rounded-lg p-3 text-sm text-secondary">
+      <p className="font-medium text-primary mb-1">{props.name || 'Untitled Discount'}</p>
       <p>{parts.filter(Boolean).join('. ')}.</p>
-      <p className="text-xs text-gray-500 mt-1 capitalize">Type: {props.applicationMethod || 'automatic'}</p>
+      <p className="text-xs text-muted mt-1 capitalize">Type: {props.applicationMethod || 'automatic'}</p>
     </div>
   )
 }

@@ -5,57 +5,57 @@ import Link from 'next/link'
 
 /* ── style constants ─────────────────────────────────────── */
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
-const sectionCls = 'bg-gray-800 rounded-xl border border-gray-700 p-6'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
+const sectionCls = 'bg-surface rounded-xl border border-edge p-6'
 
 /* ── badge helpers ───────────────────────────────────────── */
 function statusBadge(s: string) {
   switch (s) {
     case 'draft':
-      return { cls: 'bg-gray-700 text-gray-300', label: 'Draft' }
+      return { cls: 'bg-raised text-secondary', label: 'Draft' }
     case 'active':
-      return { cls: 'bg-emerald-900/50 text-emerald-400', label: 'Active' }
+      return { cls: 'bg-accent/50 text-accent', label: 'Active' }
     case 'sent':
-      return { cls: 'bg-blue-900/50 text-blue-400', label: 'Sent' }
+      return { cls: 'bg-info/50 text-info', label: 'Sent' }
     case 'paused':
-      return { cls: 'bg-amber-900/50 text-amber-400', label: 'Paused' }
+      return { cls: 'bg-warning/50 text-warning', label: 'Paused' }
     case 'archived':
-      return { cls: 'bg-gray-700 text-gray-500', label: 'Archived' }
+      return { cls: 'bg-raised text-muted', label: 'Archived' }
     default:
-      return { cls: 'bg-gray-700 text-gray-300', label: s }
+      return { cls: 'bg-raised text-secondary', label: s }
   }
 }
 
 function channelBadge(ch: string) {
   switch (ch) {
     case 'email':
-      return { cls: 'bg-blue-900/50 text-blue-400', label: 'Email' }
+      return { cls: 'bg-info/50 text-info', label: 'Email' }
     case 'sms':
-      return { cls: 'bg-purple-900/50 text-purple-400', label: 'SMS' }
+      return { cls: 'bg-info/50 text-info', label: 'SMS' }
     default:
-      return { cls: 'bg-gray-700 text-gray-300', label: ch }
+      return { cls: 'bg-raised text-secondary', label: ch }
   }
 }
 
 function recipientStatusBadge(s: string) {
   switch (s) {
     case 'delivered':
-      return 'bg-emerald-900/50 text-emerald-400'
+      return 'bg-accent/50 text-accent'
     case 'opened':
-      return 'bg-blue-900/50 text-blue-400'
+      return 'bg-info/50 text-info'
     case 'clicked':
-      return 'bg-purple-900/50 text-purple-400'
+      return 'bg-info/50 text-info'
     case 'bounced':
-      return 'bg-amber-900/50 text-amber-400'
+      return 'bg-warning/50 text-warning'
     case 'failed':
-      return 'bg-red-900/50 text-red-400'
+      return 'bg-danger/50 text-danger'
     case 'unsubscribed':
-      return 'bg-gray-700 text-gray-400'
+      return 'bg-raised text-secondary'
     case 'sent':
-      return 'bg-gray-700 text-gray-300'
+      return 'bg-raised text-secondary'
     default:
-      return 'bg-gray-700 text-gray-300'
+      return 'bg-raised text-secondary'
   }
 }
 
@@ -136,12 +136,12 @@ export default function CampaignDetailPage({
 
   if (loading) {
     return (
-      <div className="text-gray-500 text-center py-20">Loading campaign...</div>
+      <div className="text-muted text-center py-20">Loading campaign...</div>
     )
   }
   if (!campaign) {
     return (
-      <div className="text-gray-500 text-center py-20">Campaign not found</div>
+      <div className="text-muted text-center py-20">Campaign not found</div>
     )
   }
 
@@ -154,12 +154,12 @@ export default function CampaignDetailPage({
   ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-50">
+    <div className="min-h-screen bg-bg text-primary">
       {/* header */}
       <div className="flex items-center gap-3 mb-1">
         <Link
           href="/marketing/campaigns"
-          className="text-gray-400 hover:text-gray-200 transition-colors"
+          className="text-secondary hover:text-primary transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -189,15 +189,15 @@ export default function CampaignDetailPage({
       </div>
 
       {/* tabs */}
-      <div className="flex gap-1 border-b border-gray-700 mb-6 mt-4">
+      <div className="flex gap-1 border-b border-edge mb-6 mt-4">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
-                ? 'text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'text-accent border-b-2 border-accent'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             {t.label}
@@ -251,13 +251,13 @@ function OverviewTab({ id }: { id: string }) {
   }, [id])
 
   if (loading) {
-    return <div className="text-gray-500 text-center py-12">Loading analytics...</div>
+    return <div className="text-muted text-center py-12">Loading analytics...</div>
   }
 
   if (!analytics) {
     return (
       <div className={sectionCls}>
-        <p className="text-gray-500 text-center py-8">No analytics data yet</p>
+        <p className="text-muted text-center py-8">No analytics data yet</p>
       </div>
     )
   }
@@ -299,17 +299,17 @@ function OverviewTab({ id }: { id: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {metrics.map((m) => (
           <div key={m.label} className={sectionCls}>
-            <p className="text-xs font-medium text-gray-400 uppercase mb-1">
+            <p className="text-xs font-medium text-secondary uppercase mb-1">
               {m.label}
             </p>
-            <p className="text-2xl font-bold text-gray-50">{m.value}</p>
+            <p className="text-2xl font-bold text-primary">{m.value}</p>
           </div>
         ))}
       </div>
 
       {/* campaign funnel */}
       <div className={sectionCls}>
-        <h3 className="text-sm font-semibold text-gray-300 uppercase mb-4">
+        <h3 className="text-sm font-semibold text-secondary uppercase mb-4">
           Campaign Funnel
         </h3>
         <div className="space-y-3">
@@ -319,26 +319,26 @@ function OverviewTab({ id }: { id: string }) {
             return (
               <div key={step.label}>
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-300">{step.label}</span>
-                  <span className="text-gray-400 tabular-nums">
+                  <span className="text-secondary">{step.label}</span>
+                  <span className="text-secondary tabular-nums">
                     {step.count.toLocaleString()} ({pct}%)
                   </span>
                 </div>
-                <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-3 bg-raised rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{
                       width: barWidth,
                       backgroundColor:
                         i === 0
-                          ? '#10b981'
+                      ? 'var(--chart-1)'
                           : i === 1
-                            ? '#3b82f6'
+                        ? 'var(--chart-6)'
                             : i === 2
-                              ? '#8b5cf6'
+                          ? 'var(--chart-4)'
                               : i === 3
-                                ? '#f59e0b'
-                                : '#ec4899',
+                            ? 'var(--chart-3)'
+                            : 'var(--chart-5)',
                     }}
                   />
                 </div>
@@ -404,13 +404,13 @@ function ContentTab({
       {/* campaign settings */}
       <div className={sectionCls}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-300 uppercase">
+          <h3 className="text-sm font-semibold text-secondary uppercase">
             Campaign Settings
           </h3>
           {!editing ? (
             <button
               onClick={() => setEditing(true)}
-              className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+              className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
             >
               Edit
             </button>
@@ -418,14 +418,14 @@ function ContentTab({
             <div className="flex gap-2">
               <button
                 onClick={() => setEditing(false)}
-                className="text-sm px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                className="text-sm px-3 py-1.5 bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>
@@ -445,7 +445,7 @@ function ContentTab({
                   }
                 />
               ) : (
-                <p className="text-sm text-gray-200 h-10 flex items-center">
+                <p className="text-sm text-primary h-10 flex items-center">
                   {form[f.key] || '—'}
                 </p>
               )}
@@ -454,7 +454,7 @@ function ContentTab({
           {/* read-only fields */}
           <div>
             <label className={labelCls}>Send To</label>
-            <p className="text-sm text-gray-200 h-10 flex items-center">
+            <p className="text-sm text-primary h-10 flex items-center">
               {campaign.send_to_segments?.length
                 ? campaign.send_to_segments.join(', ')
                 : '—'}
@@ -462,7 +462,7 @@ function ContentTab({
           </div>
           <div>
             <label className={labelCls}>Template Name</label>
-            <p className="text-sm text-gray-200 h-10 flex items-center">
+            <p className="text-sm text-primary h-10 flex items-center">
               {campaign.template_name || '—'}
             </p>
           </div>
@@ -472,16 +472,16 @@ function ContentTab({
       {/* html content preview */}
       <div className={sectionCls}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-300 uppercase">
+          <h3 className="text-sm font-semibold text-secondary uppercase">
             Email Preview
           </h3>
-          <div className="flex rounded-lg overflow-hidden border border-gray-600">
+          <div className="flex rounded-lg overflow-hidden border border-edge-strong">
             <button
               onClick={() => setPreviewWidth('desktop')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
                 previewWidth === 'desktop'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:text-gray-200'
+                  ? 'bg-accent text-primary'
+                  : 'bg-raised text-secondary hover:text-primary'
               }`}
             >
               Desktop
@@ -490,8 +490,8 @@ function ContentTab({
               onClick={() => setPreviewWidth('mobile')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
                 previewWidth === 'mobile'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-700 text-gray-400 hover:text-gray-200'
+                  ? 'bg-accent text-primary'
+                  : 'bg-raised text-secondary hover:text-primary'
               }`}
             >
               Mobile
@@ -501,7 +501,7 @@ function ContentTab({
         {campaign.html_content ? (
           <div className="flex justify-center">
             <div
-              className="bg-white rounded-lg overflow-hidden transition-all duration-300"
+              className="bg-surface rounded-lg overflow-hidden transition-all duration-300"
               style={{
                 width: previewWidth === 'desktop' ? 640 : 375,
                 minHeight: 400,
@@ -513,7 +513,7 @@ function ContentTab({
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-muted text-center py-8">
             No email content to preview
           </p>
         )}
@@ -565,7 +565,7 @@ function RecipientsTab({ id }: { id: string }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Email</th>
               <th className="text-center px-4 py-3">Status</th>
@@ -578,13 +578,13 @@ function RecipientsTab({ id }: { id: string }) {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-gray-500">
+                <td colSpan={7} className="text-center py-8 text-muted">
                   Loading...
                 </td>
               </tr>
             ) : recipients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-8 text-gray-500">
+                <td colSpan={7} className="text-center py-8 text-muted">
                   No recipients found
                 </td>
               </tr>
@@ -592,10 +592,10 @@ function RecipientsTab({ id }: { id: string }) {
               recipients.map((r) => (
                 <tr
                   key={r.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                  className="border-b border-edge/50 hover:bg-raised/30 transition-colors"
                 >
-                  <td className="px-4 py-2.5 text-gray-200">{r.name}</td>
-                  <td className="px-4 py-2.5 text-gray-400">{r.email}</td>
+                  <td className="px-4 py-2.5 text-primary">{r.name}</td>
+                  <td className="px-4 py-2.5 text-secondary">{r.email}</td>
                   <td className="px-4 py-2.5 text-center">
                     <span
                       className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${recipientStatusBadge(r.status)}`}
@@ -603,16 +603,16 @@ function RecipientsTab({ id }: { id: string }) {
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs tabular-nums">
+                  <td className="px-4 py-2.5 text-secondary text-xs tabular-nums">
                     {fmtDate(r.sent_at)}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs tabular-nums">
+                  <td className="px-4 py-2.5 text-secondary text-xs tabular-nums">
                     {fmtDate(r.opened_at)}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs tabular-nums">
+                  <td className="px-4 py-2.5 text-secondary text-xs tabular-nums">
                     {fmtDate(r.clicked_at)}
                   </td>
-                  <td className="px-4 py-2.5 text-right text-gray-200 tabular-nums">
+                  <td className="px-4 py-2.5 text-right text-primary tabular-nums">
                     ${r.revenue_attributed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -624,8 +624,8 @@ function RecipientsTab({ id }: { id: string }) {
 
       {/* pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-          <p className="text-xs text-gray-400">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-edge">
+          <p className="text-xs text-secondary">
             Showing {(page - 1) * PAGE_SIZE + 1}–
             {Math.min(page * PAGE_SIZE, total)} of {total}
           </p>
@@ -633,7 +633,7 @@ function RecipientsTab({ id }: { id: string }) {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-40 transition-colors"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded hover:bg-raised disabled:opacity-40 transition-colors"
             >
               Prev
             </button>
@@ -654,8 +654,8 @@ function RecipientsTab({ id }: { id: string }) {
                   onClick={() => setPage(pageNum)}
                   className={`px-3 py-1 text-xs rounded transition-colors ${
                     page === pageNum
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      ? 'bg-accent text-primary'
+                      : 'bg-raised text-secondary hover:bg-raised'
                   }`}
                 >
                   {pageNum}
@@ -665,7 +665,7 @@ function RecipientsTab({ id }: { id: string }) {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 disabled:opacity-40 transition-colors"
+              className="px-3 py-1 text-xs bg-raised text-secondary rounded hover:bg-raised disabled:opacity-40 transition-colors"
             >
               Next
             </button>

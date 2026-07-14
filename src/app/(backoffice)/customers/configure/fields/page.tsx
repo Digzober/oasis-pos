@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 type FieldVisibility = 'show' | 'hide' | 'required'
 
@@ -33,7 +33,7 @@ const TABS = [
 function ConfigureTabs() {
   const pathname = usePathname()
   return (
-    <nav className="flex gap-6 border-b border-gray-700 mb-6">
+    <nav className="flex gap-6 border-b border-edge mb-6">
       {TABS.map((tab) => {
         const isActive = pathname === tab.href
         return (
@@ -42,8 +42,8 @@ function ConfigureTabs() {
             href={tab.href}
             className={`pb-3 text-sm font-medium transition-colors ${
               isActive
-                ? 'text-emerald-400 border-b-2 border-emerald-400'
-                : 'text-gray-400 hover:text-gray-200'
+                ? 'text-accent border-b-2 border-accent'
+                : 'text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -201,25 +201,25 @@ export default function FieldsPage() {
   const selectCls = `${inputCls} appearance-none cursor-pointer`
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
-      <h1 className="text-2xl font-bold text-gray-50 mb-6">Customer Configuration</h1>
+    <div className="min-h-screen bg-bg p-6">
+      <h1 className="text-2xl font-bold text-primary mb-6">Customer Configuration</h1>
       <ConfigureTabs />
 
       {loading ? (
-        <div className="text-gray-400 text-sm py-8 text-center">Loading field configuration...</div>
+        <div className="text-secondary text-sm py-8 text-center">Loading field configuration...</div>
       ) : (
         <div className="space-y-4">
           {sections.map((section) => {
             const isCollapsed = collapsed[section.key]
             return (
-              <div key={section.key} className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+              <div key={section.key} className="bg-surface border border-edge rounded-lg overflow-hidden">
                 <button
                   onClick={() => toggleCollapse(section.key)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-750 transition-colors"
+                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-raised transition-colors"
                 >
-                  <span className="text-sm font-semibold text-gray-50">{section.title}</span>
+                  <span className="text-sm font-semibold text-primary">{section.title}</span>
                   <svg
-                    className={`w-4 h-4 text-gray-400 transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
+                    className={`w-4 h-4 text-secondary transition-transform ${isCollapsed ? '' : 'rotate-180'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -228,21 +228,21 @@ export default function FieldsPage() {
                   </svg>
                 </button>
                 {!isCollapsed && (
-                  <div className="border-t border-gray-700">
+                  <div className="border-t border-edge">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-700">
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase">Field</th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase w-40">Visibility</th>
+                        <tr className="border-b border-edge">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase">Field</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase w-40">Visibility</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-700">
+                      <tbody className="divide-y divide-edge">
                         {section.fields.map((field) => (
-                          <tr key={field.field_key} className="hover:bg-gray-750">
-                            <td className="px-4 py-2.5 text-gray-200">{field.label}</td>
+                          <tr key={field.field_key} className="hover:bg-raised">
+                            <td className="px-4 py-2.5 text-primary">{field.label}</td>
                             <td className="px-4 py-2.5">
                               {field.locked ? (
-                                <span className="inline-flex items-center px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-xs text-gray-400 cursor-not-allowed">
+                                <span className="inline-flex items-center px-3 py-1.5 bg-raised border border-edge-strong rounded-lg text-xs text-secondary cursor-not-allowed">
                                   Required
                                 </span>
                               ) : (
@@ -271,12 +271,12 @@ export default function FieldsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 text-sm font-medium text-primary bg-accent hover:bg-accent rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </button>
             {saved && (
-              <span className="text-sm text-emerald-400">Changes saved successfully.</span>
+              <span className="text-sm text-accent">Changes saved successfully.</span>
             )}
           </div>
         </div>

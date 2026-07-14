@@ -47,13 +47,13 @@ export default function AuditPackagesModal({
       submitDisabled={!name.trim()}
     >
       <div className="space-y-4">
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-secondary">
           {itemIds.length} package{itemIds.length !== 1 ? 's' : ''} selected
           for audit.
         </p>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Audit Name
           </label>
           <input
@@ -62,25 +62,25 @@ export default function AuditPackagesModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter audit name..."
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Workflow
           </label>
           <select
             value={workflow}
             onChange={(e) => setWorkflow(e.target.value)}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           >
             <option value="simple">Simple</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Blind Audit
           </label>
           <div className="flex gap-4">
@@ -90,9 +90,9 @@ export default function AuditPackagesModal({
                 name="blind"
                 checked={!blind}
                 onChange={() => setBlind(false)}
-                className="text-emerald-500 focus:ring-emerald-500 bg-gray-900 border-gray-600"
+                className="text-accent focus:ring-accent bg-bg border-edge-strong"
               />
-              <span className="text-sm text-gray-300">No</span>
+              <span className="text-sm text-secondary">No</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -100,21 +100,21 @@ export default function AuditPackagesModal({
                 name="blind"
                 checked={blind}
                 onChange={() => setBlind(true)}
-                className="text-emerald-500 focus:ring-emerald-500 bg-gray-900 border-gray-600"
+                className="text-accent focus:ring-accent bg-bg border-edge-strong"
               />
-              <span className="text-sm text-gray-300">Yes</span>
+              <span className="text-sm text-secondary">Yes</span>
             </label>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Type
           </label>
           <select
             value={auditType}
             onChange={(e) => setAuditType(e.target.value)}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
           >
             <option value="manual">Manual</option>
           </select>

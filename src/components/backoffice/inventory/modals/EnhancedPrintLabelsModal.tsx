@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import BaseActionModal from './BaseActionModal'
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 const selectCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface LabelTemplate {
   id: string
@@ -90,13 +90,13 @@ export default function EnhancedPrintLabelsModal({
     >
       <div className="space-y-4">
         {productName && (
-          <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-3">
-            <p className="text-sm text-gray-300">
-              <span className="text-gray-500">Product: </span>
+          <div className="bg-bg/50 border border-edge rounded-lg p-3">
+            <p className="text-sm text-secondary">
+              <span className="text-muted">Product: </span>
               {productName}
             </p>
-            <p className="text-sm text-gray-300 mt-1">
-              <span className="text-gray-500">Items: </span>
+            <p className="text-sm text-secondary mt-1">
+              <span className="text-muted">Items: </span>
               {itemIds.length}
             </p>
           </div>
@@ -105,7 +105,7 @@ export default function EnhancedPrintLabelsModal({
         <div>
           <label className={labelCls}>Label Template</label>
           {loading ? (
-            <div className={`${selectCls} flex items-center text-gray-500`}>
+            <div className={`${selectCls} flex items-center text-muted`}>
               Loading templates...
             </div>
           ) : (
@@ -138,7 +138,7 @@ export default function EnhancedPrintLabelsModal({
             min={1}
             className={inputCls}
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-muted mt-1">
             Total labels: {quantity * itemIds.length}
           </p>
         </div>

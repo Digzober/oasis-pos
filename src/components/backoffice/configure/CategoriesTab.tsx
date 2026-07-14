@@ -38,8 +38,8 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500'
-const selectCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent'
+const selectCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent'
 
 export default function CategoriesTab() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -154,40 +154,40 @@ export default function CategoriesTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-50">Product Categories</h2>
-        <button onClick={openNew} className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New Category</button>
+        <h2 className="text-lg font-semibold text-primary">Product Categories</h2>
+        <button onClick={openNew} className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New Category</button>
       </div>
 
       <div className="mb-4">
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search categories..."
-          className="w-full max-w-sm h-10 px-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-50 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="w-full max-w-sm h-10 px-3 bg-surface border border-edge rounded-lg text-primary text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
         />
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[85vh] overflow-y-auto">
-            <h2 className="text-lg font-semibold text-gray-50">{editId ? 'Edit' : 'New'} Category</h2>
+        <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+          <div className="bg-surface border border-edge rounded-2xl w-full max-w-lg p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-primary">{editId ? 'Edit' : 'New'} Category</h2>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Name *</span>
+              <span className="text-xs text-secondary">Name *</span>
               <input value={form.name} onChange={e => handleNameChange(e.target.value)} className={inputCls} />
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Slug</span>
+              <span className="text-xs text-secondary">Slug</span>
               <input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} className={inputCls} />
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Description</span>
+              <span className="text-xs text-secondary">Description</span>
               <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} className={inputCls + ' h-auto py-2'} />
             </label>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Master Category</span>
+              <span className="text-xs text-secondary">Master Category</span>
               <input
                 list="master-categories" value={form.master_category}
                 onChange={e => setForm(p => ({ ...p, master_category: e.target.value }))}
@@ -200,14 +200,14 @@ export default function CategoriesTab() {
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-xs text-gray-400">Tax Category *</span>
+                <span className="text-xs text-secondary">Tax Category *</span>
                 <select value={form.tax_category} onChange={e => setForm(p => ({ ...p, tax_category: e.target.value }))} className={selectCls}>
                   {TAX_CATEGORIES.map(tc => <option key={tc} value={tc}>{tc}</option>)}
                 </select>
               </label>
 
               <label className="block">
-                <span className="text-xs text-gray-400">Purchase Limit Category</span>
+                <span className="text-xs text-secondary">Purchase Limit Category</span>
                 <select value={form.purchase_limit_category} onChange={e => setForm(p => ({ ...p, purchase_limit_category: e.target.value }))} className={selectCls}>
                   <option value="">None</option>
                   {PURCHASE_LIMIT_CATEGORIES.map(plc => <option key={plc} value={plc}>{plc}</option>)}
@@ -217,21 +217,21 @@ export default function CategoriesTab() {
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-xs text-gray-400">Available For *</span>
+                <span className="text-xs text-secondary">Available For *</span>
                 <select value={form.available_for} onChange={e => setForm(p => ({ ...p, available_for: e.target.value }))} className={selectCls}>
                   {AVAILABLE_FOR_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </label>
 
               <label className="block">
-                <span className="text-xs text-gray-400">Sort Order</span>
+                <span className="text-xs text-secondary">Sort Order</span>
                 <input type="number" value={form.sort_order} onChange={e => setForm(p => ({ ...p, sort_order: e.target.value }))} className={inputCls} />
               </label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="text-xs text-gray-400">Regulatory Category</span>
+                <span className="text-xs text-secondary">Regulatory Category</span>
                 <select value={form.regulatory_category} onChange={e => setForm(p => ({ ...p, regulatory_category: e.target.value }))} className={selectCls}>
                   <option value="">None</option>
                   {REGULATORY_CATEGORIES.map(rc => <option key={rc} value={rc}>{rc}</option>)}
@@ -239,13 +239,13 @@ export default function CategoriesTab() {
               </label>
 
               <label className="block">
-                <span className="text-xs text-gray-400">Default Flower Equivalent (g)</span>
+                <span className="text-xs text-secondary">Default Flower Equivalent (g)</span>
                 <input type="number" step="0.001" min="0" value={form.default_flower_equivalent} onChange={e => setForm(p => ({ ...p, default_flower_equivalent: e.target.value }))} className={inputCls} placeholder="0.000" />
               </label>
             </div>
 
             <label className="block">
-              <span className="text-xs text-gray-400">Parent Category</span>
+              <span className="text-xs text-secondary">Parent Category</span>
               <select value={form.parent_id} onChange={e => setForm(p => ({ ...p, parent_id: e.target.value }))} className={selectCls}>
                 <option value="">None (top-level)</option>
                 {categories.filter(c => c.id !== editId).map(c => (
@@ -256,24 +256,24 @@ export default function CategoriesTab() {
 
             {editId && (
               <label className="flex items-center gap-2">
-                <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} className="rounded border-gray-600 text-emerald-500 focus:ring-emerald-500" />
-                <span className="text-sm text-gray-300">Active</span>
+                <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} className="rounded border-edge-strong text-accent focus:ring-accent" />
+                <span className="text-sm text-secondary">Active</span>
               </label>
             )}
 
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-danger text-sm">{error}</p>}
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowForm(false)} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Cancel</button>
-              <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+              <button onClick={() => setShowForm(false)} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm">Cancel</button>
+              <button onClick={handleSave} disabled={saving} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>
               <th className="text-left px-4 py-3">Master Category</th>
               <th className="text-left px-4 py-3">Tax</th>
@@ -285,29 +285,29 @@ export default function CategoriesTab() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="text-center py-8 text-gray-500">Loading...</td></tr>
+              <tr><td colSpan={7} className="text-center py-8 text-muted">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-8 text-gray-500">{search ? 'No matching categories' : 'No categories found'}</td></tr>
+              <tr><td colSpan={7} className="text-center py-8 text-muted">{search ? 'No matching categories' : 'No categories found'}</td></tr>
             ) : filtered.map(cat => (
-              <tr key={cat.id} className="border-b border-gray-700/50 hover:bg-gray-750">
+              <tr key={cat.id} className="border-b border-edge/50 hover:bg-raised">
                 <td className="px-4 py-2.5">
-                  <span className="text-gray-50">{cat.name}</span>
-                  {cat.parent && <span className="text-gray-500 text-xs ml-2">({cat.parent.name})</span>}
+                  <span className="text-primary">{cat.name}</span>
+                  {cat.parent && <span className="text-muted text-xs ml-2">({cat.parent.name})</span>}
                 </td>
-                <td className="px-4 py-2.5 text-gray-400">{cat.master_category ?? '\u2014'}</td>
-                <td className="px-4 py-2.5 text-gray-400">{cat.tax_category}</td>
-                <td className="px-4 py-2.5 text-gray-400">{cat.purchase_limit_category ?? '\u2014'}</td>
+                <td className="px-4 py-2.5 text-secondary">{cat.master_category ?? '\u2014'}</td>
+                <td className="px-4 py-2.5 text-secondary">{cat.tax_category}</td>
+                <td className="px-4 py-2.5 text-secondary">{cat.purchase_limit_category ?? '\u2014'}</td>
                 <td className="px-4 py-2.5">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    cat.available_for === 'all' ? 'bg-gray-700 text-gray-300' :
-                    cat.available_for === 'medical' ? 'bg-blue-900/50 text-blue-300' :
-                    'bg-emerald-900/50 text-emerald-300'
+                    cat.available_for === 'all' ? 'bg-raised text-secondary' :
+                    cat.available_for === 'medical' ? 'bg-info/50 text-info' :
+                    'bg-accent/50 text-accent'
                   }`}>{availableForLabel(cat.available_for)}</span>
                 </td>
-                <td className="px-4 py-2.5 text-center text-gray-400 tabular-nums">{cat.sort_order}</td>
+                <td className="px-4 py-2.5 text-center text-secondary tabular-nums">{cat.sort_order}</td>
                 <td className="px-4 py-2.5 text-right">
-                  <button onClick={() => openEdit(cat)} className="text-xs text-gray-400 hover:text-emerald-400 mr-3">Edit</button>
-                  <button onClick={() => handleDeactivate(cat.id)} className="text-xs text-gray-400 hover:text-red-400">Remove</button>
+                  <button onClick={() => openEdit(cat)} className="text-xs text-secondary hover:text-accent mr-3">Edit</button>
+                  <button onClick={() => handleDeactivate(cat.id)} className="text-xs text-secondary hover:text-danger">Remove</button>
                 </td>
               </tr>
             ))}

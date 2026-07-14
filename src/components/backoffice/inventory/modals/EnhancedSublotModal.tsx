@@ -5,10 +5,10 @@ import BaseActionModal from './BaseActionModal'
 import { SearchableSelect } from '@/components/shared/SearchableSelect'
 
 const inputCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
-const labelCls = 'block text-xs font-medium text-gray-400 uppercase mb-1'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
+const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 const selectCls =
-  'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+  'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface SublotRow {
   package_id: string
@@ -158,26 +158,26 @@ export default function EnhancedSublotModal({
     >
       <div className="space-y-5">
         {/* Source info */}
-        <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-4 space-y-2">
+        <div className="bg-bg/50 border border-edge rounded-lg p-4 space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Product</span>
-            <span className="text-gray-200">{productName}</span>
+            <span className="text-secondary">Product</span>
+            <span className="text-primary">{productName}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Package ID</span>
-            <span className="text-gray-200 font-mono text-xs">
+            <span className="text-secondary">Package ID</span>
+            <span className="text-primary font-mono text-xs">
               {packageId ?? 'N/A'}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-gray-400">Available Quantity</span>
-            <span className="text-gray-200">{currentQty}</span>
+            <span className="text-secondary">Available Quantity</span>
+            <span className="text-primary">{currentQty}</span>
           </div>
         </div>
 
         {/* Configuration */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">
             Configuration
           </h3>
           <div className="grid grid-cols-2 gap-3">
@@ -208,7 +208,7 @@ export default function EnhancedSublotModal({
                 <button
                   type="button"
                   onClick={applyCostDefault}
-                  className="shrink-0 px-3 h-10 text-xs font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                  className="shrink-0 px-3 h-10 text-xs font-medium bg-raised text-secondary rounded-lg hover:bg-raised transition-colors"
                 >
                   Apply
                 </button>
@@ -245,9 +245,9 @@ export default function EnhancedSublotModal({
             type="checkbox"
             checked={bypassBiotrack}
             onChange={(e) => setBypassBiotrack(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-600 bg-gray-900 text-emerald-600 focus:ring-emerald-500"
+            className="h-4 w-4 rounded border-edge-strong bg-bg text-accent focus:ring-accent"
           />
-          <span className="text-sm text-gray-300">
+          <span className="text-sm text-secondary">
             Bypass state system (use internal UUIDs)
           </span>
         </label>
@@ -258,7 +258,7 @@ export default function EnhancedSublotModal({
             type="button"
             onClick={generateAllPackageIds}
             disabled={generating}
-            className="px-3 py-1.5 text-xs font-medium bg-emerald-700 text-emerald-100 rounded-lg hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+            className="px-3 py-1.5 text-xs font-medium bg-accent text-accent rounded-lg hover:bg-accent disabled:opacity-50 transition-colors"
           >
             {generating ? 'Generating...' : 'Generate All Package IDs'}
           </button>
@@ -268,25 +268,25 @@ export default function EnhancedSublotModal({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-2 px-2 text-xs font-medium text-gray-400 uppercase w-12">
+              <tr className="border-b border-edge">
+                <th className="text-left py-2 px-2 text-xs font-medium text-secondary uppercase w-12">
                   #
                 </th>
-                <th className="text-left py-2 px-2 text-xs font-medium text-gray-400 uppercase">
+                <th className="text-left py-2 px-2 text-xs font-medium text-secondary uppercase">
                   Package ID
                 </th>
-                <th className="text-right py-2 px-2 text-xs font-medium text-gray-400 uppercase w-28">
+                <th className="text-right py-2 px-2 text-xs font-medium text-secondary uppercase w-28">
                   Quantity
                 </th>
-                <th className="text-right py-2 px-2 text-xs font-medium text-gray-400 uppercase w-28">
+                <th className="text-right py-2 px-2 text-xs font-medium text-secondary uppercase w-28">
                   Cost ($)
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, i) => (
-                <tr key={i} className="border-b border-gray-700/50">
-                  <td className="py-2 px-2 text-gray-400">{i + 1}</td>
+                <tr key={i} className="border-b border-edge/50">
+                  <td className="py-2 px-2 text-secondary">{i + 1}</td>
                   <td className="py-2 px-2">
                     <div className="flex gap-1">
                       <input
@@ -296,13 +296,13 @@ export default function EnhancedSublotModal({
                           updateRow(i, 'package_id', e.target.value)
                         }
                         placeholder="Package ID"
-                        className="flex-1 h-8 px-2 bg-gray-900 border border-gray-600 rounded text-xs text-gray-50 font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                        className="flex-1 h-8 px-2 bg-bg border border-edge-strong rounded text-xs text-primary font-mono focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                       />
                       {!bypassBiotrack && (
                         <button
                           type="button"
                           onClick={() => generateSinglePackageId(i)}
-                          className="shrink-0 px-2 h-8 text-xs bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
+                          className="shrink-0 px-2 h-8 text-xs bg-raised text-secondary rounded hover:bg-raised transition-colors"
                         >
                           Gen
                         </button>
@@ -318,7 +318,7 @@ export default function EnhancedSublotModal({
                       }
                       min={0}
                       step="any"
-                      className="w-full h-8 px-2 bg-gray-900 border border-gray-600 rounded text-sm text-gray-50 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary text-right focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                     />
                   </td>
                   <td className="py-2 px-2">
@@ -330,7 +330,7 @@ export default function EnhancedSublotModal({
                       }
                       min={0}
                       step="0.01"
-                      className="w-full h-8 px-2 bg-gray-900 border border-gray-600 rounded text-sm text-gray-50 text-right focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                      className="w-full h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary text-right focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                     />
                   </td>
                 </tr>
@@ -341,11 +341,11 @@ export default function EnhancedSublotModal({
 
         {/* Total row */}
         <div className="flex justify-between items-center text-sm px-2">
-          <span className="text-gray-400">
+          <span className="text-secondary">
             Total: {totalQty} / {currentQty}
           </span>
           {totalQty > currentQty && (
-            <span className="text-red-400">
+            <span className="text-danger">
               Exceeds available quantity by {(totalQty - currentQty).toFixed(3)}
             </span>
           )}

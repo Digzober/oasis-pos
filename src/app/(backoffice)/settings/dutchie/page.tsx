@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/utils/logger'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface DutchieConfig {
   isEnabled: boolean
@@ -302,37 +302,37 @@ export default function DutchieSettingsPage() {
   }
 
   const statusDot = connectionStatus === 'connected'
-    ? 'bg-emerald-500'
+    ? 'bg-accent'
     : connectionStatus === 'failed'
-      ? 'bg-red-500'
-      : 'bg-gray-500'
+      ? 'bg-danger'
+      : 'bg-overlay'
 
   return (
     <div className="max-w-4xl">
       <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Dutchie Integration</h1>
+        <h1 className="text-xl font-bold text-primary">Dutchie Integration</h1>
         <div className={`w-2.5 h-2.5 rounded-full ${statusDot}`} />
         {connectionInfo && (
-          <span className="text-sm text-gray-400">{connectionInfo}</span>
+          <span className="text-sm text-secondary">{connectionInfo}</span>
         )}
       </div>
 
       {msg && (
         <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${
           msg.type === 'ok'
-            ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700'
-            : 'bg-red-900/50 text-red-300 border border-red-700'
+            ? 'bg-accent/50 text-accent border border-accent'
+            : 'bg-danger/50 text-danger border border-danger'
         }`}>
           {msg.text}
         </div>
       )}
 
       {/* Section 1: Connection */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Connection</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Connection</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">API Key</label>
+            <label className="block text-xs text-secondary mb-1">API Key</label>
             <div className="relative">
               <input
                 type={showApiKey ? 'text' : 'password'}
@@ -344,7 +344,7 @@ export default function DutchieSettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-secondary hover:text-primary transition-colors"
               >
                 {showApiKey ? 'Hide' : 'Show'}
               </button>
@@ -355,13 +355,13 @@ export default function DutchieSettingsPage() {
             <button
               onClick={testConnection}
               disabled={testing || (!config.hasApiKey && !config.apiKey)}
-              className="px-4 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm bg-raised border border-edge-strong text-primary rounded-lg hover:bg-raised transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {testing && <span className="w-3.5 h-3.5 border-2 border-gray-400/30 border-t-gray-200 rounded-full animate-spin" />}
+              {testing && <span className="w-3.5 h-3.5 border-2 border-edge-strong/30 border-t-gray-200 rounded-full animate-spin" />}
               Test Connection
             </button>
             {connectionStatus === 'connected' && connectionInfo && (
-              <span className="text-sm text-emerald-400 flex items-center gap-1.5">
+              <span className="text-sm text-accent flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -369,7 +369,7 @@ export default function DutchieSettingsPage() {
               </span>
             )}
             {connectionStatus === 'failed' && (
-              <span className="text-sm text-red-400 flex items-center gap-1.5">
+              <span className="text-sm text-danger flex items-center gap-1.5">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -381,21 +381,21 @@ export default function DutchieSettingsPage() {
       </div>
 
       {/* Section 2: Sync Settings */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Sync Settings</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Sync Settings</h2>
         <div className="space-y-3">
           {ENTITY_TYPES.map(et => (
-            <div key={et.key} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
+            <div key={et.key} className="flex items-center justify-between py-2 border-b border-edge/50 last:border-0">
               <div className="flex-1">
-                <span className="text-sm font-medium text-gray-200">{et.label}</span>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <span className="text-sm font-medium text-primary">{et.label}</span>
+                <p className="text-xs text-muted mt-0.5">
                   Last synced: {relativeTime(config[et.tsKey])}
                 </p>
                 {et.key === 'loyalty' && (
                   <select
                     value={config.designatedLoyaltyLocationId ?? ''}
                     onChange={event => updateField('designatedLoyaltyLocationId', event.target.value || null)}
-                    className="mt-2 h-8 px-2 bg-gray-900 border border-gray-600 rounded text-xs text-gray-200"
+                    className="mt-2 h-8 px-2 bg-bg border border-edge-strong rounded text-xs text-primary"
                     aria-label="Designated loyalty sync location"
                   >
                     <option value="">Use first enabled location</option>
@@ -408,10 +408,10 @@ export default function DutchieSettingsPage() {
               <button
                 onClick={() => updateField(et.configKey, !config[et.configKey])}
                 className={`w-11 h-6 rounded-full transition-colors shrink-0 ${
-                  config[et.configKey] ? 'bg-emerald-600' : 'bg-gray-600'
+                  config[et.configKey] ? 'bg-accent' : 'bg-raised'
                 }`}
               >
-                <div className={`w-4 h-4 bg-white rounded-full mx-1 transition-transform ${
+                <div className={`w-4 h-4 bg-surface rounded-full mx-1 transition-transform ${
                   config[et.configKey] ? 'translate-x-5' : ''
                 }`} />
               </button>
@@ -419,30 +419,30 @@ export default function DutchieSettingsPage() {
           ))}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-edge">
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="px-5 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            {saving && <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            {saving && <span className="w-3.5 h-3.5 border-2 border-edge/30 border-t-white rounded-full animate-spin" />}
             Save Settings
           </button>
         </div>
       </div>
 
       {/* Section 3: Actions */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Actions</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Actions</h2>
 
         <div className="flex items-center gap-3 mb-4">
           <button
             onClick={() => runSync()}
             disabled={syncing}
-            className="px-5 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-5 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {syncing && syncingEntity === 'all' && (
-              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-2 border-edge/30 border-t-white rounded-full animate-spin" />
             )}
             Sync All
           </button>
@@ -454,10 +454,10 @@ export default function DutchieSettingsPage() {
               key={et.key}
               onClick={() => runSync([et.key])}
               disabled={syncing || !config[et.configKey]}
-              className="px-3 py-2 text-sm bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="px-3 py-2 text-sm bg-raised border border-edge-strong text-primary rounded-lg hover:bg-raised transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {syncing && syncingEntity === et.key && (
-                <span className="w-3 h-3 border-2 border-gray-400/30 border-t-gray-200 rounded-full animate-spin" />
+                <span className="w-3 h-3 border-2 border-edge-strong/30 border-t-gray-200 rounded-full animate-spin" />
               )}
               Sync {et.label}
             </button>
@@ -466,12 +466,12 @@ export default function DutchieSettingsPage() {
 
         {/* Sync Results */}
         {syncResults && syncResults.length > 0 && (
-          <div className="mt-4 bg-gray-900 border border-gray-700 rounded-lg p-4">
+          <div className="mt-4 bg-bg border border-edge rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-200">Sync Results</h3>
+              <h3 className="text-sm font-semibold text-primary">Sync Results</h3>
               <button
                 onClick={() => setSyncResults(null)}
-                className="text-xs text-gray-500 hover:text-gray-300"
+                className="text-xs text-muted hover:text-secondary"
               >
                 Dismiss
               </button>
@@ -479,16 +479,16 @@ export default function DutchieSettingsPage() {
             <div className="space-y-2">
               {syncResults.map(r => (
                 <div key={r.entityType} className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-50 font-medium min-w-[100px] capitalize">{r.entityType}</span>
+                  <span className="text-primary font-medium min-w-[100px] capitalize">{r.entityType}</span>
                   <div className="flex gap-4 text-xs">
-                    <div><span className="text-gray-500">Fetched:</span> <span className="text-gray-200 font-mono">{r.fetched}</span></div>
-                    <div><span className="text-gray-500">Created:</span> <span className="text-emerald-400 font-mono">{r.created}</span></div>
-                    <div><span className="text-gray-500">Updated:</span> <span className="text-blue-400 font-mono">{r.updated}</span></div>
-                    <div><span className="text-gray-500">Skipped:</span> <span className="text-gray-400 font-mono">{r.skipped}</span></div>
+                    <div><span className="text-muted">Fetched:</span> <span className="text-primary font-mono">{r.fetched}</span></div>
+                    <div><span className="text-muted">Created:</span> <span className="text-accent font-mono">{r.created}</span></div>
+                    <div><span className="text-muted">Updated:</span> <span className="text-info font-mono">{r.updated}</span></div>
+                    <div><span className="text-muted">Skipped:</span> <span className="text-secondary font-mono">{r.skipped}</span></div>
                     {r.errors > 0 && (
-                      <div><span className="text-gray-500">Errors:</span> <span className="text-red-400 font-mono">{r.errors}</span></div>
+                      <div><span className="text-muted">Errors:</span> <span className="text-danger font-mono">{r.errors}</span></div>
                     )}
-                    <div><span className="text-gray-500">Time:</span> <span className="text-gray-400 font-mono">{fmtDuration(r.duration)}</span></div>
+                    <div><span className="text-muted">Time:</span> <span className="text-secondary font-mono">{fmtDuration(r.duration)}</span></div>
                   </div>
                 </div>
               ))}
@@ -498,17 +498,17 @@ export default function DutchieSettingsPage() {
       </div>
 
       {/* Section 4: Sync History */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Sync History</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Sync History</h2>
         {syncLogs.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No sync history yet</p>
+            <p className="text-muted">No sync history yet</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-500 text-xs uppercase border-b border-gray-700">
+                <tr className="text-muted text-xs uppercase border-b border-edge">
                   <th className="text-left px-3 py-2">Entity</th>
                   <th className="text-left px-3 py-2">Type</th>
                   <th className="text-left px-3 py-2">Status</th>
@@ -519,41 +519,41 @@ export default function DutchieSettingsPage() {
               </thead>
               <tbody>
                 {syncLogs.map(log => (
-                  <tr key={log.id} className="border-b border-gray-700/30 hover:bg-gray-700/20">
-                    <td className="px-3 py-2 text-gray-300 capitalize">{log.entity_type}</td>
+                  <tr key={log.id} className="border-b border-edge/30 hover:bg-raised/20">
+                    <td className="px-3 py-2 text-secondary capitalize">{log.entity_type}</td>
                     <td className="px-3 py-2">
-                      <span className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300">{log.sync_type}</span>
+                      <span className="text-xs px-2 py-0.5 rounded bg-raised text-secondary">{log.sync_type}</span>
                     </td>
                     <td className="px-3 py-2">
                       <span className={`text-xs px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
                         log.status === 'completed'
-                          ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700'
+                          ? 'bg-accent/50 text-accent border-accent'
                           : log.status === 'running'
-                            ? 'bg-blue-900/50 text-blue-400 border-blue-700'
+                            ? 'bg-info/50 text-info border-info'
                             : log.status === 'failed'
-                              ? 'bg-red-900/50 text-red-400 border-red-700'
-                              : 'bg-gray-700 text-gray-400 border-gray-600'
+                              ? 'bg-danger/50 text-danger border-danger'
+                              : 'bg-raised text-secondary border-edge-strong'
                       }`}>
                         {log.status === 'running' && (
-                          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                          <span className="w-1.5 h-1.5 bg-info rounded-full animate-pulse" />
                         )}
                         {log.status}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-right text-gray-400 tabular-nums text-xs">
+                    <td className="px-3 py-2 text-right text-secondary tabular-nums text-xs">
                       {log.records_fetched != null && (
                         <span>
                           {log.records_fetched} fetched
                           {(log.records_created ?? 0) > 0 && `, ${log.records_created} new`}
                           {(log.records_updated ?? 0) > 0 && `, ${log.records_updated} upd`}
                           {(log.records_errored ?? 0) > 0 && (
-                            <span className="text-red-400">, {log.records_errored} err</span>
+                            <span className="text-danger">, {log.records_errored} err</span>
                           )}
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-2 text-right text-gray-400 tabular-nums">{fmtDuration(log.duration_ms)}</td>
-                    <td className="px-3 py-2 text-right text-gray-400">{fmtDate(log.started_at)}</td>
+                    <td className="px-3 py-2 text-right text-secondary tabular-nums">{fmtDuration(log.duration_ms)}</td>
+                    <td className="px-3 py-2 text-right text-secondary">{fmtDate(log.started_at)}</td>
                   </tr>
                 ))}
               </tbody>

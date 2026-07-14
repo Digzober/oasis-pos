@@ -182,30 +182,30 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
     setSaving(false)
   }
 
-  const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500'
+  const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent'
   const labelCls = 'block'
-  const labelTextCls = 'text-xs text-gray-400 mb-1 block'
+  const labelTextCls = 'text-xs text-secondary mb-1 block'
 
   if (success) {
     return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-        <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full text-center">
-          <p className="text-emerald-400 text-lg font-bold mb-2">Inventory Received</p>
-          <button onClick={onClose} className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg text-sm">Close</button>
+      <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center">
+        <div className="bg-surface rounded-2xl p-6 max-w-md w-full text-center">
+          <p className="text-accent text-lg font-bold mb-2">Inventory Received</p>
+          <button onClick={onClose} className="px-4 py-2 bg-raised text-secondary rounded-lg text-sm">Close</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center overflow-y-auto py-8">
-      <form onSubmit={handleSubmit} className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-2xl p-6 space-y-4 my-auto">
+    <div className="fixed inset-0 bg-bg/60 z-50 flex items-center justify-center overflow-y-auto py-8">
+      <form onSubmit={handleSubmit} className="bg-surface border border-edge rounded-2xl w-full max-w-2xl p-6 space-y-4 my-auto">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-50">Manual Receive</h2>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">X</button>
+          <h2 className="text-lg font-semibold text-primary">Manual Receive</h2>
+          <button type="button" onClick={onClose} className="text-secondary hover:text-primary text-lg">X</button>
         </div>
 
-        {loading && <p className="text-gray-500 text-sm">Loading form data...</p>}
+        {loading && <p className="text-muted text-sm">Loading form data...</p>}
 
         {/* Product Selection */}
         <label className={labelCls}>
@@ -333,8 +333,8 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
         {/* Tags Multi-Select */}
         <div>
           <span className={labelTextCls}>Tags</span>
-          <div className="flex flex-wrap gap-2 p-2 bg-gray-900 border border-gray-600 rounded-lg min-h-[40px]">
-            {tagOptions.length === 0 && <span className="text-gray-500 text-xs py-1">No tags available</span>}
+          <div className="flex flex-wrap gap-2 p-2 bg-bg border border-edge-strong rounded-lg min-h-[40px]">
+            {tagOptions.length === 0 && <span className="text-muted text-xs py-1">No tags available</span>}
             {tagOptions.map((tag) => {
               const isSelected = selectedTags.includes(tag.value)
               return (
@@ -344,8 +344,8 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
                   onClick={() => toggleTag(tag.value)}
                   className={`px-2 py-1 rounded text-xs transition-colors ${
                     isSelected
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-300'
+                      ? 'bg-accent text-primary'
+                      : 'bg-raised text-secondary hover:bg-raised hover:text-secondary'
                   }`}
                 >
                   {tag.label}
@@ -361,11 +361,11 @@ export default function ManualReceiveForm({ onClose }: { onClose: () => void }) 
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className={inputCls + ' h-16'} />
         </label>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-danger text-sm">{error}</p>}
 
         <div className="flex gap-2 justify-end">
-          <button type="button" onClick={onClose} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Cancel</button>
-          <button type="submit" disabled={saving || loading} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">
+          <button type="button" onClick={onClose} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm">Cancel</button>
+          <button type="submit" disabled={saving || loading} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">
             {saving ? 'Receiving...' : 'Receive'}
           </button>
         </div>

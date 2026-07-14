@@ -65,18 +65,18 @@ export default function AssignVendorModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Current Vendor
           </label>
           <input
             type="text"
             readOnly
             value={currentVendorName || 'None'}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent opacity-60"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent opacity-60"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             New Vendor
           </label>
           <SearchableSelect

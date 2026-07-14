@@ -62,11 +62,11 @@ export default function QuickCustomerForm({ onClose }: QuickCustomerFormProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-16">
-      <div className="bg-gray-800 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="px-4 pt-4 pb-3 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-gray-50 font-semibold">New Customer</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">✕</button>
+    <div className="fixed inset-0 bg-bg/60 z-50 flex items-start justify-center pt-16">
+      <div className="bg-surface border border-edge rounded-2xl w-full max-w-md shadow-2xl">
+        <div className="px-4 pt-4 pb-3 border-b border-edge flex items-center justify-between">
+          <h2 className="text-primary font-semibold">New Customer</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary text-lg">✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="px-4 py-4 space-y-3">
@@ -78,20 +78,20 @@ export default function QuickCustomerForm({ onClose }: QuickCustomerFormProps) {
           <Field label="Phone" value={phone} onChange={setPhone} type="tel" />
           <Field label="Email" value={email} onChange={setEmail} type="email" />
 
-          <div className="pt-2 border-t border-gray-700">
-            <p className="text-xs text-gray-400 mb-2">Medical Card (optional)</p>
+          <div className="pt-2 border-t border-edge">
+            <p className="text-xs text-secondary mb-2">Medical Card (optional)</p>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Card Number" value={medCard} onChange={setMedCard} />
               <Field label="Expiration" value={medExpiration} onChange={setMedExpiration} type="date" />
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-danger text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full h-11 rounded-lg bg-emerald-600 text-white font-medium text-sm hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+            className="w-full h-11 rounded-lg bg-accent text-primary font-medium text-sm hover:bg-accent disabled:opacity-50 transition-colors"
           >
             {isSaving ? 'Saving...' : 'Save & Attach to Sale'}
           </button>
@@ -114,12 +114,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-gray-400">{label}</span>
+      <span className="text-xs text-secondary">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-0.5 w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="mt-0.5 w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
       />
     </label>
   )

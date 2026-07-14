@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 type Settings = Record<string, boolean | string | number>
 
@@ -193,29 +193,29 @@ export default function LocationSettingsPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Location Settings</h1>
-        <button onClick={save} disabled={saving} className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50">
+        <h1 className="text-xl font-bold text-primary">Location Settings</h1>
+        <button onClick={save} disabled={saving} className="px-4 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
 
       {msg && (
-        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700' : 'bg-red-900/50 text-red-300 border border-red-700'}`}>
+        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-accent/50 text-accent border border-accent' : 'bg-danger/50 text-danger border border-danger'}`}>
           {msg.text}
         </div>
       )}
 
       <div className="space-y-3">
         {SECTIONS.map(section => (
-          <div key={section.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+          <div key={section.id} className="bg-surface rounded-xl border border-edge overflow-hidden">
             {/* Section Header — clickable to expand/collapse */}
             <button
               onClick={() => toggleSection(section.id)}
-              className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-700/30 transition-colors"
+              className="w-full flex items-center justify-between px-6 py-4 hover:bg-raised/30 transition-colors"
             >
-              <h2 className="text-base font-semibold text-gray-50">{section.title}</h2>
+              <h2 className="text-base font-semibold text-primary">{section.title}</h2>
               <svg
-                className={`w-5 h-5 text-gray-400 transition-transform ${expanded[section.id] ? 'rotate-180' : ''}`}
+                className={`w-5 h-5 text-secondary transition-transform ${expanded[section.id] ? 'rotate-180' : ''}`}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -224,11 +224,11 @@ export default function LocationSettingsPage() {
 
             {/* Section Content */}
             {expanded[section.id] && (
-              <div className="px-6 pb-5 space-y-4 border-t border-gray-700">
+              <div className="px-6 pb-5 space-y-4 border-t border-edge">
                 {/* Dropdown field */}
                 {section.dropdown && (
                   <div className="pt-4">
-                    <label className="block text-xs text-gray-400 mb-1">{section.dropdown.label}</label>
+                    <label className="block text-xs text-secondary mb-1">{section.dropdown.label}</label>
                     <select
                       value={(settings[section.dropdown.key] as string) ?? 'none'}
                       onChange={e => updateSetting(section.dropdown!.key, e.target.value)}
@@ -244,12 +244,12 @@ export default function LocationSettingsPage() {
                 {/* Toggle fields */}
                 {section.toggles && section.toggles.map(t => (
                   <div key={t.key} className="flex items-center justify-between first:pt-4">
-                    <span className="text-sm text-gray-300">{t.label}</span>
+                    <span className="text-sm text-secondary">{t.label}</span>
                     <button
                       onClick={() => updateSetting(t.key, !settings[t.key])}
-                      className={`w-11 h-6 rounded-full transition-colors shrink-0 ml-4 ${settings[t.key] ? 'bg-emerald-600' : 'bg-gray-600'}`}
+                      className={`w-11 h-6 rounded-full transition-colors shrink-0 ml-4 ${settings[t.key] ? 'bg-accent' : 'bg-raised'}`}
                     >
-                      <div className={`w-4 h-4 bg-white rounded-full mx-1 transition-transform ${settings[t.key] ? 'translate-x-5' : ''}`} />
+                      <div className={`w-4 h-4 bg-surface rounded-full mx-1 transition-transform ${settings[t.key] ? 'translate-x-5' : ''}`} />
                     </button>
                   </div>
                 ))}
@@ -259,7 +259,7 @@ export default function LocationSettingsPage() {
                   <div className="grid grid-cols-2 gap-4 pt-4">
                     {section.numbers.map(n => (
                       <div key={n.key}>
-                        <label className="block text-xs text-gray-400 mb-1">{n.label}</label>
+                        <label className="block text-xs text-secondary mb-1">{n.label}</label>
                         <input
                           type="number"
                           value={(settings[n.key] as number) ?? ''}
@@ -279,11 +279,11 @@ export default function LocationSettingsPage() {
 
       {/* Bottom save button */}
       <div className="mt-6 flex items-center gap-4">
-        <button onClick={save} disabled={saving} className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="px-5 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Settings'}
         </button>
         {msg && (
-          <span className={`text-sm ${msg.type === 'ok' ? 'text-emerald-400' : 'text-red-400'}`}>{msg.text}</span>
+          <span className={`text-sm ${msg.type === 'ok' ? 'text-accent' : 'text-danger'}`}>{msg.text}</span>
         )}
       </div>
     </div>

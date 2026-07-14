@@ -41,11 +41,11 @@ interface Pagination {
 /* ------------------------------------------------------------------ */
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: 'bg-gray-600 text-gray-100',
+  draft: 'bg-raised text-primary',
   in_progress: 'bg-yellow-600 text-yellow-100',
-  review: 'bg-blue-600 text-blue-100',
-  completed: 'bg-green-600 text-green-100',
-  cancelled: 'bg-red-600 text-red-100',
+  review: 'bg-info text-info',
+  completed: 'bg-success text-success',
+  cancelled: 'bg-danger text-danger',
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -58,7 +58,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full ${STATUS_COLORS[status] ?? 'bg-gray-600 text-gray-100'}`}>
+    <span className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full ${STATUS_COLORS[status] ?? 'bg-raised text-primary'}`}>
       {STATUS_LABELS[status] ?? status}
     </span>
   )
@@ -70,10 +70,10 @@ function StatusBadge({ status }: { status: string }) {
 
 function SkeletonRow({ cols }: { cols: number }) {
   return (
-    <tr className="border-b border-gray-700/50 animate-pulse">
+    <tr className="border-b border-edge/50 animate-pulse">
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-4 py-3">
-          <div className="h-4 bg-gray-700 rounded w-3/4" />
+          <div className="h-4 bg-raised rounded w-3/4" />
         </td>
       ))}
     </tr>
@@ -157,43 +157,43 @@ function CreateAuditModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl w-full max-w-lg mx-4">
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-50">Create Inventory Audit</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+      <div className="bg-surface border border-edge rounded-xl shadow-2xl w-full max-w-lg mx-4">
+        <div className="px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-semibold text-primary">Create Inventory Audit</h2>
         </div>
         <div className="px-6 py-4 space-y-4">
           {error && (
-            <div className="bg-red-900/30 border border-red-700 text-red-300 px-4 py-2 rounded-lg text-sm">
+            <div className="bg-danger/30 border border-danger text-danger px-4 py-2 rounded-lg text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Name *</label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Q1 2026 Cycle Count"
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-secondary mb-1">Notes</label>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={2}
               placeholder="Optional notes about this audit..."
-              className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none"
+              className="w-full bg-bg border border-edge rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:ring-2 focus:ring-accent focus:border-accent outline-none resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Scope: Rooms</label>
-            <p className="text-xs text-gray-500 mb-2">Leave empty to include all rooms</p>
+            <label className="block text-sm font-medium text-secondary mb-1">Scope: Rooms</label>
+            <p className="text-xs text-muted mb-2">Leave empty to include all rooms</p>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
               {rooms.map(room => (
                 <button
@@ -206,22 +206,22 @@ function CreateAuditModal({
                   }
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     selectedRooms.includes(room.id)
-                      ? 'bg-emerald-600 border-emerald-500 text-white'
-                      : 'bg-gray-900 border-gray-700 text-gray-300 hover:border-gray-500'
+                      ? 'bg-accent border-accent text-primary'
+                      : 'bg-bg border-edge text-secondary hover:border-edge-strong'
                   }`}
                 >
                   {room.name}
                 </button>
               ))}
               {rooms.length === 0 && (
-                <p className="text-xs text-gray-500">No rooms available</p>
+                <p className="text-xs text-muted">No rooms available</p>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Scope: Categories</label>
-            <p className="text-xs text-gray-500 mb-2">Leave empty to include all categories</p>
+            <label className="block text-sm font-medium text-secondary mb-1">Scope: Categories</label>
+            <p className="text-xs text-muted mb-2">Leave empty to include all categories</p>
             <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
               {categories.map(cat => (
                 <button
@@ -234,31 +234,31 @@ function CreateAuditModal({
                   }
                   className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                     selectedCategories.includes(cat.id)
-                      ? 'bg-emerald-600 border-emerald-500 text-white'
-                      : 'bg-gray-900 border-gray-700 text-gray-300 hover:border-gray-500'
+                      ? 'bg-accent border-accent text-primary'
+                      : 'bg-bg border-edge text-secondary hover:border-edge-strong'
                   }`}
                 >
                   {cat.name}
                 </button>
               ))}
               {categories.length === 0 && (
-                <p className="text-xs text-gray-500">No categories available</p>
+                <p className="text-xs text-muted">No categories available</p>
               )}
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-edge flex justify-end gap-3">
           <button
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 text-sm text-gray-300 hover:text-gray-100 transition-colors"
+            className="px-4 py-2 text-sm text-secondary hover:text-primary transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-2 text-sm bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-accent hover:bg-accent text-primary rounded-lg font-medium transition-colors disabled:opacity-50"
           >
             {saving ? 'Creating...' : 'Create Audit'}
           </button>
@@ -331,12 +331,12 @@ export default function AuditsListPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-50">Inventory Audits</h1>
-          <p className="text-sm text-gray-400 mt-1">Cycle counts and inventory verification</p>
+          <h1 className="text-2xl font-bold text-primary">Inventory Audits</h1>
+          <p className="text-sm text-secondary mt-1">Cycle counts and inventory verification</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-4 py-2 bg-accent hover:bg-accent text-primary text-sm font-medium rounded-lg transition-colors"
         >
           Create Audit
         </button>
@@ -347,7 +347,7 @@ export default function AuditsListPage() {
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 focus:ring-2 focus:ring-emerald-500 outline-none"
+          className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary focus:ring-2 focus:ring-accent outline-none"
         >
           {statusOptions.map(opt => (
             <option key={opt} value={opt}>
@@ -355,17 +355,17 @@ export default function AuditsListPage() {
             </option>
           ))}
         </select>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted">
           {pagination.total} audit{pagination.total !== 1 ? 's' : ''}
         </span>
       </div>
 
       {/* Table */}
-      <div className="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden">
+      <div className="bg-surface border border-edge rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase tracking-wider">
+              <tr className="border-b border-edge text-secondary text-xs uppercase tracking-wider">
                 <th className="text-left px-4 py-3">Name</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-left px-4 py-3">Location</th>
@@ -389,7 +389,7 @@ export default function AuditsListPage() {
               )}
               {!loading && audits.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="text-center py-12 text-gray-500">
+                  <td colSpan={9} className="text-center py-12 text-muted">
                     No audits found. Create one to get started.
                   </td>
                 </tr>
@@ -397,12 +397,12 @@ export default function AuditsListPage() {
               {audits.map(audit => (
                 <tr
                   key={audit.id}
-                  className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                  className="border-b border-edge/50 hover:bg-raised/30 transition-colors"
                 >
                   <td className="px-4 py-3">
                     <Link
                       href={`/inventory/audits/${audit.id}`}
-                      className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                      className="text-accent hover:text-accent font-medium transition-colors"
                     >
                       {audit.name}
                     </Link>
@@ -410,31 +410,31 @@ export default function AuditsListPage() {
                   <td className="px-4 py-3">
                     <StatusBadge status={audit.status} />
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-secondary">
                     {audit.location?.name ?? '\u2014'}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-secondary">
                     {audit.scope_room_names.length > 0
                       ? audit.scope_room_names.join(', ')
                       : 'All'}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-secondary">
                     {audit.scope_category_names.length > 0
                       ? audit.scope_category_names.join(', ')
                       : 'All'}
                   </td>
-                  <td className="px-4 py-3 text-gray-300">
+                  <td className="px-4 py-3 text-secondary">
                     {audit.created_by_employee
                       ? `${audit.created_by_employee.first_name} ${audit.created_by_employee.last_name}`
                       : '\u2014'}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-secondary text-xs whitespace-nowrap">
                     {fmtDate(audit.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-secondary text-xs whitespace-nowrap">
                     {fmtDate(audit.started_at)}
                   </td>
-                  <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                  <td className="px-4 py-3 text-secondary text-xs whitespace-nowrap">
                     {fmtDate(audit.completed_at)}
                   </td>
                 </tr>
@@ -447,21 +447,21 @@ export default function AuditsListPage() {
       {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted">
             Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => fetchAudits(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+              className="px-3 py-1.5 text-xs bg-raised hover:bg-raised text-primary rounded-lg disabled:opacity-40 transition-colors"
             >
               Previous
             </button>
             <button
               onClick={() => fetchAudits(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+              className="px-3 py-1.5 text-xs bg-raised hover:bg-raised text-primary rounded-lg disabled:opacity-40 transition-colors"
             >
               Next
             </button>

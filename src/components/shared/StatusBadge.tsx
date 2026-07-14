@@ -11,11 +11,11 @@ const STATUS_MAP: Record<string, string> = {
 }
 
 const VARIANT_STYLES: Record<string, string> = {
-  success: 'bg-emerald-600/20 text-emerald-400',
-  warning: 'bg-amber-600/20 text-amber-400',
-  error: 'bg-red-600/20 text-red-400',
-  info: 'bg-blue-600/20 text-blue-400',
-  default: 'bg-gray-600/20 text-gray-400',
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  error: 'bg-danger-soft text-danger',
+  info: 'bg-info-soft text-info',
+  default: 'bg-raised text-muted',
 }
 
 interface StatusBadgeProps {

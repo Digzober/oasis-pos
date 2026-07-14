@@ -51,38 +51,38 @@ export default function LabelsPage() {
   const previewW = mmToPx(parseFloat(form.width_mm) || 50)
   const previewH = mmToPx(parseFloat(form.height_mm) || 25)
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">Label Templates</h1>
+        <h1 className="text-xl font-bold text-primary">Label Templates</h1>
         <button onClick={() => { setEditId(null); setForm({ name: '', label_type: 'product', width_mm: '50', height_mm: '25' }) }}
-          className="text-sm px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500">+ New Template</button>
+          className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New Template</button>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
         {/* Template list + form */}
         <div>
-          <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden mb-4">
+          <div className="bg-surface rounded-xl border border-edge overflow-hidden mb-4">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Type</th><th className="text-left px-4 py-3">Size</th><th className="text-center px-4 py-3">Default</th>
               </tr></thead>
               <tbody>{templates.map((t: Template) => (
-                <tr key={t.id} className="border-b border-gray-700/50 hover:bg-gray-700/30 cursor-pointer" onClick={() => { setEditId(t.id); setForm({ name: t.name, label_type: t.label_type, width_mm: String(t.width_mm), height_mm: String(t.height_mm) }) }}>
-                  <td className="px-4 py-2.5 text-gray-50">{t.name}</td>
-                  <td className="px-4 py-2.5 text-gray-300 capitalize">{t.label_type}</td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs">{t.width_mm}×{t.height_mm}mm</td>
-                  <td className="px-4 py-2.5 text-center">{t.is_default ? <span className="text-emerald-400 text-xs">Default</span> : ''}</td>
+                <tr key={t.id} className="border-b border-edge/50 hover:bg-raised/30 cursor-pointer" onClick={() => { setEditId(t.id); setForm({ name: t.name, label_type: t.label_type, width_mm: String(t.width_mm), height_mm: String(t.height_mm) }) }}>
+                  <td className="px-4 py-2.5 text-primary">{t.name}</td>
+                  <td className="px-4 py-2.5 text-secondary capitalize">{t.label_type}</td>
+                  <td className="px-4 py-2.5 text-secondary text-xs">{t.width_mm}×{t.height_mm}mm</td>
+                  <td className="px-4 py-2.5 text-center">{t.is_default ? <span className="text-accent text-xs">Default</span> : ''}</td>
                 </tr>
               ))}</tbody>
             </table>
           </div>
 
           {/* Form */}
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-            <h3 className="text-sm font-semibold text-gray-300">{editId ? 'Edit' : 'New'} Template</h3>
+          <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+            <h3 className="text-sm font-semibold text-secondary">{editId ? 'Edit' : 'New'} Template</h3>
             <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Template name" className={inputCls} />
             <div className="grid grid-cols-3 gap-3">
               <select value={form.label_type} onChange={e => setForm(p => ({ ...p, label_type: e.target.value }))} className={inputCls}>
@@ -91,14 +91,14 @@ export default function LabelsPage() {
               <input value={form.width_mm} onChange={e => setForm(p => ({ ...p, width_mm: e.target.value }))} placeholder="Width mm" className={inputCls} />
               <input value={form.height_mm} onChange={e => setForm(p => ({ ...p, height_mm: e.target.value }))} placeholder="Height mm" className={inputCls} />
             </div>
-            <button onClick={save} disabled={saving || !form.name} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
+            <button onClick={save} disabled={saving || !form.name} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
           </div>
         </div>
 
         {/* Preview */}
         <div>
-          <h3 className="text-sm font-semibold text-gray-300 mb-3">Preview</h3>
-          <div className="bg-white rounded-lg p-4 inline-block">
+          <h3 className="text-sm font-semibold text-secondary mb-3">Preview</h3>
+          <div className="bg-surface rounded-lg p-4 inline-block">
             <div style={{ position: 'relative', width: previewW, height: previewH, border: '1px solid #ddd', fontFamily: 'Arial, sans-serif', overflow: 'hidden' }}>
               {DEFAULT_FIELDS.map((f, i) => {
                 const val = SAMPLE_DATA[f.key as keyof typeof SAMPLE_DATA] ?? ''

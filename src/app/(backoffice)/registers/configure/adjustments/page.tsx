@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 const TABS = [
   { label: 'Guestlist Status', href: '/registers/configure/guestlist' },
@@ -62,15 +62,15 @@ export default function AdjustmentsPage() {
   return (
     <div>
       {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-gray-700 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-edge mb-6 overflow-x-auto">
         {TABS.map(tab => (
           <Link
             key={tab.href}
             href={tab.href}
             className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               pathname === tab.href
-                ? 'border-emerald-500 text-emerald-400'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                ? 'border-accent text-accent'
+                : 'border-transparent text-secondary hover:text-primary'
             }`}
           >
             {tab.label}
@@ -78,19 +78,19 @@ export default function AdjustmentsPage() {
         ))}
       </div>
 
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Register Adjustment Reasons</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Register Adjustment Reasons</h1>
 
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted">Loading...</p>
       ) : (
         <>
           <div className="flex flex-wrap gap-2 mb-6">
             {reasons.length === 0 ? (
-              <p className="text-sm text-gray-500">No adjustment reasons configured</p>
+              <p className="text-sm text-muted">No adjustment reasons configured</p>
             ) : reasons.map(reason => (
-              <span key={reason.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-full text-sm text-gray-50">
+              <span key={reason.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-edge rounded-full text-sm text-primary">
                 {reason.name}
-                <button onClick={() => removeReason(reason.id)} className="text-gray-400 hover:text-red-400" aria-label={`Remove ${reason.name}`}>
+                <button onClick={() => removeReason(reason.id)} className="text-secondary hover:text-danger" aria-label={`Remove ${reason.name}`}>
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </span>
@@ -106,7 +106,7 @@ export default function AdjustmentsPage() {
               placeholder="New adjustment reason"
               className={inputCls}
             />
-            <button onClick={addReason} disabled={!newReason.trim()} className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50 whitespace-nowrap">
+            <button onClick={addReason} disabled={!newReason.trim()} className="px-4 py-2 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50 whitespace-nowrap">
               Add Reason
             </button>
           </div>

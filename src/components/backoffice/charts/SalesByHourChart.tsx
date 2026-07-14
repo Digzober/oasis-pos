@@ -16,16 +16,16 @@ export default function SalesByHourChart({ data }: Props) {
     <div className="h-64">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={formatted}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-          <XAxis dataKey="label" tick={{ fill: '#9CA3AF', fontSize: 11 }} />
-          <YAxis tick={{ fill: '#9CA3AF', fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--edge)" />
+          <XAxis dataKey="label" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+          <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(v) => `$${v}`} />
           <Tooltip
-            contentStyle={{ backgroundColor: '#1F2937', border: '1px solid #374151', borderRadius: 8 }}
-            labelStyle={{ color: '#F9FAFB' }}
-            itemStyle={{ color: '#10B981' }}
+            contentStyle={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--edge)', borderRadius: 8 }}
+            labelStyle={{ color: 'var(--text-primary)' }}
+            itemStyle={{ color: 'var(--chart-1)' }}
             formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Sales']}
           />
-          <Bar dataKey="total" fill="#10B981" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="total" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

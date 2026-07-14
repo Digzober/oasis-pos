@@ -154,19 +154,19 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50"
+        className="fixed inset-0 bg-bg/70 backdrop-blur-sm z-50"
         onClick={onClose}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+        <div className="bg-bg border border-edge rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-            <h2 className="text-lg font-bold text-gray-50">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+            <h2 className="text-lg font-bold text-primary">
               {view === 'list' ? 'Reprint Receipt' : 'Receipt Preview'}
             </h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-50 hover:bg-gray-700 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-secondary hover:text-primary hover:bg-raised transition-colors"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -176,8 +176,8 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
 
           {/* Error */}
           {error && (
-            <div className="mx-6 mt-4 px-3 py-2 bg-red-900/30 border border-red-700/40 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="mx-6 mt-4 px-3 py-2 bg-danger/30 border border-danger/40 rounded-lg">
+              <p className="text-sm text-danger">{error}</p>
             </div>
           )}
 
@@ -185,8 +185,8 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
           <div className="p-6 max-h-[70vh] overflow-y-auto">
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                <span className="ml-3 text-sm text-gray-400">Loading...</span>
+                <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <span className="ml-3 text-sm text-secondary">Loading...</span>
               </div>
             )}
 
@@ -194,7 +194,7 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
             {!loading && view === 'list' && (
               <>
                 {recent.length === 0 && !error && (
-                  <p className="text-center text-gray-500 py-8 text-sm">
+                  <p className="text-center text-muted py-8 text-sm">
                     No recent transactions for this register.
                   </p>
                 )}
@@ -203,26 +203,26 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                     <button
                       key={txn.id}
                       onClick={() => fetchReceipt(txn.id)}
-                      className="w-full flex items-center justify-between px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl hover:border-emerald-600/50 hover:bg-gray-800/80 transition-all group text-left"
+                      className="w-full flex items-center justify-between px-4 py-3 bg-surface border border-edge rounded-xl hover:border-accent/50 hover:bg-surface/80 transition-all group text-left"
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-50">
+                          <span className="text-sm font-semibold text-primary">
                             #{txn.receipt_number}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted">
                             {relativeTime(txn.created_at)}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">
+                        <p className="text-xs text-secondary mt-0.5 truncate">
                           {txn.customer_name}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-emerald-400">
+                        <span className="text-sm font-bold text-accent">
                           {fmt(txn.total)}
                         </span>
-                        <svg className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -237,16 +237,16 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
               <>
                 <div
                   id="receipt-print-area"
-                  className="bg-gray-800 border border-gray-700 rounded-xl p-5 font-mono text-xs text-gray-200 leading-relaxed"
+                  className="bg-surface border border-edge rounded-xl p-5 font-mono text-xs text-primary leading-relaxed"
                 >
                   {/* Store Header */}
                   <div className="center text-center mb-3">
-                    <p className="bold font-bold text-sm text-gray-50">
+                    <p className="bold font-bold text-sm text-primary">
                       OASIS CANNABIS CO.
                     </p>
-                    <p className="text-gray-400">{receipt.location_name}</p>
-                    <div className="divider border-t border-dashed border-gray-600 my-2" />
-                    <p className="text-gray-400">
+                    <p className="text-secondary">{receipt.location_name}</p>
+                    <div className="divider border-t border-dashed border-edge-strong my-2" />
+                    <p className="text-secondary">
                       {new Date(receipt.date).toLocaleString('en-US', {
                         month: 'short',
                         day: 'numeric',
@@ -256,31 +256,31 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                         hour12: true,
                       })}
                     </p>
-                    <p className="text-gray-400">Receipt #{receipt.receipt_number}</p>
-                    <p className="text-gray-400">Served by: {receipt.employee_name}</p>
+                    <p className="text-secondary">Receipt #{receipt.receipt_number}</p>
+                    <p className="text-secondary">Served by: {receipt.employee_name}</p>
                     {receipt.customer_name && (
-                      <p className="text-gray-400">Customer: {receipt.customer_name}</p>
+                      <p className="text-secondary">Customer: {receipt.customer_name}</p>
                     )}
                   </div>
 
-                  <div className="border-t border-dashed border-gray-600 my-2" />
+                  <div className="border-t border-dashed border-edge-strong my-2" />
 
                   {/* Line Items */}
                   <div className="space-y-1.5">
                     {receipt.lines.map((line, i) => (
                       <div key={i}>
                         <div className="row flex justify-between">
-                          <span className="text-gray-100 flex-1 pr-2 truncate">
+                          <span className="text-primary flex-1 pr-2 truncate">
                             {line.product_name}
                           </span>
-                          <span className="text-gray-100 tabular-nums">
+                          <span className="text-primary tabular-nums">
                             {fmt(line.line_total)}
                           </span>
                         </div>
-                        <div className="text-gray-500 pl-2">
+                        <div className="text-muted pl-2">
                           {line.quantity} x {fmt(line.unit_price)}
                           {line.discount_amount > 0 && (
-                            <span className="text-emerald-500 ml-2">
+                            <span className="text-accent ml-2">
                               -{fmt(line.discount_amount)}
                             </span>
                           )}
@@ -289,51 +289,51 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                     ))}
                   </div>
 
-                  <div className="border-t border-dashed border-gray-600 my-2" />
+                  <div className="border-t border-dashed border-edge-strong my-2" />
 
                   {/* Totals */}
                   <div className="space-y-1">
-                    <div className="row flex justify-between text-gray-400">
+                    <div className="row flex justify-between text-secondary">
                       <span>Subtotal</span>
                       <span className="tabular-nums">{fmt(receipt.subtotal)}</span>
                     </div>
                     {receipt.discounts.map((d, i) => (
-                      <div key={i} className="row flex justify-between text-emerald-400">
+                      <div key={i} className="row flex justify-between text-accent">
                         <span>{d.name}</span>
                         <span className="tabular-nums">-{fmt(d.amount)}</span>
                       </div>
                     ))}
                     {receipt.discount_total > 0 && (
-                      <div className="row flex justify-between text-emerald-400">
+                      <div className="row flex justify-between text-accent">
                         <span>Discount Total</span>
                         <span className="tabular-nums">-{fmt(receipt.discount_total)}</span>
                       </div>
                     )}
                     {receipt.taxes.map((t, i) => (
-                      <div key={i} className="row flex justify-between text-gray-400">
+                      <div key={i} className="row flex justify-between text-secondary">
                         <span>{t.name} ({(t.rate * 100).toFixed(2)}%)</span>
                         <span className="tabular-nums">{fmt(t.amount)}</span>
                       </div>
                     ))}
-                    <div className="border-t border-dashed border-gray-600 my-1" />
-                    <div className="total-row flex justify-between font-bold text-base text-gray-50">
+                    <div className="border-t border-dashed border-edge-strong my-1" />
+                    <div className="total-row flex justify-between font-bold text-base text-primary">
                       <span>TOTAL</span>
                       <span className="tabular-nums">{fmt(receipt.total)}</span>
                     </div>
                   </div>
 
-                  <div className="border-t border-dashed border-gray-600 my-2" />
+                  <div className="border-t border-dashed border-edge-strong my-2" />
 
                   {/* Payments */}
                   <div className="space-y-1">
                     {receipt.payments.map((p, i) => (
                       <div key={i}>
-                        <div className="row flex justify-between text-gray-300">
+                        <div className="row flex justify-between text-secondary">
                           <span className="capitalize">{p.method.replace(/_/g, ' ')}</span>
                           <span className="tabular-nums">{fmt(p.amount)}</span>
                         </div>
                         {p.change > 0 && (
-                          <div className="row flex justify-between text-gray-500">
+                          <div className="row flex justify-between text-muted">
                             <span>Change</span>
                             <span className="tabular-nums">{fmt(p.change)}</span>
                           </div>
@@ -342,11 +342,11 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                     ))}
                   </div>
 
-                  <div className="border-t border-dashed border-gray-600 my-3" />
-                  <p className="center text-center text-gray-500">
+                  <div className="border-t border-dashed border-edge-strong my-3" />
+                  <p className="center text-center text-muted">
                     ** REPRINT **
                   </p>
-                  <p className="center text-center text-gray-500 mt-1">
+                  <p className="center text-center text-muted mt-1">
                     Thank you for choosing Oasis!
                   </p>
                 </div>
@@ -355,14 +355,14 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                 <div className="flex gap-3 mt-4">
                   <button
                     onClick={() => { setView('list'); setReceipt(null) }}
-                    className="flex-1 h-11 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
+                    className="flex-1 h-11 bg-surface border border-edge text-secondary rounded-xl text-sm font-medium hover:bg-raised transition-colors"
                   >
                     Back to List
                   </button>
                   {receipt.customer_name && (
                     <button
                       onClick={handleEmailStub}
-                      className="flex-1 h-11 bg-gray-800 border border-gray-700 text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 h-11 bg-surface border border-edge text-secondary rounded-xl text-sm font-medium hover:bg-raised transition-colors flex items-center justify-center gap-2"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -372,7 +372,7 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
                   )}
                   <button
                     onClick={handlePrint}
-                    className="flex-1 h-11 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 h-11 bg-accent text-primary rounded-xl text-sm font-bold hover:bg-accent transition-colors flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

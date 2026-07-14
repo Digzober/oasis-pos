@@ -51,18 +51,18 @@ export default function AssignBatchModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             Current Batch
           </label>
           <input
             type="text"
             readOnly
             value={currentBatch || 'None'}
-            className="w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent opacity-60"
+            className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent opacity-60"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-400 uppercase mb-1">
+          <label className="block text-xs font-medium text-secondary uppercase mb-1">
             New Batch Name
           </label>
           <div className="flex gap-2">
@@ -71,12 +71,12 @@ export default function AssignBatchModal({
               value={newBatch}
               onChange={(e) => setNewBatch(e.target.value)}
               placeholder="Enter batch name..."
-              className="flex-1 h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="flex-1 h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
             />
             <button
               type="button"
               onClick={() => setNewBatch(generateBatchId())}
-              className="px-3 h-10 text-sm font-medium bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors whitespace-nowrap"
+              className="px-3 h-10 text-sm font-medium bg-raised text-secondary rounded-lg hover:bg-raised transition-colors whitespace-nowrap"
             >
               Generate
             </button>

@@ -128,10 +128,10 @@ export default function CardsConfigPage() {
   return (
     <div>
       {/* Tab Bar */}
-      <div className="flex gap-1 border-b border-gray-700 mb-6 overflow-x-auto">
+      <div className="flex gap-1 border-b border-edge mb-6 overflow-x-auto">
         {TABS.map(tab => (
           <Link key={tab.href} href={tab.href}
-            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${pathname === tab.href ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${pathname === tab.href ? 'border-accent text-accent' : 'border-transparent text-secondary hover:text-primary'}`}>
             {tab.label}
           </Link>
         ))}
@@ -140,19 +140,19 @@ export default function CardsConfigPage() {
       <div className="space-y-8">
         {/* Card Attributes */}
         <div>
-          <h1 className="text-xl font-bold text-gray-50 mb-1">Card attributes</h1>
-          <p className="text-sm text-gray-400 mb-5">Attributes for customer cards. These will show the following information based on the status of a customer&apos;s order.</p>
+          <h1 className="text-xl font-bold text-primary mb-1">Card attributes</h1>
+          <p className="text-sm text-secondary mb-5">Attributes for customer cards. These will show the following information based on the status of a customer&apos;s order.</p>
 
           {/* Card Status Selector */}
           <div className="mb-6">
-            <label className="block text-xs font-medium text-gray-400 uppercase mb-1">Card status:</label>
+            <label className="block text-xs font-medium text-secondary uppercase mb-1">Card status:</label>
             <select value={cardStatus} onChange={e => setCardStatus(e.target.value)}
-              className="w-full max-w-xs h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              className="w-full max-w-xs h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent">
               {CARD_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
 
-          {loading ? <p className="text-gray-500">Loading...</p> : (
+          {loading ? <p className="text-muted">Loading...</p> : (
             <>
               {/* Two-column checkbox grid */}
               <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-6">
@@ -160,8 +160,8 @@ export default function CardsConfigPage() {
                   {col1.map(f => (
                     <label key={f.key} className="flex items-center gap-3 cursor-pointer">
                       <input type="checkbox" checked={currentFields[f.key] !== false} onChange={() => toggleField(f.key)}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0" />
-                      <span className="text-sm text-gray-200">{f.label}</span>
+                        className="w-4 h-4 rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0" />
+                      <span className="text-sm text-primary">{f.label}</span>
                     </label>
                   ))}
                 </div>
@@ -169,14 +169,14 @@ export default function CardsConfigPage() {
                   {col2.map(f => (
                     <label key={f.key} className="flex items-center gap-3 cursor-pointer">
                       <input type="checkbox" checked={currentFields[f.key] !== false} onChange={() => toggleField(f.key)}
-                        className="w-4 h-4 rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0" />
-                      <span className="text-sm text-gray-200">{f.label}</span>
+                        className="w-4 h-4 rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0" />
+                      <span className="text-sm text-primary">{f.label}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              <button onClick={save} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-50">
+              <button onClick={save} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save'}
               </button>
             </>
@@ -185,16 +185,16 @@ export default function CardsConfigPage() {
 
         {/* Card Preview */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-50 mb-4">Card Preview</h2>
+          <h2 className="text-lg font-semibold text-primary mb-4">Card Preview</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Compact card */}
           <div>
-            <p className="text-xs text-gray-500 mb-2 font-medium uppercase">Compact View</p>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 text-sm max-w-sm">
+            <p className="text-xs text-muted mb-2 font-medium uppercase">Compact View</p>
+            <div className="bg-surface border border-edge rounded-xl p-5 text-sm max-w-sm">
               <div className="flex items-center gap-2 mb-3">
-                <span className="font-bold text-base text-gray-50">{PREVIEW.name}</span>
-                {show('new_vs_existing') && <span className="text-[10px] px-1.5 py-0.5 bg-emerald-900/50 text-emerald-300 rounded-full border border-emerald-700">New</span>}
+                <span className="font-bold text-base text-primary">{PREVIEW.name}</span>
+                {show('new_vs_existing') && <span className="text-[10px] px-1.5 py-0.5 bg-accent/50 text-accent rounded-full border border-accent">New</span>}
               </div>
               <div className="space-y-2 text-xs">
                 {show('nickname') && <Row label="Nickname" value={PREVIEW.nickname} />}
@@ -204,7 +204,7 @@ export default function CardsConfigPage() {
                 {show('customer_type') && <Row label="Customer Type" value={PREVIEW.customerType} highlight />}
                 {show('medical_card_id') && <Row label="MMJ ID" value={PREVIEW.mmjId} />}
                 {show('med_card_exp') && <Row label="MMJ Expires" value={PREVIEW.mmjExpires} />}
-                {(show('date_received') || show('time_window') || show('last_purchase_date')) && <div className="border-t border-gray-700 pt-2 mt-2" />}
+                {(show('date_received') || show('time_window') || show('last_purchase_date')) && <div className="border-t border-edge pt-2 mt-2" />}
                 {show('date_received') && <Row label="Received" value={PREVIEW.received} />}
                 {show('time_window') && <Row label="Window" value={PREVIEW.window} />}
                 {show('last_purchase_date') && <Row label="Last Purchase" value={PREVIEW.lastPurchase} />}
@@ -213,39 +213,39 @@ export default function CardsConfigPage() {
                 {show('order_source') && <Row label="Order" value={PREVIEW.order} />}
                 {show('room') && <Row label="Room" value={PREVIEW.room} />}
                 {show('transaction_reference') && <Row label="REF" value={PREVIEW.ref} />}
-                {show('delivery_vehicle') && <><div className="border-t border-gray-700 pt-2 mt-2" /><Row label="Vehicle" value={PREVIEW.vehicle} /></>}
+                {show('delivery_vehicle') && <><div className="border-t border-edge pt-2 mt-2" /><Row label="Vehicle" value={PREVIEW.vehicle} /></>}
               </div>
-              {show('register') && <div className="pt-3"><span className="text-[10px] px-2 py-1 bg-gray-700 text-gray-300 rounded border border-gray-600 font-medium">{PREVIEW.register}</span></div>}
+              {show('register') && <div className="pt-3"><span className="text-[10px] px-2 py-1 bg-raised text-secondary rounded border border-edge-strong font-medium">{PREVIEW.register}</span></div>}
             </div>
           </div>
 
           {/* Expanded card */}
           <div>
-            <p className="text-xs text-gray-500 mb-2 font-medium uppercase">Expanded View</p>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 text-xs">
+            <p className="text-xs text-muted mb-2 font-medium uppercase">Expanded View</p>
+            <div className="bg-surface border border-edge rounded-xl p-5 text-xs">
               <div className="flex items-center gap-2 mb-4">
-                <span className="font-bold text-base text-gray-50">{PREVIEW.name}</span>
-                {show('new_vs_existing') && <span className="text-[10px] px-1.5 py-0.5 bg-emerald-900/50 text-emerald-300 rounded-full border border-emerald-700">New</span>}
+                <span className="font-bold text-base text-primary">{PREVIEW.name}</span>
+                {show('new_vs_existing') && <span className="text-[10px] px-1.5 py-0.5 bg-accent/50 text-accent rounded-full border border-accent">New</span>}
               </div>
               <div className="grid grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-2">
-                {show('nickname') && <><span className="text-gray-500">Nickname:</span><span className="text-gray-200">{PREVIEW.nickname}</span></>}
-                {show('customer_dob') && <><span className="text-gray-500">DOB:</span><span className="text-gray-200">{PREVIEW.dob}</span></>}
-                {show('address') && <><span className="text-gray-500">Address:</span><span className="text-gray-200 col-span-3">{PREVIEW.address}, {PREVIEW.cityStateZip}</span></>}
-                {show('drivers_license_exp') && <><span className="text-gray-500">ID Expires:</span><span className="text-gray-200">{PREVIEW.idExpires}</span></>}
-                {show('customer_type') && <><span className="text-gray-500">Customer Type:</span><span className="text-emerald-400 font-medium">{PREVIEW.customerType}</span></>}
-                {show('medical_card_id') && <><span className="text-gray-500">MMJ ID:</span><span className="text-gray-200">{PREVIEW.mmjId}</span></>}
-                {show('med_card_exp') && <><span className="text-gray-500">MMJ Expires:</span><span className="text-gray-200">{PREVIEW.mmjExpires}</span></>}
-                {show('date_received') && <><span className="text-gray-500">Received:</span><span className="text-gray-200">{PREVIEW.received}</span></>}
-                {show('time_window') && <><span className="text-gray-500">Window:</span><span className="text-gray-200">{PREVIEW.window}</span></>}
-                {show('last_purchase_date') && <><span className="text-gray-500">Last Purchase:</span><span className="text-gray-200">{PREVIEW.lastPurchase}</span></>}
-                {show('discount_group') && <><span className="text-gray-500">Discount Groups:</span><span className="text-gray-200">{PREVIEW.discountGroups}</span></>}
-                {show('payment_status') && <><span className="text-gray-500">Status:</span><span className="text-gray-200">{PREVIEW.status}</span></>}
-                {show('order_source') && <><span className="text-gray-500">Order:</span><span className="text-gray-200">{PREVIEW.order}</span></>}
-                {show('room') && <><span className="text-gray-500">Room:</span><span className="text-gray-200">{PREVIEW.room}</span></>}
-                {show('transaction_reference') && <><span className="text-gray-500">REF:</span><span className="text-gray-200">{PREVIEW.ref}</span></>}
-                {show('delivery_vehicle') && <><span className="text-gray-500">Vehicle:</span><span className="text-gray-200">{PREVIEW.vehicle}</span></>}
+                {show('nickname') && <><span className="text-muted">Nickname:</span><span className="text-primary">{PREVIEW.nickname}</span></>}
+                {show('customer_dob') && <><span className="text-muted">DOB:</span><span className="text-primary">{PREVIEW.dob}</span></>}
+                {show('address') && <><span className="text-muted">Address:</span><span className="text-primary col-span-3">{PREVIEW.address}, {PREVIEW.cityStateZip}</span></>}
+                {show('drivers_license_exp') && <><span className="text-muted">ID Expires:</span><span className="text-primary">{PREVIEW.idExpires}</span></>}
+                {show('customer_type') && <><span className="text-muted">Customer Type:</span><span className="text-accent font-medium">{PREVIEW.customerType}</span></>}
+                {show('medical_card_id') && <><span className="text-muted">MMJ ID:</span><span className="text-primary">{PREVIEW.mmjId}</span></>}
+                {show('med_card_exp') && <><span className="text-muted">MMJ Expires:</span><span className="text-primary">{PREVIEW.mmjExpires}</span></>}
+                {show('date_received') && <><span className="text-muted">Received:</span><span className="text-primary">{PREVIEW.received}</span></>}
+                {show('time_window') && <><span className="text-muted">Window:</span><span className="text-primary">{PREVIEW.window}</span></>}
+                {show('last_purchase_date') && <><span className="text-muted">Last Purchase:</span><span className="text-primary">{PREVIEW.lastPurchase}</span></>}
+                {show('discount_group') && <><span className="text-muted">Discount Groups:</span><span className="text-primary">{PREVIEW.discountGroups}</span></>}
+                {show('payment_status') && <><span className="text-muted">Status:</span><span className="text-primary">{PREVIEW.status}</span></>}
+                {show('order_source') && <><span className="text-muted">Order:</span><span className="text-primary">{PREVIEW.order}</span></>}
+                {show('room') && <><span className="text-muted">Room:</span><span className="text-primary">{PREVIEW.room}</span></>}
+                {show('transaction_reference') && <><span className="text-muted">REF:</span><span className="text-primary">{PREVIEW.ref}</span></>}
+                {show('delivery_vehicle') && <><span className="text-muted">Vehicle:</span><span className="text-primary">{PREVIEW.vehicle}</span></>}
               </div>
-              {show('register') && <div className="mt-4 flex justify-end"><span className="text-[10px] px-2 py-1 bg-gray-700 text-gray-300 rounded border border-gray-600 font-medium">{PREVIEW.register}</span></div>}
+              {show('register') && <div className="mt-4 flex justify-end"><span className="text-[10px] px-2 py-1 bg-raised text-secondary rounded border border-edge-strong font-medium">{PREVIEW.register}</span></div>}
             </div>
           </div>
           </div>
@@ -258,8 +258,8 @@ export default function CardsConfigPage() {
 function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex gap-2">
-      {label && <span className="text-gray-500 shrink-0 min-w-[90px]">{label}:</span>}
-      <span className={highlight ? 'text-emerald-400 font-medium' : 'text-gray-200'}>{value}</span>
+      {label && <span className="text-muted shrink-0 min-w-[90px]">{label}:</span>}
+      <span className={highlight ? 'text-accent font-medium' : 'text-primary'}>{value}</span>
     </div>
   )
 }

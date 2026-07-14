@@ -61,6 +61,7 @@ const navigation: NavItem[] = [
     { label: 'Schedules', href: '/reports/schedules' },
   ]},
   { label: 'Settings', icon: Settings, children: [
+    { label: 'Appearance', href: '/settings/appearance' },
     { label: 'Location Settings', href: '/settings/location-settings' },
     { label: 'Locations', href: '/settings/locations' },
     { label: 'Rooms', href: '/settings/rooms' },
@@ -103,7 +104,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
   return (
     <aside className={cn(
-      'bg-gray-800 border-r border-gray-700 flex flex-col shrink-0 transition-all duration-200 overflow-hidden',
+      'bg-surface border-r border-edge flex flex-col shrink-0 transition-all duration-200 overflow-hidden',
       collapsed ? 'w-16' : 'w-60',
     )}>
       <nav className="flex-1 py-2 overflow-y-auto">
@@ -116,7 +117,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
             return (
               <Link key={item.label} href={item.href}
                 className={cn('flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                  active ? 'bg-gray-700 text-emerald-400 font-medium' : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-50')}>
+                  active ? 'bg-raised text-accent font-medium' : 'text-secondary hover:bg-raised/50 hover:text-primary')}>
                 <Icon size={18} className="shrink-0" />
                 {!collapsed && <span className="truncate">{item.label}</span>}
               </Link>
@@ -127,7 +128,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
             <div key={item.label}>
               <button onClick={() => toggle(item.label)}
                 className={cn('w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                  active ? 'text-emerald-400' : 'text-gray-300 hover:bg-gray-700/50 hover:text-gray-50')}>
+                  active ? 'text-accent' : 'text-secondary hover:bg-raised/50 hover:text-primary')}>
                 <Icon size={18} className="shrink-0" />
                 {!collapsed && (
                   <>
@@ -137,11 +138,11 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
                 )}
               </button>
               {!collapsed && isExpanded && item.children && (
-                <div className="ml-7 border-l border-gray-700">
+                <div className="ml-7 border-l border-edge">
                   {item.children.map(child => (
                     <Link key={child.href} href={child.href}
                       className={cn('block pl-4 py-1.5 text-xs transition-colors',
-                        isActive(child.href) ? 'text-emerald-400 font-medium' : 'text-gray-400 hover:text-gray-200')}>
+                        isActive(child.href) ? 'text-accent font-medium' : 'text-secondary hover:text-primary')}>
                       {child.label}
                     </Link>
                   ))}

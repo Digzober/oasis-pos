@@ -8,9 +8,9 @@ function fmt(n: number) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  completed: 'bg-emerald-600',
-  voided: 'bg-red-600',
-  returned: 'bg-amber-600',
+  completed: 'bg-accent',
+  voided: 'bg-danger',
+  returned: 'bg-warning',
 }
 
 export default function TransactionDetailDrawer({
@@ -33,34 +33,34 @@ export default function TransactionDetailDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={onClose} />
-      <div className="fixed right-0 top-0 bottom-0 w-[480px] max-w-full bg-gray-800 border-l border-gray-700 z-50 flex flex-col overflow-hidden">
-        <div className="h-14 border-b border-gray-700 flex items-center justify-between px-4 shrink-0">
-          <h2 className="text-gray-50 font-semibold">Transaction Detail</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200">✕</button>
+      <div className="fixed inset-0 bg-bg/50 z-50" onClick={onClose} />
+      <div className="fixed right-0 top-0 bottom-0 w-[480px] max-w-full bg-surface border-l border-edge z-50 flex flex-col overflow-hidden">
+        <div className="h-14 border-b border-edge flex items-center justify-between px-4 shrink-0">
+          <h2 className="text-primary font-semibold">Transaction Detail</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary">✕</button>
         </div>
 
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500">Loading...</div>
+          <div className="flex-1 flex items-center justify-center text-muted">Loading...</div>
         ) : !tx ? (
-          <div className="flex-1 flex items-center justify-center text-gray-500">Not found</div>
+          <div className="flex-1 flex items-center justify-center text-muted">Not found</div>
         ) : (
           <div className="flex-1 overflow-y-auto">
             {/* Header */}
-            <div className="px-4 py-4 border-b border-gray-700">
+            <div className="px-4 py-4 border-b border-edge">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg text-gray-50 font-bold">#{tx.transaction_number}</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-white ${STATUS_COLORS[tx.status] ?? 'bg-gray-600'}`}>
+                <span className="text-lg text-primary font-bold">#{tx.transaction_number}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-primary ${STATUS_COLORS[tx.status] ?? 'bg-raised'}`}>
                   {tx.status.toUpperCase()}
                 </span>
-                {tx.is_medical && <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-600 text-white">MED</span>}
+                {tx.is_medical && <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-info text-primary">MED</span>}
                 {tx.biotrack_synced ? (
-                  <span className="text-[10px] text-emerald-400">BT ✓</span>
+                  <span className="text-[10px] text-accent">BT ✓</span>
                 ) : (
-                  <span className="text-[10px] text-amber-400">BT pending</span>
+                  <span className="text-[10px] text-warning">BT pending</span>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-1 text-xs text-gray-400">
+              <div className="grid grid-cols-2 gap-1 text-xs text-secondary">
                 <span>Date: {new Date(tx.created_at).toLocaleString()}</span>
                 <span>Location: {tx.location.name}</span>
                 <span>Employee: {tx.employee.name}</span>
@@ -68,73 +68,73 @@ export default function TransactionDetailDrawer({
                 {tx.customer && <span>Customer: {tx.customer.name}</span>}
               </div>
               {tx.void_reason && (
-                <div className="mt-2 text-xs bg-red-900/30 text-red-300 rounded px-2 py-1">
+                <div className="mt-2 text-xs bg-danger/30 text-danger rounded px-2 py-1">
                   Void reason: {tx.void_reason}
-                  {tx.voided_by_name && <span className="text-gray-500"> by {tx.voided_by_name}</span>}
+                  {tx.voided_by_name && <span className="text-muted"> by {tx.voided_by_name}</span>}
                 </div>
               )}
             </div>
 
             {/* Line Items */}
-            <div className="px-4 py-3 border-b border-gray-700">
-              <h3 className="text-xs text-gray-400 font-semibold uppercase mb-2">Items ({tx.lines.length})</h3>
+            <div className="px-4 py-3 border-b border-edge">
+              <h3 className="text-xs text-secondary font-semibold uppercase mb-2">Items ({tx.lines.length})</h3>
               <div className="space-y-2">
                 {tx.lines.map((line) => (
                   <div key={line.id} className="flex justify-between text-sm">
                     <div className="min-w-0 flex-1">
-                      <p className="text-gray-50 truncate">{line.product_name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-primary truncate">{line.product_name}</p>
+                      <p className="text-xs text-muted">
                         {line.quantity} × {fmt(line.unit_price)}
-                        {line.discount_amount > 0 && <span className="text-emerald-400 ml-1">-{fmt(line.discount_amount)}</span>}
+                        {line.discount_amount > 0 && <span className="text-accent ml-1">-{fmt(line.discount_amount)}</span>}
                       </p>
                     </div>
-                    <span className="text-gray-50 tabular-nums shrink-0 ml-2">{fmt(line.line_total)}</span>
+                    <span className="text-primary tabular-nums shrink-0 ml-2">{fmt(line.line_total)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Payments */}
-            <div className="px-4 py-3 border-b border-gray-700">
-              <h3 className="text-xs text-gray-400 font-semibold uppercase mb-2">Payments</h3>
+            <div className="px-4 py-3 border-b border-edge">
+              <h3 className="text-xs text-secondary font-semibold uppercase mb-2">Payments</h3>
               {tx.payments.map((pay) => (
                 <div key={pay.id} className="flex justify-between text-sm py-0.5">
-                  <span className="text-gray-300 capitalize">{pay.payment_method}</span>
-                  <span className="text-gray-50 tabular-nums">{fmt(pay.amount)}</span>
+                  <span className="text-secondary capitalize">{pay.payment_method}</span>
+                  <span className="text-primary tabular-nums">{fmt(pay.amount)}</span>
                 </div>
               ))}
             </div>
 
             {/* Taxes */}
             {tx.taxes.length > 0 && (
-              <div className="px-4 py-3 border-b border-gray-700">
-                <h3 className="text-xs text-gray-400 font-semibold uppercase mb-2">Taxes</h3>
+              <div className="px-4 py-3 border-b border-edge">
+                <h3 className="text-xs text-secondary font-semibold uppercase mb-2">Taxes</h3>
                 {tx.taxes.map((t) => (
                   <div key={t.id} className="flex justify-between text-sm py-0.5">
-                    <span className="text-gray-300">
+                    <span className="text-secondary">
                       {t.tax_name} ({(t.tax_rate * 100).toFixed(2)}%)
-                      {t.is_excise && <span className="text-xs text-gray-500 ml-1">excise</span>}
+                      {t.is_excise && <span className="text-xs text-muted ml-1">excise</span>}
                     </span>
-                    <span className="text-gray-50 tabular-nums">{fmt(t.tax_amount)}</span>
+                    <span className="text-primary tabular-nums">{fmt(t.tax_amount)}</span>
                   </div>
                 ))}
               </div>
             )}
 
             {/* Totals */}
-            <div className="px-4 py-3 border-b border-gray-700 space-y-1">
-              <div className="flex justify-between text-sm text-gray-400">
+            <div className="px-4 py-3 border-b border-edge space-y-1">
+              <div className="flex justify-between text-sm text-secondary">
                 <span>Subtotal</span><span className="tabular-nums">{fmt(tx.subtotal)}</span>
               </div>
               {tx.discount_amount > 0 && (
-                <div className="flex justify-between text-sm text-emerald-400">
+                <div className="flex justify-between text-sm text-accent">
                   <span>Discounts</span><span className="tabular-nums">-{fmt(tx.discount_amount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-sm text-gray-400">
+              <div className="flex justify-between text-sm text-secondary">
                 <span>Tax</span><span className="tabular-nums">{fmt(tx.tax_amount)}</span>
               </div>
-              <div className="flex justify-between text-base font-bold text-gray-50 pt-1 border-t border-gray-700">
+              <div className="flex justify-between text-base font-bold text-primary pt-1 border-t border-edge">
                 <span>Total</span><span className="tabular-nums">{fmt(tx.total)}</span>
               </div>
             </div>

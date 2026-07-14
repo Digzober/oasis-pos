@@ -108,21 +108,21 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
     setSaving(false)
   }
 
-  const inputCls = "w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  const inputCls = "w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
   const TABS = ['details', 'schedule', 'constraints', 'rewards', 'targeting']
 
   return (
     <div className="max-w-4xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold text-gray-50">{isEdit ? 'Edit Discount' : 'New Discount'}</h1>
+        <h1 className="text-xl font-bold text-primary">{isEdit ? 'Edit Discount' : 'New Discount'}</h1>
         <div className="flex gap-2">
-          <button onClick={() => router.push('/marketing/discounts')} className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg text-sm">Cancel</button>
-          <button onClick={() => handleSave('draft')} disabled={saving} className="px-3 py-1.5 bg-gray-600 text-gray-200 rounded-lg text-sm disabled:opacity-50">Save Draft</button>
-          <button onClick={() => handleSave('active')} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save & Activate'}</button>
+          <button onClick={() => router.push('/marketing/discounts')} className="px-3 py-1.5 bg-raised text-secondary rounded-lg text-sm">Cancel</button>
+          <button onClick={() => handleSave('draft')} disabled={saving} className="px-3 py-1.5 bg-raised text-primary rounded-lg text-sm disabled:opacity-50">Save Draft</button>
+          <button onClick={() => handleSave('active')} disabled={saving} className="px-4 py-1.5 bg-accent text-primary rounded-lg text-sm disabled:opacity-50">{saving ? 'Saving...' : 'Save & Activate'}</button>
         </div>
       </div>
 
-      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {error && <p className="text-danger text-sm mb-4">{error}</p>}
 
       {/* Preview */}
       <div className="mb-4">
@@ -132,83 +132,83 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 mb-4 border-b border-gray-700">
+      <div className="flex gap-1 mb-4 border-b border-edge">
         {TABS.map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm capitalize ${tab === t ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-gray-400 hover:text-gray-200'}`}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm capitalize ${tab === t ? 'text-accent border-b-2 border-accent' : 'text-secondary hover:text-primary'}`}>{t}</button>
         ))}
       </div>
 
       {/* Tab content */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-4">
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-4">
         {tab === 'details' && <>
-          <label className="block"><span className="text-xs text-gray-400">Name *</span><input value={name} onChange={e => setName(e.target.value)} className={inputCls} /></label>
-          <label className="block"><span className="text-xs text-gray-400">Description</span><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + ' h-16'} /></label>
+          <label className="block"><span className="text-xs text-secondary">Name *</span><input value={name} onChange={e => setName(e.target.value)} className={inputCls} /></label>
+          <label className="block"><span className="text-xs text-secondary">Description</span><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + ' h-16'} /></label>
           <div className="grid grid-cols-2 gap-4">
-            <label className="block"><span className="text-xs text-gray-400">Application Method</span>
+            <label className="block"><span className="text-xs text-secondary">Application Method</span>
               <select value={appMethod} onChange={e => setAppMethod(e.target.value)} className={inputCls}><option value="automatic">Automatic</option><option value="manual">Manual</option><option value="coupon">Coupon</option></select></label>
-            {appMethod === 'coupon' && <label className="block"><span className="text-xs text-gray-400">Code</span><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} /></label>}
+            {appMethod === 'coupon' && <label className="block"><span className="text-xs text-secondary">Code</span><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} /></label>}
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={isStackable} onChange={e => setIsStackable(e.target.checked)} className="rounded" /> Can stack with other discounts</label>
+          <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={isStackable} onChange={e => setIsStackable(e.target.checked)} className="rounded" /> Can stack with other discounts</label>
         </>}
 
         {tab === 'schedule' && <>
           <div className="grid grid-cols-2 gap-4">
-            <label className="block"><span className="text-xs text-gray-400">Start Date</span><input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></label>
-            <label className="block"><span className="text-xs text-gray-400">End Date</span><input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></label>
+            <label className="block"><span className="text-xs text-secondary">Start Date</span><input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></label>
+            <label className="block"><span className="text-xs text-secondary">End Date</span><input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></label>
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} className="rounded" /> Weekly recurrence</label>
+          <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={recurring} onChange={e => setRecurring(e.target.checked)} className="rounded" /> Weekly recurrence</label>
           {recurring && (
             <>
               <div className="flex gap-2">{DAYS.map((d, i) => (
-                <button key={i} onClick={() => toggleDay(i)} className={`w-10 h-10 rounded-lg text-xs font-medium ${recDays.includes(i) ? 'bg-emerald-600 text-white' : 'bg-gray-700 text-gray-400'}`}>{d}</button>
+                <button key={i} onClick={() => toggleDay(i)} className={`w-10 h-10 rounded-lg text-xs font-medium ${recDays.includes(i) ? 'bg-accent text-primary' : 'bg-raised text-secondary'}`}>{d}</button>
               ))}</div>
               <div className="grid grid-cols-2 gap-4">
-                <label className="block"><span className="text-xs text-gray-400">Active Start Time</span><input type="time" value={recStartTime} onChange={e => setRecStartTime(e.target.value)} className={inputCls} /></label>
-                <label className="block"><span className="text-xs text-gray-400">Active End Time</span><input type="time" value={recEndTime} onChange={e => setRecEndTime(e.target.value)} className={inputCls} /></label>
+                <label className="block"><span className="text-xs text-secondary">Active Start Time</span><input type="time" value={recStartTime} onChange={e => setRecStartTime(e.target.value)} className={inputCls} /></label>
+                <label className="block"><span className="text-xs text-secondary">Active End Time</span><input type="time" value={recEndTime} onChange={e => setRecEndTime(e.target.value)} className={inputCls} /></label>
               </div>
             </>
           )}
         </>}
 
         {tab === 'constraints' && <>
-          <p className="text-xs text-gray-400">What must be true in the cart for this discount to activate?</p>
+          <p className="text-xs text-secondary">What must be true in the cart for this discount to activate?</p>
           <div className="grid grid-cols-2 gap-4">
-            <label className="block"><span className="text-xs text-gray-400">Threshold Type</span>
+            <label className="block"><span className="text-xs text-secondary">Threshold Type</span>
               <select value={constraintType} onChange={e => setConstraintType(e.target.value)} className={inputCls}>
                 <option value="min_quantity">Minimum Items</option><option value="min_spend">Minimum Spend ($)</option><option value="min_weight">Minimum Weight (g)</option>
               </select></label>
-            <label className="block"><span className="text-xs text-gray-400">Minimum Value</span>
+            <label className="block"><span className="text-xs text-secondary">Minimum Value</span>
               <input type="number" value={constraintValue} onChange={e => setConstraintValue(e.target.value)} className={inputCls} placeholder="Leave empty for no minimum" /></label>
           </div>
-          <div><p className="text-xs text-gray-400 mb-2">Filter qualifying products (empty = all products)</p>
+          <div><p className="text-xs text-secondary mb-2">Filter qualifying products (empty = all products)</p>
             <EntityFilterBuilder value={constraintFilters} onChange={setConstraintFilters} /></div>
         </>}
 
         {tab === 'rewards' && <>
           <div className="grid grid-cols-2 gap-4">
-            <label className="block"><span className="text-xs text-gray-400">Reward Type</span>
+            <label className="block"><span className="text-xs text-secondary">Reward Type</span>
               <select value={rewardType} onChange={e => setRewardType(e.target.value)} className={inputCls}>
                 {REWARD_TYPES.map(rt => <option key={rt.value} value={rt.value}>{rt.label}</option>)}
               </select></label>
-            <label className="block"><span className="text-xs text-gray-400">Value</span>
+            <label className="block"><span className="text-xs text-secondary">Value</span>
               <input type="number" step="0.01" value={rewardValue} onChange={e => setRewardValue(e.target.value)} className={inputCls}
                 placeholder={rewardType === 'percentage' ? 'e.g. 10 for 10%' : 'e.g. 5.00'} /></label>
           </div>
-          <label className="block"><span className="text-xs text-gray-400">Apply To</span>
+          <label className="block"><span className="text-xs text-secondary">Apply To</span>
             <select value={rewardApplyTo} onChange={e => setRewardApplyTo(e.target.value)} className={inputCls}>
               <option value="each_item">Each Matching Item</option><option value="cheapest">Cheapest Item</option><option value="most_expensive">Most Expensive</option><option value="cart_total">Cart Total</option>
             </select></label>
-          <div><p className="text-xs text-gray-400 mb-2">Filter which products get the reward (empty = same as constraint)</p>
+          <div><p className="text-xs text-secondary mb-2">Filter which products get the reward (empty = same as constraint)</p>
             <EntityFilterBuilder value={rewardFilters} onChange={setRewardFilters} /></div>
         </>}
 
         {tab === 'targeting' && <>
-          <label className="block"><span className="text-xs text-gray-400">Customer Type</span>
+          <label className="block"><span className="text-xs text-secondary">Customer Type</span>
             <select value={customerTypes[0] ?? 'all'} onChange={e => setCustomerTypes([e.target.value])} className={inputCls}>
               <option value="all">All Customers</option><option value="recreational">Recreational Only</option><option value="medical">Medical Only</option>
             </select></label>
-          <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={firstTimeOnly} onChange={e => setFirstTimeOnly(e.target.checked)} className="rounded" /> First-time customers only</label>
-          <label className="flex items-center gap-2 text-sm text-gray-300"><input type="checkbox" checked={requiresApproval} onChange={e => setRequiresApproval(e.target.checked)} className="rounded" /> Requires manager approval</label>
+          <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={firstTimeOnly} onChange={e => setFirstTimeOnly(e.target.checked)} className="rounded" /> First-time customers only</label>
+          <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={requiresApproval} onChange={e => setRequiresApproval(e.target.checked)} className="rounded" /> Requires manager approval</label>
         </>}
       </div>
     </div>

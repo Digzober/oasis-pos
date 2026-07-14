@@ -64,14 +64,14 @@ function ConfigurePageInner() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-50">Configure</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-primary">Configure</h1>
+        <p className="text-sm text-secondary mt-1">
           Manage product categories, pricing tiers, field visibility, and other catalog settings.
         </p>
       </div>
 
       {/* Tab Bar */}
-      <div className="mb-6 border-b border-gray-700">
+      <div className="mb-6 border-b border-edge">
         <nav className="-mb-px flex gap-1 overflow-x-auto" aria-label="Configure tabs">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key
@@ -81,8 +81,8 @@ function ConfigurePageInner() {
                 onClick={() => handleTabChange(tab.key)}
                 className={`whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                   isActive
-                    ? 'border-emerald-500 text-emerald-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-secondary hover:text-primary hover:border-edge-strong'
                 }`}
               >
                 {tab.label}
@@ -102,7 +102,7 @@ export default function ConfigurePage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400 text-sm">Loading...</div>
+        <div className="text-secondary text-sm">Loading...</div>
       </div>
     }>
       <ConfigurePageInner />

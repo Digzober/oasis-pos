@@ -22,19 +22,19 @@ export default function RoomsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-50 mb-6">Rooms & Subrooms</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">Rooms & Subrooms</h1>
       <div className="flex gap-2 mb-4">
         <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="New room name..."
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-50 w-64" />
-        <button onClick={addRoom} className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500">Add Room</button>
+          className="bg-surface border border-edge rounded-lg px-3 py-2 text-sm text-primary w-64" />
+        <button onClick={addRoom} className="px-3 py-1.5 bg-accent text-primary rounded-lg text-sm hover:bg-accent">Add Room</button>
       </div>
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-        {loading ? <p className="text-gray-500 text-sm">Loading...</p> : rooms.map((r: AnyR) => (
-          <div key={r.id} className="border-b border-gray-700/50 pb-2">
-            <p className="text-gray-50 font-medium">{r.name}</p>
-            <p className="text-xs text-gray-400">{(r.room_types ?? []).join(', ')}</p>
+      <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
+        {loading ? <p className="text-muted text-sm">Loading...</p> : rooms.map((r: AnyR) => (
+          <div key={r.id} className="border-b border-edge/50 pb-2">
+            <p className="text-primary font-medium">{r.name}</p>
+            <p className="text-xs text-secondary">{(r.room_types ?? []).join(', ')}</p>
             {(r.subrooms ?? []).map((s: AnyR) => (
-              <p key={s.id} className="text-sm text-gray-300 ml-4">└ {s.name}</p>
+              <p key={s.id} className="text-sm text-secondary ml-4">└ {s.name}</p>
             ))}
           </div>
         ))}

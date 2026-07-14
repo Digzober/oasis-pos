@@ -74,23 +74,23 @@ export default function ProductPriceHistory({ productId }: { productId: string }
   }, [productId])
 
   return (
-    <div className="bg-gray-800 rounded-xl border border-gray-700 p-4">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
+    <div className="bg-surface rounded-xl border border-edge p-4">
+      <h3 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">
         Price History
       </h3>
 
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-gray-600 border-t-emerald-500 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-edge-strong border-t-emerald-500 rounded-full animate-spin" />
         </div>
       )}
 
       {error && (
-        <p className="text-red-400 text-sm py-4">{error}</p>
+        <p className="text-danger text-sm py-4">{error}</p>
       )}
 
       {!loading && !error && history.length === 0 && (
-        <p className="text-gray-500 text-sm py-6 text-center">
+        <p className="text-muted text-sm py-6 text-center">
           No price changes recorded.
         </p>
       )}
@@ -99,28 +99,28 @@ export default function ProductPriceHistory({ productId }: { productId: string }
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left text-xs text-gray-400 font-medium py-2 pr-4">Date</th>
-                <th className="text-left text-xs text-gray-400 font-medium py-2 pr-4">Field</th>
-                <th className="text-left text-xs text-gray-400 font-medium py-2 pr-4">Previous</th>
-                <th className="text-left text-xs text-gray-400 font-medium py-2">New</th>
+              <tr className="border-b border-edge">
+                <th className="text-left text-xs text-secondary font-medium py-2 pr-4">Date</th>
+                <th className="text-left text-xs text-secondary font-medium py-2 pr-4">Field</th>
+                <th className="text-left text-xs text-secondary font-medium py-2 pr-4">Previous</th>
+                <th className="text-left text-xs text-secondary font-medium py-2">New</th>
               </tr>
             </thead>
             <tbody>
               {history.map(entry => (
-                <tr key={entry.id} className="border-b border-gray-700/50 last:border-0">
-                  <td className="py-2.5 pr-4 text-gray-300 whitespace-nowrap">
+                <tr key={entry.id} className="border-b border-edge/50 last:border-0">
+                  <td className="py-2.5 pr-4 text-secondary whitespace-nowrap">
                     {formatTimestamp(entry.event_timestamp)}
                   </td>
                   <td className="py-2.5 pr-4">
-                    <span className="inline-block px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-xs font-medium">
+                    <span className="inline-block px-2 py-0.5 rounded bg-raised text-secondary text-xs font-medium">
                       {formatFieldName(entry.field_edited)}
                     </span>
                   </td>
-                  <td className="py-2.5 pr-4 text-gray-400">
+                  <td className="py-2.5 pr-4 text-secondary">
                     {formatValue(entry.field_edited, entry.previous_value)}
                   </td>
-                  <td className="py-2.5 text-gray-50 font-medium">
+                  <td className="py-2.5 text-primary font-medium">
                     {formatValue(entry.field_edited, entry.new_value)}
                   </td>
                 </tr>

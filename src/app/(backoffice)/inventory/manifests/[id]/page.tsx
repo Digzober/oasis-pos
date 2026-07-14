@@ -88,12 +88,12 @@ interface InventorySearchResult {
 /* ------------------------------------------------------------------ */
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-blue-600/20 text-blue-400',
-  open: 'bg-blue-600/20 text-blue-400',
-  in_transit: 'bg-amber-600/20 text-amber-400',
-  delivered: 'bg-emerald-600/20 text-emerald-400',
-  sold: 'bg-emerald-600/20 text-emerald-400',
-  cancelled: 'bg-red-600/20 text-red-400',
+  draft: 'bg-info/20 text-info',
+  open: 'bg-info/20 text-info',
+  in_transit: 'bg-warning/20 text-warning',
+  delivered: 'bg-accent/20 text-accent',
+  sold: 'bg-accent/20 text-accent',
+  cancelled: 'bg-danger/20 text-danger',
 }
 
 /* ------------------------------------------------------------------ */
@@ -126,7 +126,7 @@ function formatCurrency(n: number | null | undefined): string {
 /* ------------------------------------------------------------------ */
 
 function ManifestStatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] ?? 'bg-gray-600/20 text-gray-400'
+  const style = STATUS_STYLES[status] ?? 'bg-raised/20 text-secondary'
   return (
     <span className={`inline-flex items-center rounded-full text-xs font-medium px-2.5 py-1 capitalize ${style}`}>
       {status.replace(/_/g, ' ')}
@@ -170,7 +170,7 @@ function ActionsDropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="px-3 py-2 text-sm bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-1"
+        className="px-3 py-2 text-sm bg-raised text-primary rounded-lg hover:bg-raised transition-colors flex items-center gap-1"
       >
         Actions
         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,22 +178,22 @@ function ActionsDropdown({
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
+        <div className="absolute right-0 z-50 mt-1 w-48 bg-surface border border-edge rounded-lg shadow-xl overflow-hidden">
           <button
             onClick={handlePrint}
-            className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
+            className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-raised"
           >
             Print manifest
           </button>
           <button
             onClick={handleExport}
-            className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
+            className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-raised"
           >
             Export items
           </button>
           <button
             onClick={() => { onHistory(); setOpen(false) }}
-            className="w-full text-left px-3 py-2 text-sm text-gray-200 hover:bg-gray-700"
+            className="w-full text-left px-3 py-2 text-sm text-primary hover:bg-raised"
           >
             History
           </button>
@@ -217,29 +217,29 @@ function HistoryModal({
   onClose: () => void
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-bold text-gray-50">Manifest History</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">&times;</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+      <div className="bg-surface border border-edge rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-bold text-primary">Manifest History</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary text-lg">&times;</button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading history...</div>
+            <div className="text-center py-8 text-muted">Loading history...</div>
           ) : entries.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No history entries found</div>
+            <div className="text-center py-8 text-muted">No history entries found</div>
           ) : (
             <div className="space-y-3">
               {entries.map(entry => (
-                <div key={entry.id} className="bg-gray-900 rounded-lg p-3 border border-gray-700">
+                <div key={entry.id} className="bg-bg rounded-lg p-3 border border-edge">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-200 font-medium capitalize">
+                    <span className="text-sm text-primary font-medium capitalize">
                       {entry.action.replace(/_/g, ' ')}
                     </span>
-                    <span className="text-xs text-gray-500">{formatDate(entry.created_at)}</span>
+                    <span className="text-xs text-muted">{formatDate(entry.created_at)}</span>
                   </div>
                   {entry.employee_name && (
-                    <p className="text-xs text-gray-400">By: {entry.employee_name}</p>
+                    <p className="text-xs text-secondary">By: {entry.employee_name}</p>
                   )}
                 </div>
               ))}
@@ -372,38 +372,38 @@ function AddItemsModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-800 border border-gray-700 rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-bold text-gray-50">Add Items</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-200 text-lg">&times;</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60">
+      <div className="bg-surface border border-edge rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-bold text-primary">Add Items</h2>
+          <button onClick={onClose} className="text-secondary hover:text-primary text-lg">&times;</button>
         </div>
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-6 border-b border-edge">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder="Search inventory by name, SKU, or barcode..."
-            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            className="w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
             autoFocus
           />
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           {error && (
-            <div className="mb-4 px-3 py-2 bg-red-900/30 border border-red-700 rounded text-sm text-red-300">
+            <div className="mb-4 px-3 py-2 bg-danger/30 border border-danger rounded text-sm text-danger">
               {error}
             </div>
           )}
           {searching ? (
-            <div className="text-center py-8 text-gray-500">Searching...</div>
+            <div className="text-center py-8 text-muted">Searching...</div>
           ) : results.length === 0 && searchQuery.trim() ? (
-            <div className="text-center py-8 text-gray-500">No inventory items found</div>
+            <div className="text-center py-8 text-muted">No inventory items found</div>
           ) : results.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">Type to search inventory at source location</div>
+            <div className="text-center py-8 text-muted">Type to search inventory at source location</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-gray-400 text-xs uppercase border-b border-gray-700">
+                <tr className="text-secondary text-xs uppercase border-b border-edge">
                   <th className="text-left py-2 pr-3 w-8" />
                   <th className="text-left py-2 pr-3">Product</th>
                   <th className="text-left py-2 pr-3">SKU</th>
@@ -418,20 +418,20 @@ function AddItemsModal({
                   const isSelected = selectedItems.has(item.id)
                   const entry = selectedItems.get(item.id)
                   return (
-                    <tr key={item.id} className={`border-b border-gray-700/50 ${isSelected ? 'bg-emerald-900/10' : ''}`}>
+                    <tr key={item.id} className={`border-b border-edge/50 ${isSelected ? 'bg-accent/10' : ''}`}>
                       <td className="py-2 pr-3">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleItem(item)}
-                          className="rounded border-gray-600 bg-gray-900 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                          className="rounded border-edge-strong bg-bg text-accent focus:ring-accent focus:ring-offset-0"
                         />
                       </td>
-                      <td className="py-2 pr-3 text-gray-200">{item.product_name}</td>
-                      <td className="py-2 pr-3 text-gray-400 font-mono text-xs">{item.sku ?? '\u2014'}</td>
-                      <td className="py-2 pr-3 text-gray-400">{item.brand_name ?? '\u2014'}</td>
-                      <td className="py-2 pr-3 text-right text-gray-300 tabular-nums">{item.quantity_available}</td>
-                      <td className="py-2 pr-3 text-right text-gray-300 tabular-nums">{formatCurrency(item.unit_cost)}</td>
+                      <td className="py-2 pr-3 text-primary">{item.product_name}</td>
+                      <td className="py-2 pr-3 text-secondary font-mono text-xs">{item.sku ?? '\u2014'}</td>
+                      <td className="py-2 pr-3 text-secondary">{item.brand_name ?? '\u2014'}</td>
+                      <td className="py-2 pr-3 text-right text-secondary tabular-nums">{item.quantity_available}</td>
+                      <td className="py-2 pr-3 text-right text-secondary tabular-nums">{formatCurrency(item.unit_cost)}</td>
                       <td className="py-2 text-right">
                         {isSelected && (
                           <input
@@ -440,7 +440,7 @@ function AddItemsModal({
                             max={item.quantity_available}
                             value={entry?.quantity ?? 1}
                             onChange={(e) => setItemQuantity(item.id, Number(e.target.value))}
-                            className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-50 text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            className="w-20 bg-bg border border-edge-strong rounded px-2 py-1 text-sm text-primary text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
                           />
                         )}
                       </td>
@@ -451,21 +451,21 @@ function AddItemsModal({
             </table>
           )}
         </div>
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700">
-          <span className="text-xs text-gray-400">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-edge">
+          <span className="text-xs text-secondary">
             {selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-300 hover:text-gray-100"
+              className="px-4 py-2 text-sm text-secondary hover:text-primary"
             >
               Cancel
             </button>
             <button
               onClick={handleAdd}
               disabled={selectedItems.size === 0 || submitting}
-              className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 disabled:opacity-40 transition-colors"
+              className="px-4 py-2 text-sm bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-40 transition-colors"
             >
               {submitting ? 'Adding...' : `Add ${selectedItems.size} Item${selectedItems.size !== 1 ? 's' : ''}`}
             </button>
@@ -482,9 +482,9 @@ function AddItemsModal({
 
 function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between py-2 border-b border-gray-700/50 last:border-0">
-      <span className="text-xs text-gray-400 uppercase tracking-wider shrink-0 w-32">{label}</span>
-      <span className="text-sm text-gray-100 text-right">{children}</span>
+    <div className="flex items-start justify-between py-2 border-b border-edge/50 last:border-0">
+      <span className="text-xs text-secondary uppercase tracking-wider shrink-0 w-32">{label}</span>
+      <span className="text-sm text-primary text-right">{children}</span>
     </div>
   )
 }
@@ -668,7 +668,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-gray-500">Loading manifest...</div>
+        <div className="text-muted">Loading manifest...</div>
       </div>
     )
   }
@@ -677,10 +677,10 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
   if (error || !manifest) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="text-red-400">{error ?? 'Manifest not found'}</div>
+        <div className="text-danger">{error ?? 'Manifest not found'}</div>
         <Link
           href="/inventory/manifests"
-          className="text-sm text-emerald-400 hover:text-emerald-300"
+          className="text-sm text-accent hover:text-accent"
         >
           Back to manifests
         </Link>
@@ -701,7 +701,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
           <button
             onClick={handleSend}
             disabled={actionLoading}
-            className={`${btnBase} bg-emerald-600 text-white hover:bg-emerald-500`}
+            className={`${btnBase} bg-accent text-primary hover:bg-accent`}
           >
             {actionLoading ? 'Sending...' : 'Send'}
           </button>
@@ -711,7 +711,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
           <button
             onClick={handleReceive}
             disabled={actionLoading}
-            className={`${btnBase} bg-emerald-600 text-white hover:bg-emerald-500`}
+            className={`${btnBase} bg-accent text-primary hover:bg-accent`}
           >
             {actionLoading ? 'Receiving...' : 'Receive'}
           </button>
@@ -721,7 +721,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
           <button
             onClick={handleReopen}
             disabled={actionLoading}
-            className={`${btnBase} bg-amber-600 text-white hover:bg-amber-500`}
+            className={`${btnBase} bg-warning text-primary hover:bg-warning`}
           >
             {actionLoading ? 'Reopening...' : 'Reopen'}
           </button>
@@ -738,13 +738,13 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
         <div className="flex items-center gap-3">
           <Link
             href="/inventory/manifests"
-            className="text-gray-400 hover:text-gray-200 transition-colors"
+            className="text-secondary hover:text-primary transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </Link>
-          <h1 className="text-xl font-bold text-gray-50">{manifest.title}</h1>
+          <h1 className="text-xl font-bold text-primary">{manifest.title}</h1>
         </div>
         <div className="flex items-center gap-2">
           <ActionsDropdown manifestId={id} onHistory={handleShowHistory} />
@@ -755,8 +755,8 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
       {/* Two-column card layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Left: Details */}
-        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Details</h2>
+        <div className="bg-surface rounded-xl border border-edge p-6">
+          <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">Details</h2>
           <DetailRow label="Order #">{manifest.manifest_number ?? '\u2014'}</DetailRow>
           <DetailRow label="Customer">{manifest.customer_name ?? '\u2014'}</DetailRow>
           <DetailRow label="Date">{formatDateShort(manifest.created_date)}</DetailRow>
@@ -764,7 +764,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
           <DetailRow label="Status"><ManifestStatusBadge status={manifest.status} /></DetailRow>
           <DetailRow label="Type"><span className="capitalize">{manifest.type}</span></DetailRow>
           <DetailRow label="Pickup">{manifest.pickup ? 'Yes' : 'No'}</DetailRow>
-          <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="mt-4 pt-4 border-t border-edge">
             <DetailRow label="Subtotal">{formatCurrency(manifest.subtotal)}</DetailRow>
             <DetailRow label="Taxes">{formatCurrency(manifest.taxes)}</DetailRow>
             <DetailRow label="Discounts">{formatCurrency(manifest.discounts)}</DetailRow>
@@ -777,62 +777,62 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
 
         {/* Right: Notes + Driver Info */}
         <div className="space-y-6">
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          <div className="bg-surface rounded-xl border border-edge p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Notes</h2>
-              {notesDirty && <span className="text-xs text-gray-500">Saving...</span>}
+              <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider">Notes</h2>
+              {notesDirty && <span className="text-xs text-muted">Saving...</span>}
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Invoice Comments</label>
+                <label className="block text-xs text-secondary mb-1">Invoice Comments</label>
                 <textarea
                   value={notes.invoice_comments ?? ''}
                   onChange={(e) => handleNoteChange('invoice_comments', e.target.value)}
                   rows={2}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                  className="w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent resize-none"
                   placeholder="Invoice comments..."
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Transaction Notes</label>
+                <label className="block text-xs text-secondary mb-1">Transaction Notes</label>
                 <textarea
                   value={notes.transaction_notes ?? ''}
                   onChange={(e) => handleNoteChange('transaction_notes', e.target.value)}
                   rows={2}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                  className="w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent resize-none"
                   placeholder="Transaction notes..."
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Customer Notes</label>
+                <label className="block text-xs text-secondary mb-1">Customer Notes</label>
                 <textarea
                   value={notes.customer_notes ?? ''}
                   onChange={(e) => handleNoteChange('customer_notes', e.target.value)}
                   rows={2}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"
+                  className="w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent resize-none"
                   placeholder="Customer notes..."
                 />
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
-            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">Driver Info</h2>
+          <div className="bg-surface rounded-xl border border-edge p-6">
+            <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">Driver Info</h2>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Assigned Driver</label>
+                <label className="block text-xs text-secondary mb-1">Assigned Driver</label>
                 <select
                   value={manifest.driver_id ?? ''}
                   onChange={e => handleDriverAssign(e.target.value)}
                   disabled={driverSaving}
-                  className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+                  className="w-full bg-bg border border-edge-strong rounded-lg px-3 py-2 text-sm text-primary focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
                 >
                   <option value="">No driver assigned</option>
                   {drivers.map(d => (
                     <option key={d.id} value={d.id}>{d.name}{d.phone ? ` (${d.phone})` : ''}{d.state_id ? ` — ID: ${d.state_id}` : ''}</option>
                   ))}
                 </select>
-                {driverSaving && <span className="text-xs text-gray-500 mt-1">Saving...</span>}
+                {driverSaving && <span className="text-xs text-muted mt-1">Saving...</span>}
               </div>
             </div>
             <div className="mt-4 space-y-1">
@@ -846,15 +846,15 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Items section */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-          <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-edge">
+          <h2 className="text-sm font-semibold text-secondary uppercase tracking-wider">
             Items ({manifest.items.length})
           </h2>
           {isEditable && (
             <button
               onClick={() => setShowAddItems(true)}
-              className="px-3 py-1.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors"
+              className="px-3 py-1.5 text-sm bg-accent text-primary rounded-lg hover:bg-accent transition-colors"
             >
               Add items
             </button>
@@ -863,7 +863,7 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+              <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">SKU</th>
                 <th className="text-left px-4 py-3">Description</th>
                 <th className="text-left px-4 py-3">Package ID</th>
@@ -880,15 +880,15 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
             <tbody>
               {manifest.items.length === 0 ? (
                 <tr>
-                  <td colSpan={isEditable ? 11 : 10} className="text-center py-12 text-gray-500">
+                  <td colSpan={isEditable ? 11 : 10} className="text-center py-12 text-muted">
                     No items added yet
                   </td>
                 </tr>
               ) : manifest.items.map((item) => (
-                <tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-700/20">
-                  <td className="px-4 py-2.5 text-gray-400 font-mono text-xs">{item.sku ?? '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-gray-200">{item.description}</td>
-                  <td className="px-4 py-2.5 text-gray-400 font-mono text-xs">{item.package_id ?? '\u2014'}</td>
+                <tr key={item.id} className="border-b border-edge/50 hover:bg-raised/20">
+                  <td className="px-4 py-2.5 text-secondary font-mono text-xs">{item.sku ?? '\u2014'}</td>
+                  <td className="px-4 py-2.5 text-primary">{item.description}</td>
+                  <td className="px-4 py-2.5 text-secondary font-mono text-xs">{item.package_id ?? '\u2014'}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">
                     {isEditable && editingQty === item.id ? (
                       <div className="flex items-center justify-end gap-1">
@@ -901,19 +901,19 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                             if (e.key === 'Enter') handleSaveQuantity(item.id)
                             if (e.key === 'Escape') setEditingQty(null)
                           }}
-                          className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-gray-50 text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          className="w-20 bg-bg border border-edge-strong rounded px-2 py-1 text-sm text-primary text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-accent"
                           autoFocus
                         />
                         <button
                           onClick={() => handleSaveQuantity(item.id)}
-                          className="text-emerald-400 hover:text-emerald-300 text-xs"
+                          className="text-accent hover:text-accent text-xs"
                         >
                           Save
                         </button>
                       </div>
                     ) : (
                       <span
-                        className={`text-gray-50 ${isEditable ? 'cursor-pointer hover:text-emerald-400' : ''}`}
+                        className={`text-primary ${isEditable ? 'cursor-pointer hover:text-accent' : ''}`}
                         onClick={() => {
                           if (isEditable) {
                             setEditingQty(item.id)
@@ -925,17 +925,17 @@ export default function ManifestDetailPage({ params }: { params: Promise<{ id: s
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 text-gray-400 text-xs">{item.batch ?? '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-gray-400">{item.brand ?? '\u2014'}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{formatCurrency(item.unit_price)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-300 tabular-nums">{formatCurrency(item.subtotal)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-400 tabular-nums">{formatCurrency(item.discount)}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-50 tabular-nums font-medium">{formatCurrency(item.total_price)}</td>
+                  <td className="px-4 py-2.5 text-secondary text-xs">{item.batch ?? '\u2014'}</td>
+                  <td className="px-4 py-2.5 text-secondary">{item.brand ?? '\u2014'}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(item.unit_price)}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(item.subtotal)}</td>
+                  <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{formatCurrency(item.discount)}</td>
+                  <td className="px-4 py-2.5 text-right text-primary tabular-nums font-medium">{formatCurrency(item.total_price)}</td>
                   {isEditable && (
                     <td className="px-4 py-2.5">
                       <button
                         onClick={() => handleRemoveItem(item.id)}
-                        className="text-red-400 hover:text-red-300 text-xs"
+                        className="text-danger hover:text-danger text-xs"
                       >
                         Remove
                       </button>

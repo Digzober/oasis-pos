@@ -40,9 +40,9 @@ function formatWaitTime(minutes: number): string {
 }
 
 function getWaitColor(minutes: number): string {
-  if (minutes < 5) return 'text-emerald-400'
-  if (minutes <= 15) return 'text-amber-400'
-  return 'text-red-400'
+  if (minutes < 5) return 'text-accent'
+  if (minutes <= 15) return 'text-warning'
+  return 'text-danger'
 }
 
 function getDisplayName(entry: QueueEntry): string {
@@ -149,15 +149,15 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
   return (
     <div className="flex flex-col gap-4 h-full">
       {/* Check-In Form */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-5">
-        <h2 className="text-base font-semibold text-gray-50 mb-4 uppercase tracking-wide">
+      <div className="bg-surface rounded-xl border border-edge p-5">
+        <h2 className="text-base font-semibold text-primary mb-4 uppercase tracking-wide">
           Customer Check-In
         </h2>
 
         <form onSubmit={handleCheckIn} className="space-y-4">
           {/* Customer Name */}
           <div>
-            <label htmlFor="door-name" className="block text-xs font-medium text-gray-400 mb-1.5">
+            <label htmlFor="door-name" className="block text-xs font-medium text-secondary mb-1.5">
               Customer Name
             </label>
             <input
@@ -168,23 +168,23 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
               placeholder="First Last"
               required
               autoFocus
-              className="w-full px-3 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-50 text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-bg border border-edge rounded-lg text-primary text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
             />
           </div>
 
           {/* Customer Type Toggle */}
           <div>
-            <label className="block text-xs font-medium text-gray-400 mb-1.5">
+            <label className="block text-xs font-medium text-secondary mb-1.5">
               Customer Type
             </label>
-            <div className="flex rounded-lg overflow-hidden border border-gray-700">
+            <div className="flex rounded-lg overflow-hidden border border-edge">
               <button
                 type="button"
                 onClick={() => setCustomerType('recreational')}
                 className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
                   customerType === 'recreational'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-gray-900 text-gray-400 hover:text-gray-300'
+                    ? 'bg-accent text-primary'
+                    : 'bg-bg text-secondary hover:text-secondary'
                 }`}
               >
                 REC
@@ -192,10 +192,10 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
               <button
                 type="button"
                 onClick={() => setCustomerType('medical')}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors border-l border-gray-700 ${
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors border-l border-edge ${
                   customerType === 'medical'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-900 text-gray-400 hover:text-gray-300'
+                    ? 'bg-info text-primary'
+                    : 'bg-bg text-secondary hover:text-secondary'
                 }`}
               >
                 MED
@@ -205,8 +205,8 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
 
           {/* Notes */}
           <div>
-            <label htmlFor="door-notes" className="block text-xs font-medium text-gray-400 mb-1.5">
-              Notes <span className="text-gray-600">(optional)</span>
+            <label htmlFor="door-notes" className="block text-xs font-medium text-secondary mb-1.5">
+              Notes <span className="text-muted">(optional)</span>
             </label>
             <input
               id="door-notes"
@@ -214,7 +214,7 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="VIP, first-time, needs help with..."
-              className="w-full px-3 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-gray-50 text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-colors"
+              className="w-full px-3 py-2.5 bg-bg border border-edge rounded-lg text-primary text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent transition-colors"
             />
           </div>
 
@@ -224,8 +224,8 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
             disabled={submitting || !customerName.trim()}
             className={`w-full py-3 rounded-lg text-sm font-semibold transition-all ${
               flash
-                ? 'bg-emerald-500 text-white scale-[0.98]'
-                : 'bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed'
+                ? 'bg-accent text-primary scale-[0.98]'
+                : 'bg-accent text-primary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
             {submitting ? 'Checking in...' : flash ? 'Checked In!' : 'Check In'}
@@ -234,11 +234,11 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
       </div>
 
       {/* Live Queue (Read-Only) */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 flex-1 flex flex-col min-h-0">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+      <div className="bg-surface rounded-xl border border-edge flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-edge">
           <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${waiting.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+            <div className={`h-2 w-2 rounded-full ${waiting.length > 0 ? 'bg-accent animate-pulse' : 'bg-overlay'}`} />
+            <h3 className="text-xs font-semibold text-secondary uppercase tracking-wide">
               Queue ({waiting.length} waiting{serving.length > 0 ? ` / ${serving.length} serving` : ''})
             </h3>
           </div>
@@ -246,7 +246,7 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {waiting.length === 0 && serving.length === 0 ? (
-            <div className="flex items-center justify-center py-6 text-gray-500 text-sm">
+            <div className="flex items-center justify-center py-6 text-muted text-sm">
               No customers in queue
             </div>
           ) : (
@@ -260,33 +260,33 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
                   <div
                     key={entry.id}
                     className={`flex items-center justify-between rounded-lg px-3 py-2 ${
-                      isClaimed ? 'bg-gray-900/40 opacity-60' : 'bg-gray-900/40'
+                      isClaimed ? 'bg-bg/40 opacity-60' : 'bg-bg/40'
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xs font-mono text-gray-500 w-5 text-right flex-shrink-0">
+                      <span className="text-xs font-mono text-muted w-5 text-right flex-shrink-0">
                         #{index + 1}
                       </span>
-                      <span className="text-sm text-gray-200 truncate">{getDisplayName(entry)}</span>
+                      <span className="text-sm text-primary truncate">{getDisplayName(entry)}</span>
                       <span
                         className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                           type === 'medical'
-                            ? 'bg-blue-900/50 text-blue-300'
-                            : 'bg-emerald-900/50 text-emerald-300'
+                            ? 'bg-info/50 text-info'
+                            : 'bg-accent/50 text-accent'
                         }`}
                       >
                         {type === 'medical' ? 'MED' : 'REC'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[10px] text-gray-500">
+                      <span className="text-[10px] text-muted">
                         {SOURCE_LABELS[entry.source] ?? entry.source}
                       </span>
                       <span className={`text-xs font-mono ${getWaitColor(waitMin)}`}>
                         {formatWaitTime(waitMin)}
                       </span>
                       {isClaimed && entry.employees && (
-                        <span className="text-[10px] text-gray-500 italic">
+                        <span className="text-[10px] text-muted italic">
                           {entry.employees.first_name}
                         </span>
                       )}
@@ -304,14 +304,14 @@ export default function DoorCheckIn({ locationId }: { locationId: string }) {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 bg-emerald-900/15 border border-emerald-800/20"
+                    className="flex items-center justify-between rounded-lg px-3 py-2 bg-accent/15 border border-accent/20"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-300 truncate">{getDisplayName(entry)}</span>
-                      <span className="text-[10px] text-emerald-400/60">w/ {budtenderName}</span>
+                      <div className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" />
+                      <span className="text-sm text-secondary truncate">{getDisplayName(entry)}</span>
+                      <span className="text-[10px] text-accent/60">w/ {budtenderName}</span>
                     </div>
-                    <span className="text-[10px] text-emerald-500/60">Serving</span>
+                    <span className="text-[10px] text-accent/60">Serving</span>
                   </div>
                 )
               })}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
-const inputCls = 'w-full h-10 px-3 bg-gray-900 border border-gray-600 rounded-lg text-sm text-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent'
+const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
 interface BiotrackConfig {
   is_enabled: boolean
@@ -47,11 +47,11 @@ const OPTION_TOGGLES: { key: keyof BiotrackConfig; label: string; description: s
 ]
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-900/50 text-amber-300 border border-amber-700',
-  eligible: 'bg-emerald-900/50 text-emerald-300 border border-emerald-700',
-  submitted: 'bg-blue-900/50 text-blue-300 border border-blue-700',
-  confirmed: 'bg-gray-700 text-gray-300 border border-gray-600',
-  failed: 'bg-red-900/50 text-red-300 border border-red-700',
+  pending: 'bg-warning/50 text-warning border border-warning',
+  eligible: 'bg-accent/50 text-accent border border-accent',
+  submitted: 'bg-info/50 text-info border border-info',
+  confirmed: 'bg-raised text-secondary border border-edge-strong',
+  failed: 'bg-danger/50 text-danger border border-danger',
 }
 
 const DEFAULT_CONFIG: BiotrackConfig = {
@@ -165,48 +165,48 @@ export default function BiotrackPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-50 mb-6">BioTrack Integration</h1>
+      <h1 className="text-xl font-bold text-primary mb-6">BioTrack Integration</h1>
 
       {msg && (
-        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700' : 'bg-red-900/50 text-red-300 border border-red-700'}`}>
+        <div className={`mb-4 px-4 py-2 rounded-lg text-sm ${msg.type === 'ok' ? 'bg-accent/50 text-accent border border-accent' : 'bg-danger/50 text-danger border border-danger'}`}>
           {msg.text}
         </div>
       )}
 
       {/* Connection Settings */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Connection Settings</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Connection Settings</h2>
         <div className="space-y-4">
           {/* Enabled toggle */}
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium text-gray-200">Enable BioTrack Integration</span>
-              <p className="text-xs text-gray-500 mt-0.5">Connect to BioTrack for state traceability compliance</p>
+              <span className="text-sm font-medium text-primary">Enable BioTrack Integration</span>
+              <p className="text-xs text-muted mt-0.5">Connect to BioTrack for state traceability compliance</p>
             </div>
             <button
               onClick={() => updateField('is_enabled', !config.is_enabled)}
-              className={`w-11 h-6 rounded-full transition-colors ${config.is_enabled ? 'bg-emerald-600' : 'bg-gray-600'}`}
+              className={`w-11 h-6 rounded-full transition-colors ${config.is_enabled ? 'bg-accent' : 'bg-raised'}`}
             >
-              <div className={`w-4 h-4 bg-white rounded-full mx-1 transition-transform ${config.is_enabled ? 'translate-x-5' : ''}`} />
+              <div className={`w-4 h-4 bg-surface rounded-full mx-1 transition-transform ${config.is_enabled ? 'translate-x-5' : ''}`} />
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">State Code</label>
+              <label className="block text-xs text-secondary mb-1">State Code</label>
               <select value={config.state_code} onChange={e => updateField('state_code', e.target.value)} className={inputCls}>
                 <option value="NM">NM - New Mexico</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">UBI</label>
+              <label className="block text-xs text-secondary mb-1">UBI</label>
               <input value={config.ubi} onChange={e => updateField('ubi', e.target.value)} placeholder="Universal Business Identifier" className={inputCls} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">BioTrack Location ID</label>
+              <label className="block text-xs text-secondary mb-1">BioTrack Location ID</label>
               <input value={config.biotrack_location_id} onChange={e => updateField('biotrack_location_id', e.target.value)} placeholder="e.g. 220091005" className={inputCls} />
             </div>
             <div />
@@ -214,22 +214,22 @@ export default function BiotrackPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">XML API URL</label>
+              <label className="block text-xs text-secondary mb-1">XML API URL</label>
               <input value={config.xml_api_url} onChange={e => updateField('xml_api_url', e.target.value)} placeholder="https://wslcb.mjtraceability.com/serverjson.asp" className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">REST API URL</label>
+              <label className="block text-xs text-secondary mb-1">REST API URL</label>
               <input value={config.rest_api_url} onChange={e => updateField('rest_api_url', e.target.value)} placeholder="https://api.biotrackthc.net/v1" className={inputCls} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Username</label>
+              <label className="block text-xs text-secondary mb-1">Username</label>
               <input value={config.username} onChange={e => updateField('username', e.target.value)} placeholder="BioTrack username" className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Password</label>
+              <label className="block text-xs text-secondary mb-1">Password</label>
               <input type="password" value={config.password} onChange={e => updateField('password', e.target.value)} placeholder="BioTrack password" className={inputCls} />
             </div>
           </div>
@@ -237,20 +237,20 @@ export default function BiotrackPage() {
       </div>
 
       {/* Options */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-50 mb-4">Options</h2>
+      <div className="bg-surface rounded-xl border border-edge p-6 mb-6">
+        <h2 className="text-lg font-semibold text-primary mb-4">Options</h2>
         <div className="space-y-4">
           {OPTION_TOGGLES.map(opt => (
             <div key={opt.key} className="flex items-center justify-between">
               <div>
-                <span className="text-sm font-medium text-gray-200">{opt.label}</span>
-                <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
+                <span className="text-sm font-medium text-primary">{opt.label}</span>
+                <p className="text-xs text-muted mt-0.5">{opt.description}</p>
               </div>
               <button
                 onClick={() => updateField(opt.key, !config[opt.key])}
-                className={`w-11 h-6 rounded-full transition-colors shrink-0 ml-4 ${config[opt.key] ? 'bg-emerald-600' : 'bg-gray-600'}`}
+                className={`w-11 h-6 rounded-full transition-colors shrink-0 ml-4 ${config[opt.key] ? 'bg-accent' : 'bg-raised'}`}
               >
-                <div className={`w-4 h-4 bg-white rounded-full mx-1 transition-transform ${config[opt.key] ? 'translate-x-5' : ''}`} />
+                <div className={`w-4 h-4 bg-surface rounded-full mx-1 transition-transform ${config[opt.key] ? 'translate-x-5' : ''}`} />
               </button>
             </div>
           ))}
@@ -259,13 +259,13 @@ export default function BiotrackPage() {
 
       {/* Save + Test */}
       <div className="mb-6 flex items-center gap-3">
-        <button onClick={save} disabled={saving} className="px-5 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-500 disabled:opacity-50">
+        <button onClick={save} disabled={saving} className="px-5 py-2 bg-accent text-primary rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50">
           {saving ? 'Saving...' : 'Save Configuration'}
         </button>
         <button
           onClick={testConnection}
           disabled={testing}
-          className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 disabled:opacity-50 flex items-center gap-2"
+          className="px-5 py-2 bg-info text-primary rounded-lg text-sm font-medium hover:bg-info disabled:opacity-50 flex items-center gap-2"
         >
           {testing ? (
             <>
@@ -279,17 +279,17 @@ export default function BiotrackPage() {
       {/* Connection Test Results */}
       {testResult && (
         <div className={`mb-6 rounded-xl border p-5 ${
-          testResult.overall === 'connected' ? 'bg-emerald-900/30 border-emerald-700' :
-          testResult.overall === 'partial' ? 'bg-amber-900/30 border-amber-700' :
-          'bg-red-900/30 border-red-700'
+          testResult.overall === 'connected' ? 'bg-accent/30 border-accent' :
+          testResult.overall === 'partial' ? 'bg-warning/30 border-warning' :
+          'bg-danger/30 border-danger'
         }`}>
           <div className="flex items-center gap-2 mb-3">
             <div className={`w-3 h-3 rounded-full ${
-              testResult.overall === 'connected' ? 'bg-emerald-400' :
-              testResult.overall === 'partial' ? 'bg-amber-400' :
-              'bg-red-400'
+              testResult.overall === 'connected' ? 'bg-accent' :
+              testResult.overall === 'partial' ? 'bg-warning' :
+              'bg-danger'
             }`} />
-            <span className="text-sm font-semibold text-gray-50">
+            <span className="text-sm font-semibold text-primary">
               {testResult.overall === 'connected' ? 'Connected to BioTrack' :
                testResult.overall === 'partial' ? 'Partial Connection' :
                'Not Connected'}
@@ -298,33 +298,33 @@ export default function BiotrackPage() {
           <div className="space-y-2">
             <div className="flex items-start gap-2">
               <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
-                testResult.v3.status === 'success' ? 'bg-emerald-800 text-emerald-200' :
-                testResult.v3.status === 'failed' ? 'bg-red-800 text-red-200' :
-                'bg-gray-700 text-gray-400'
+                testResult.v3.status === 'success' ? 'bg-accent text-accent' :
+                testResult.v3.status === 'failed' ? 'bg-danger text-danger' :
+                'bg-raised text-secondary'
               }`}>v3 REST</span>
-              <span className="text-sm text-gray-300">{testResult.v3.message}</span>
+              <span className="text-sm text-secondary">{testResult.v3.message}</span>
             </div>
             <div className="flex items-start gap-2">
               <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
-                testResult.v1.status === 'success' ? 'bg-emerald-800 text-emerald-200' :
-                testResult.v1.status === 'failed' ? 'bg-red-800 text-red-200' :
-                'bg-gray-700 text-gray-400'
+                testResult.v1.status === 'success' ? 'bg-accent text-accent' :
+                testResult.v1.status === 'failed' ? 'bg-danger text-danger' :
+                'bg-raised text-secondary'
               }`}>v1 XML</span>
-              <span className="text-sm text-gray-300">{testResult.v1.message}</span>
+              <span className="text-sm text-secondary">{testResult.v1.message}</span>
             </div>
           </div>
         </div>
       )}
 
       {/* Destruction Queue */}
-      <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-50">Destruction Queue</h2>
-          <p className="text-xs text-gray-500 mt-1">Items scheduled for destruction reporting to BioTrack</p>
+      <div className="bg-surface rounded-xl border border-edge overflow-hidden">
+        <div className="px-6 py-4 border-b border-edge">
+          <h2 className="text-lg font-semibold text-primary">Destruction Queue</h2>
+          <p className="text-xs text-muted mt-1">Items scheduled for destruction reporting to BioTrack</p>
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-700 text-gray-400 text-xs uppercase">
+            <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">BioTrack ID</th>
               <th className="text-left px-4 py-3">Type</th>
               <th className="text-right px-4 py-3">Quantity</th>
@@ -335,17 +335,17 @@ export default function BiotrackPage() {
           </thead>
           <tbody>
             {queue.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">No items in destruction queue</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-muted">No items in destruction queue</td></tr>
             )}
             {queue.map(item => (
-              <tr key={item.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                <td className="px-4 py-2.5 text-gray-50 font-mono text-xs">{item.biotrack_id}</td>
-                <td className="px-4 py-2.5 text-gray-300 capitalize">{item.item_type}</td>
-                <td className="px-4 py-2.5 text-right text-gray-300">{item.quantity}</td>
-                <td className="px-4 py-2.5 text-gray-400">{item.eligible_on ? new Date(item.eligible_on).toLocaleDateString() : '-'}</td>
-                <td className="px-4 py-2.5 text-gray-400">{item.reason}</td>
+              <tr key={item.id} className="border-b border-edge/50 hover:bg-raised/30">
+                <td className="px-4 py-2.5 text-primary font-mono text-xs">{item.biotrack_id}</td>
+                <td className="px-4 py-2.5 text-secondary capitalize">{item.item_type}</td>
+                <td className="px-4 py-2.5 text-right text-secondary">{item.quantity}</td>
+                <td className="px-4 py-2.5 text-secondary">{item.eligible_on ? new Date(item.eligible_on).toLocaleDateString() : '-'}</td>
+                <td className="px-4 py-2.5 text-secondary">{item.reason}</td>
                 <td className="px-4 py-2.5 text-center">
-                  <span className={`inline-block px-2 py-0.5 rounded text-xs ${STATUS_COLORS[item.status] ?? 'bg-gray-700 text-gray-300'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded text-xs ${STATUS_COLORS[item.status] ?? 'bg-raised text-secondary'}`}>
                     {item.status}
                   </span>
                 </td>

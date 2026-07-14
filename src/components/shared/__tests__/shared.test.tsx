@@ -100,7 +100,8 @@ describe('shared components', () => {
   it('11. StatusBadge maps active to success', () => {
     const { container } = render(<StatusBadge status="active" />)
     expect(container.textContent).toBe('active')
-    expect(container.innerHTML).toContain('emerald')
+    expect(container.innerHTML).toContain('text-success')
+    expect(container.innerHTML).toContain('bg-success-soft')
   })
 
   it('12. DateRangePicker Today preset', () => {

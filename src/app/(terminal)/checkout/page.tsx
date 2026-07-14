@@ -64,7 +64,7 @@ export default function CheckoutPage() {
 
         {/* Persistent search bar — Sale tab only */}
         {activeTab === 'sale' && (
-          <div className="shrink-0 px-4 pt-3 pb-2 bg-gray-900 border-b border-gray-800/50">
+          <div className="shrink-0 px-4 pt-3 pb-2 bg-bg border-b border-edge/50">
             <ProductSearch
               locationId={session?.locationId}
               categoryId={selectedCategory?.id}
@@ -73,11 +73,11 @@ export default function CheckoutPage() {
             />
             {selectedCategory && (
               <div className="flex items-center gap-2 mt-2">
-                <div className="flex items-center gap-2 px-3 py-1 bg-emerald-900/50 border border-emerald-700/60 rounded-full text-xs text-emerald-300 font-medium">
+                <div className="flex items-center gap-2 px-3 py-1 bg-accent/50 border border-accent/60 rounded-full text-xs text-accent font-medium">
                   {selectedCategory.name}
                   <button
                     onClick={() => setSelectedCategory(null)}
-                    className="hover:text-white transition-colors"
+                    className="hover:text-primary transition-colors"
                   >
                     &#10005;
                   </button>

@@ -1,0 +1,8 @@
+# path | justification
+src/app/(backoffice)/customers/configure/badges/page.tsx | Customer badge colors are user-selected persisted data; the color input requires a literal fallback value.
+src/app/(backoffice)/registers/configure/guestlist/page.tsx | Guest-list status colors are user-selectable presets stored as business data.
+src/app/(backoffice)/settings/labels/page.tsx | Label preview mirrors black-on-white thermal printer output and must not follow the application theme.
+src/app/api/badges/route.ts | The literal is the persisted default for a user-configurable badge color, not application chrome.
+src/app/api/registers/configure/guestlist-statuses/route.ts | The literal is the persisted default for a user-configurable guest-list status color.
+src/components/backoffice/ProductForm.tsx | Product badge color is user-selected data and the native color input requires a literal placeholder.
+src/components/terminal/ReceiptReprint.tsx | Receipt HTML targets monochrome thermal printing and must explicitly render black ink on white paper.
