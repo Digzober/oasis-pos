@@ -351,3 +351,22 @@ The DB-write count covers statically resolvable `.insert`/`.update`/`.upsert` ch
 ## Null-location render inventory
 
 Inspected with the selected-location store unhydrated/null: `/dashboard`, `/delivery`, `/employees/time-clock`, `/inventory`, `/inventory/audits`, `/inventory/journal`, `/inventory/manifests`, `/inventory/purchase-orders`, `/inventory/receive`, `/inventory/receive-history`, `/inventory/transfers`, `/orders`, `/products`, `/registers`, `/reports/closing`, `/reports/cogs`, `/reports/inventory`, `/reports/reconciliation`, `/reports/sales`, `/reports/transactions`, `/settings/delivery`, `/settings/dutchie`, `/settings/labels`, `/settings/receipts`, `/settings/rooms`, `/settings/taxes`, and `/terminal/checkout`. No render-time non-null assertion or null property dereference remains; backoffice fetches omit `location_id` until selected and server routes fall back to the signed session location, while terminal checkout uses the signed session directly.
+
+## Phase B — LIVE VERIFICATION (Fable, against real Dutchie data, dev DB)
+
+Migration 20260402160000 applied via supabase db push (drift NOTICEs benign — IF NOT EXISTS guards worked).
+Schema confirmed: dutchie_sync_state + dutchie_loyalty_staging created; current_points/points_change → NUMERIC; 7 RPCs present; dutchie_sync_state seeded 99 rows (96 location + 3 org-scoped); dutchie_sync_log +organization_id +heartbeat_at.
+
+Loyalty pipeline driven with 50 REAL customer records from live /reporting/loyalty-snapshot (108,701 total):
+- Match-rate guard: 50/50 (100%) via count_dutchie_loyalty_matches BEFORE apply.
+- apply_dutchie_loyalty_chunk: 50 processed, 50 journaled, 0 unmatched.
+- Decimal fidelity: all 50 current_points + lifetime_points EXACT to source cent (420253=295.10, 420184=2952.63, 420263=93.48).
+- Idempotency: re-drain same run = 0 pending, no-op.
+- Re-sync delta journaling: 420253 295.10→350.00 recorded points_change=+54.90 (delta, NOT absolute); 2 audit rows.
+- adjust_loyalty_points (referral/manual path): 391.10 +25 = 416.10 relative, atomic, audit row written.
+- All test artifacts cleaned up (0 balances/journal/staging remain).
+
+Cron auth (src/lib/auth/cron.ts): fail-closed — missing CRON_SECRET → 500, wrong bearer → 401. 3/3 unit tests pass.
+Cron full incremental live-run deferred: first real run does Apr→Jul catch-up; requires CRON_SECRET env var (currently unset). Incremental logic covered by unit tests.
+
+Result: AC-B1, B11, B15 live-proven on real data. AC-B12 verified. AC-B8 (consecutive incremental) unit-tested; live run flagged for controlled first execution.
