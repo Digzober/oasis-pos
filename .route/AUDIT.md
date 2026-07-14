@@ -371,6 +371,15 @@ Cron full incremental live-run deferred: first real run does Apr→Jul catch-up;
 
 Result: AC-B1, B11, B15 live-proven on real data. AC-B12 verified. AC-B8 (consecutive incremental) unit-tested; live run flagged for controlled first execution.
 
+### Phase B review follow-up — F1 loyalty staging freshness
+
+| ID | File:line | Class | Fix |
+|---|---|---|---|
+| B-F1 | `src/lib/dutchie/loyaltySync.ts:136` | Resumability / stale data | Defined one 20-hour cutoff per sync attempt. Cleanup now deletes complete/unapplied organization staging older than that cutoff in addition to the existing 24-hour incomplete cleanup. Both complete/unapplied resume lookups require `created_at >= cutoff` and order by `created_at DESC`, preventing old balances from being resumed while preserving recent staging-drain recovery. Match-rate-before-apply and checkpoint-only-after-full-drain code paths were not moved or changed. |
+| B-F1-T | `src/lib/dutchie/__tests__/loyaltyResume.test.ts:201` | Regression tests | Added an in-memory Supabase query-double test proving a one-hour-old complete/unapplied run resumes with zero Dutchie snapshot calls, while a 21-hour-old run is purged and exactly one fresh snapshot is fetched. TDD RED: stale case expected one fetch but observed zero; GREEN: 2/2 focused tests passed. |
+
+Verification: `npx vitest run src/lib/dutchie src/lib/services/__tests__/loyaltyAdjustmentAtomic.test.ts src/app/api/dutchie src/app/api/settings/dutchie-config` exited 0 (10 files, 34/34 tests); `npm run typecheck` exited 0.
+
 ## Phase C — Universal theme system
 
 ### Findings and implementation ledger

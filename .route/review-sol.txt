@@ -17718,3 +17718,197 @@ sortBy && (sortDir === 'asc' ? <IconChevronUp /> : <IconChevronDown />)}</span>
 
 
 
+Completed the scoped diff audit, call-path tracing, theme semantic scan, and available verification. Focused Vitest execution was blocked by read-only temp-directory permissions; typecheck and the theme gate completed.
+  ✓ Establish diff scope, changed files, and available tests
+  ✓ Trace ownership, session override, and HMAC authorization paths
+  ✓ Trace loyalty sync orchestration, leases, deadlines, and checkpoints
+  ✓ Audit theme codemod and high traffic interactive components
+  ✓ Run focused tests and validate only actionable findings
+exec
+"C:\\windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -Command '$f='"'src/lib/services/reconciliationService.ts';"'$i=0;Get-Content -LiteralPath $f|ForEach-Object{$i++;if($i -le 170){'"'{0,5}: {1}' -f "'$i,$_}}' in C:\Users\Kane(Don't delete C\Github Projects\OCC-POS\oasis-pos
+ succeeded in 579ms:
+    1: import { createSupabaseServerClient } from '@/lib/supabase/server'
+    2: import { logger } from '@/lib/utils/logger'
+    3: 
+    4: export interface ReconciliationItem {
+    5:   biotrack_barcode: string
+    6:   product_name: string
+    7:   local_quantity: number
+    8:   biotrack_quantity: number
+    9:   variance: number
+   10:   status: 'matched' | 'discrepancy' | 'local_only' | 'biotrack_only'
+   11:   auto_resolved: boolean
+   12:   resolution_notes: string | null
+   13: }
+   14: 
+   15: export interface ReconciliationReport {
+   16:   id?: string
+   17:   location_id: string
+   18:   location_name: string
+   19:   run_at: string
+   20:   items_matched: number
+   21:   items_with_discrepancy: number
+   22:   items_local_only: number
+   23:   items_biotrack_only: number
+   24:   auto_resolved: number
+   25:   needs_review: number
+   26:   items: ReconciliationItem[]
+   27: }
+   28: 
+   29: const VARIANCE_THRESHOLD = 0.1
+   30: 
+   31: export async function runDailyReconciliation(locationId: string, employeeId: string): Promise<ReconciliationReport> {
+   32:   const sb = await createSupabaseServerClient()
+   33: 
+   34:   const { data: location } = await sb.from('locations').select('name, organization_id, biotrack_location_id').eq('id', locationId).single()
+   35:   if (!location) throw new Error('Location not found')
+   36: 
+   37:   // Pull BioTrack inventory
+   38:   let btItems: Array<{ barcode: string; product_name: string; quantity: number }> = []
+   39:   try {
+   40:     const { getBioTrackClient } = await import('@/lib/biotrack/client')
+   41:     const client = getBioTrackClient()
+   42:     const response = await client.call('inventory/sync', { location_id: location.biotrack_location_id ?? locationId }, {
+   43:       organizationId: location.organization_id, locationId, entityType: 'reconciliation',
+   44:     })
+   45:     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   46:     btItems = ((response.data as any)?.inventory ?? []).map((i: any) => ({
+   47:       barcode: i.barcode ?? i.id ?? '', product_name: i.product_name ?? i.productname ?? '', quantity: i.quantity ?? i.remaining_quantity ?? 0,
+   48:     }))
+   49:   } catch (err) {
+   50:     logger.warn('BioTrack sync failed during reconciliation, using empty', { error: String(err) })
+   51:   }
+   52: 
+   53:   // Load local inventory
+   54:   const { data: localItems } = await sb.from('inventory_items').select('biotrack_barcode, quantity, products ( name )').eq('location_id', locationId).eq('is_active', true)
+   55: 
+   56:   const btMap = new Map(btItems.map((i) => [i.barcode, i]))
+   57:   const localMap = new Map<string, { barcode: string; quantity: number; name: string }>()
+   58:    
+   59:   for (const item of localItems ?? []) {
+   60:     if (!item.biotrack_barcode) continue
+   61:     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   62:     localMap.set(item.biotrack_barcode, { barcode: item.biotrack_barcode, quantity: item.quantity, name: (item.products as any)?.name ?? '' })
+   63:   }
+   64: 
+   65:   const items: ReconciliationItem[] = []
+   66:   let matched = 0, discrepancies = 0, localOnly = 0, btOnly = 0, autoResolved = 0
+   67: 
+   68:   // Compare matched barcodes
+   69:   for (const [barcode, local] of localMap) {
+   70:     const bt = btMap.get(barcode)
+   71:     if (bt) {
+   72:       const variance = local.quantity - bt.quantity
+   73:       if (Math.abs(variance) < VARIANCE_THRESHOLD) {
+   74:         items.push({ biotrack_barcode: barcode, product_name: local.name, local_quantity: local.quantity, biotrack_quantity: bt.quantity, variance, status: 'matched', auto_resolved: Math.abs(variance) > 0, resolution_notes: null })
+   75:         matched++
+   76:         if (Math.abs(variance) > 0) autoResolved++
+   77:       } else {
+   78:         items.push({ biotrack_barcode: barcode, product_name: local.name, local_quantity: local.quantity, biotrack_quantity: bt.quantity, variance, status: 'discrepancy', auto_resolved: false, resolution_notes: null })
+   79:         discrepancies++
+   80:       }
+   81:       btMap.delete(barcode)
+   82:     } else {
+   83:       items.push({ biotrack_barcode: barcode, product_name: local.name, local_quantity: local.quantity, biotrack_quantity: 0, variance: local.quantity, status: 'local_only', auto_resolved: false, resolution_notes: null })
+   84:       localOnly++
+   85:     }
+   86:   }
+   87: 
+   88:   // BioTrack-only items
+   89:   for (const [barcode, bt] of btMap) {
+   90:     items.push({ biotrack_barcode: barcode, product_name: bt.product_name, local_quantity: 0, biotrack_quantity: bt.quantity, variance: -bt.quantity, status: 'biotrack_only', auto_resolved: false, resolution_notes: null })
+   91:     btOnly++
+   92:   }
+   93: 
+   94:   const report: ReconciliationReport = {
+   95:     location_id: locationId, location_name: location.name, run_at: new Date().toISOString(),
+   96:     items_matched: matched, items_with_discrepancy: discrepancies, items_local_only: localOnly,
+   97:     items_biotrack_only: btOnly, auto_resolved: autoResolved, needs_review: discrepancies + localOnly + btOnly, items,
+   98:   }
+   99: 
+  100:   // Save report
+  101:   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  102:   const { data: saved } = await ((sb as any).from('reconciliation_reports') as any).insert({
+  103:     organization_id: location.organization_id, location_id: locationId, run_by: employeeId,
+  104:     items_matched: matched, items_with_discrepancy: discrepancies, items_local_only: localOnly,
+  105:     items_biotrack_only: btOnly, auto_resolved: autoResolved, needs_review: report.needs_review,
+  106:     details: items, status: 'completed',
+  107:   }).select('id').single()
+  108: 
+  109:   if (saved) report.id = saved.id
+  110: 
+  111:   // Audit
+  112:   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  113:   await sb.from('audit_log').insert({ organization_id: location.organization_id, location_id: locationId, employee_id: employeeId, entity_type: 'reconciliation', event_type: 'run', entity_id: saved?.id ?? '', metadata: { matched, discrepancies, localOnly, btOnly } } as any)
+  114: 
+  115:   logger.info('Reconciliation complete', { locationId, matched, discrepancies, localOnly, btOnly })
+  116:   return report
+  117: }
+  118: 
+  119: export async function listReports(organizationId: string, locationId?: string, page = 1) {
+  120:   const sb = await createSupabaseServerClient()
+  121:   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  122:   let query = ((sb as any).from('reconciliation_reports') as any)
+  123:     .select('id, location_id, run_at, items_matched, items_with_discrepancy, items_local_only, items_biotrack_only, auto_resolved, needs_review, status, locations!inner(organization_id)', { count: 'exact' })
+  124:     .eq('locations.organization_id', organizationId)
+  125:   if (locationId) query = query.eq('location_id', locationId)
+  126:   const { data, count } = await query.order('run_at', { ascending: false }).range((page - 1) * 20, page * 20 - 1)
+  127:   return { reports: data ?? [], total: count ?? 0 }
+  128: }
+  129: 
+  130: export async function getReport(id: string, organizationId: string) {
+  131:   const sb = await createSupabaseServerClient()
+  132:   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  133:   const { data } = await ((sb as any).from('reconciliation_reports') as any)
+  134:     .select('*, locations!inner(organization_id)')
+  135:     .eq('id', id)
+  136:     .eq('locations.organization_id', organizationId)
+  137:     .single()
+  138:   return data
+  139: }
+
+codex
+NOT SHIP-READY.
+
+1. [blocker] Orders remain cross-location accessible. [orders/route.ts:43](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/route.ts:43>) accepts any `location_id`, or returns every organization location when omitted. [[id]/route.ts:9](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/[id]/route.ts:9>) and [[id]/route.ts:14](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/[id]/route.ts:14>) omit `session.locationId` when asserting `online_orders`. A location A employee can read customer PII or change the status of a known location B order. The ownership tests cover foreign organizations, not same-organization cross-location access.
+
+2. [blocker] The new manual reconciliation endpoint has no role or assigned-location authorization. [manual/route.ts:9](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/reconciliation/manual/route.ts:9>) accepts any authenticated session, while [manual/route.ts:14](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/reconciliation/manual/route.ts:14>) verifies only organization membership. A budtender assigned to location A can submit location B and initiate a BioTrack call, create a financial reconciliation report, and write an audit event there.
+
+3. [major] Printer assignment deletion is not bound to the printer in the URL. [assignments/route.ts:77](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/settings/printers/[id]/assignments/route.ts:77>) does not read `[id]`, and [line 86](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/settings/printers/[id]/assignments/route.ts:86>) passes no `expectedParentId`. Calling `/printers/A/assignments` with an assignment belonging to printer B deletes B’s assignment when both printers share the active location. The matrix test only checks that an ownership call exists.
+
+4. [major] Pending loyalty lookup failures are silently treated as “no pending run.” [loyaltySync.ts:142](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:142>) and [loyaltySync.ts:156](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:156>) ignore both query errors. A transient failure can leave snapshot A pending, allow newer snapshot B to be staged and applied, then cause A to be resumed later and revert balances to older values. The resumability test checks lookup ordering, not error handling or run ordering.
+
+5. [major] Deadline-exhausted loyalty runs are recorded as successful while balances are only partially updated. [loyaltySync.ts:207](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:207>) exits the chunk loop without recording an error; pending rows prevent checkpointing at [line 232](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:232>), but [line 259](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:259>) completes the lease with `errored === 0`, so [syncLease.ts:69](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncLease.ts:69>) marks it `completed`. Customers can see mixed old and new balances until the next cron run, while operations reports success. Pending-staging recovery limits eventual data loss but does not cover this false-success window.
+
+6. [major] Active syncs can be reaped while they are still fetching. [syncLease.ts:28](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncLease.ts:28>) declares a lease stale after five minutes, but full customer, product, and inventory fetches occur before any heartbeat, for example [syncEngine.ts:235](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncEngine.ts:235>) and [syncEngine.ts:655](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncEngine.ts:655>). A manual full sync lasting over five minutes can be marked failed and replaced while the original continues writing, producing overlapping runs. Existing lease tests verify stale reaping but not heartbeats during long external fetches.
+
+7. [major] Batch isolation amplifies infrastructure failures into a request storm. [batchIsolation.ts:37](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/batchIsolation.ts:37>) bisects every error concurrently without distinguishing row-specific constraint failures from database, authentication, or network outages. A failed 1,000-row batch during a database outage recursively generates roughly 2,000 attempts, ending with up to 1,000 concurrent single-row writes. The passing-path test covers one poisoned record only.
+
+8. [major] The theme conversion uses the wrong foreground token on accent controls. [CheckoutPanel.tsx:167](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/terminal/CheckoutPanel.tsx:167>) is one high-traffic example of 164 changed `bg-accent text-primary` combinations. Actual contrast is 2.10 in dark, 3.06 in light, and 1.91 in high-contrast mode, all below WCAG AA for normal text. The defined `text-accent-fg` token passes, but is rarely used. The theme gate passes because it tests token pairs, not component token usage.
+
+9. [major] The codemod collapsed widespread hover states into the base state. [LocationSwitcher.tsx:28](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/backoffice/LocationSwitcher.tsx:28>) changed distinct `gray-700`/`gray-600` states to `bg-raised hover:bg-raised`; [CheckoutPanel.tsx:167](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/terminal/CheckoutPanel.tsx:167>) similarly changed `emerald-600`/`emerald-500` to identical accent values. This pattern occurs across primary and secondary controls, removing visible hover feedback from core checkout and back-office actions.
+
+Verification: `npm run typecheck` and `npm run check:theme` passed. Focused Vitest execution could not start because the read-only environment denied Vitest’s temporary directory creation, so no test-pass claim was made. The session override itself validates organization and employee assignment correctly, and the order HMAC implementation is purpose-separated and timing-safe.
+tokens used
+279,347
+NOT SHIP-READY.
+
+1. [blocker] Orders remain cross-location accessible. [orders/route.ts:43](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/route.ts:43>) accepts any `location_id`, or returns every organization location when omitted. [[id]/route.ts:9](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/[id]/route.ts:9>) and [[id]/route.ts:14](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/orders/[id]/route.ts:14>) omit `session.locationId` when asserting `online_orders`. A location A employee can read customer PII or change the status of a known location B order. The ownership tests cover foreign organizations, not same-organization cross-location access.
+
+2. [blocker] The new manual reconciliation endpoint has no role or assigned-location authorization. [manual/route.ts:9](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/reconciliation/manual/route.ts:9>) accepts any authenticated session, while [manual/route.ts:14](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/reconciliation/manual/route.ts:14>) verifies only organization membership. A budtender assigned to location A can submit location B and initiate a BioTrack call, create a financial reconciliation report, and write an audit event there.
+
+3. [major] Printer assignment deletion is not bound to the printer in the URL. [assignments/route.ts:77](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/settings/printers/[id]/assignments/route.ts:77>) does not read `[id]`, and [line 86](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/app/api/settings/printers/[id]/assignments/route.ts:86>) passes no `expectedParentId`. Calling `/printers/A/assignments` with an assignment belonging to printer B deletes B’s assignment when both printers share the active location. The matrix test only checks that an ownership call exists.
+
+4. [major] Pending loyalty lookup failures are silently treated as “no pending run.” [loyaltySync.ts:142](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:142>) and [loyaltySync.ts:156](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:156>) ignore both query errors. A transient failure can leave snapshot A pending, allow newer snapshot B to be staged and applied, then cause A to be resumed later and revert balances to older values. The resumability test checks lookup ordering, not error handling or run ordering.
+
+5. [major] Deadline-exhausted loyalty runs are recorded as successful while balances are only partially updated. [loyaltySync.ts:207](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:207>) exits the chunk loop without recording an error; pending rows prevent checkpointing at [line 232](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:232>), but [line 259](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/loyaltySync.ts:259>) completes the lease with `errored === 0`, so [syncLease.ts:69](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncLease.ts:69>) marks it `completed`. Customers can see mixed old and new balances until the next cron run, while operations reports success. Pending-staging recovery limits eventual data loss but does not cover this false-success window.
+
+6. [major] Active syncs can be reaped while they are still fetching. [syncLease.ts:28](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncLease.ts:28>) declares a lease stale after five minutes, but full customer, product, and inventory fetches occur before any heartbeat, for example [syncEngine.ts:235](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncEngine.ts:235>) and [syncEngine.ts:655](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/syncEngine.ts:655>). A manual full sync lasting over five minutes can be marked failed and replaced while the original continues writing, producing overlapping runs. Existing lease tests verify stale reaping but not heartbeats during long external fetches.
+
+7. [major] Batch isolation amplifies infrastructure failures into a request storm. [batchIsolation.ts:37](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/lib/dutchie/batchIsolation.ts:37>) bisects every error concurrently without distinguishing row-specific constraint failures from database, authentication, or network outages. A failed 1,000-row batch during a database outage recursively generates roughly 2,000 attempts, ending with up to 1,000 concurrent single-row writes. The passing-path test covers one poisoned record only.
+
+8. [major] The theme conversion uses the wrong foreground token on accent controls. [CheckoutPanel.tsx:167](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/terminal/CheckoutPanel.tsx:167>) is one high-traffic example of 164 changed `bg-accent text-primary` combinations. Actual contrast is 2.10 in dark, 3.06 in light, and 1.91 in high-contrast mode, all below WCAG AA for normal text. The defined `text-accent-fg` token passes, but is rarely used. The theme gate passes because it tests token pairs, not component token usage.
+
+9. [major] The codemod collapsed widespread hover states into the base state. [LocationSwitcher.tsx:28](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/backoffice/LocationSwitcher.tsx:28>) changed distinct `gray-700`/`gray-600` states to `bg-raised hover:bg-raised`; [CheckoutPanel.tsx:167](<C:/Users/Kane(Don't delete C/Github Projects/OCC-POS/oasis-pos/src/components/terminal/CheckoutPanel.tsx:167>) similarly changed `emerald-600`/`emerald-500` to identical accent values. This pattern occurs across primary and secondary controls, removing visible hover feedback from core checkout and back-office actions.
+
+Verification: `npm run typecheck` and `npm run check:theme` passed. Focused Vitest execution could not start because the read-only environment denied Vitest’s temporary directory creation, so no test-pass claim was made. The session override itself validates organization and employee assignment correctly, and the order HMAC implementation is purpose-separated and timing-safe.

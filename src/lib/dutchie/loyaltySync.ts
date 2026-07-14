@@ -133,17 +133,26 @@ export async function syncLoyalty(
   })
 
   try {
+    const recentResumeCutoff = new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString()
     await (sb as any).from('dutchie_loyalty_staging')
       .delete()
       .eq('organization_id', organizationId)
       .eq('staging_complete', false)
       .lt('created_at', new Date(Date.now() - 86_400_000).toISOString())
+    await (sb as any).from('dutchie_loyalty_staging')
+      .delete()
+      .eq('organization_id', organizationId)
+      .eq('staging_complete', true)
+      .is('applied_at', null)
+      .lt('created_at', recentResumeCutoff)
 
     const fingerprintLookup = await (sb as any).from('dutchie_loyalty_staging')
       .select('run_id, run_fingerprint')
       .eq('organization_id', organizationId)
       .eq('staging_complete', true)
       .is('applied_at', null)
+      .gte('created_at', recentResumeCutoff)
+      .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
@@ -159,6 +168,8 @@ export async function syncLoyalty(
         .eq('run_fingerprint', fingerprint)
         .eq('staging_complete', true)
         .is('applied_at', null)
+        .gte('created_at', recentResumeCutoff)
+        .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
