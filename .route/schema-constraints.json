@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "source": "LIVE introspection of dev DB nlyrqgosspjefrkhupja (pg_constraint, contype='c'), 2026-07-14",
+    "authority": "This file supersedes DATABASE-CONSTRAINTS.md for Phase A conformance. Only values listed here are legal for their columns. Tables with no entry have NO CHECK constraints (but still have NOT NULLs/FKs — consult migrations; ambiguities go in AUDIT.md as needs-live-verify).",
+    "drift_notes": [
+      "dutchie_sync_jobs exists on dev but in NO migration file (drift — do not assume it in code without defensive checks)",
+      "loyalty_balances UNIQUE(customer_id,organization_id) exists on dev but not in migration files",
+      "loyalty_transactions has NO CHECK constraint on its type column — follow app-level conventions in existing loyalty code"
+    ]
+  },
+  "check_constraints": {
+    "tags": ["tag_type IN ('product','inventory')"],
+    "rooms": ["room_area_unit IN ('sqft','sqm')"],
+    "badges": ["assignment_method IN ('manual','automatic')"],
+    "events": ["status IN ('draft','upcoming','active','completed','cancelled')"],
+    "strains": ["strain_type IN ('indica','sativa','hybrid','cbd')"],
+    "printers": ["connection_type IN ('printnode','usb','network','bluetooth')", "printer_type IN ('esc_pos','zpl','brother','pdf')"],
+    "products": ["strain_type IN ('indica','sativa','hybrid','cbd')", "product_type IN ('quantity','weight')", "net_weight_unit IN ('g','mg','oz','ml')", "default_unit IN ('each','gram','eighth','quarter','half','ounce')"],
+    "audit_log": ["event_type IN ('create','update','delete','receive','manual_receive','adjust','transfer','move','combine','sublot','destroy')"],
+    "campaigns": ["status IN ('draft','active','sent','paused','archived')", "campaign_type IN ('automated','one_time_blast')", "channel IN ('email','sms')"],
+    "customers": ["customer_type IN ('recreational','medical','medical_out_of_state','medical_tax_exempt','non_cannabis','distributor','processor','retailer')", "id_type IN ('drivers_license','passport','state_id','military_id')", "status IN ('active','banned','inactive')"],
+    "discounts": ["status IN ('active','expired','draft','disabled')", "application_method IN ('automatic','manual')"],
+    "employees": ["role IN ('budtender','shift_lead','manager','admin','owner')"],
+    "manifests": ["status IN ('draft','open','in_transit','delivered','sold','cancelled')", "direction IN ('outbound','inbound')", "type IN ('transfer','order')", "tab IN ('wholesale','retail')"],
+    "tax_rates": ["rate_type IN ('percentage','flat_amount')", "applies_to IN ('recreational','medical','both')"],
+    "workflows": ["channel IN ('email','sms')", "status IN ('draft','active','paused','archived')"],
+    "cash_drawers": ["status IN ('open','closed','reconciled')"],
+    "transactions": ["status IN ('pending','completed','voided','returned')", "transaction_type IN ('sale','return','void','exchange')"],
+    "online_orders": ["status IN ('pending','confirmed','preparing','ready','out_for_delivery','completed','cancelled')", "order_type IN ('pickup','delivery','curbside','kiosk','drive_thru')"],
+    "fees_donations": ["fee_type IN ('fee','donation')"],
+    "loyalty_config": ["enrollment_type IN ('opt_in','auto_enroll')", "redemption_method IN ('discount','payment_pretax','payment_posttax')"],
+    "receipt_config": ["config_type IN ('receipt','pick_ticket')"],
+    "inventory_items": ["testing_status IN ('untested','pending','passed','failed')"],
+    "label_templates": ["label_type IN ('package','product','barcode','custom')", "orientation IN ('portrait','landscape')"],
+    "purchase_limits": ["unit IN ('grams','ounces','mg_thc','items')", "limit_type IN ('rolling','calendar','fixed')", "time_period IN ('daily','weekly','monthly')", "customer_type IN ('recreational','medical','all')"],
+    "purchase_orders": ["status IN ('draft','submitted','partial','received','cancelled')"],
+    "discount_rewards": ["discount_method IN ('percent_off','dollar_off','price_to_amount','bogo','free_item')"],
+    "dutchie_sync_log": ["sync_type IN ('full','incremental')", "status IN ('running','completed','failed')"],
+    "inventory_audits": ["status IN ('draft','in_progress','review','completed','cancelled')"],
+    "report_schedules": ["frequency IN ('daily','weekly','monthly','yearly')"],
+    "biotrack_sync_log": ["sync_type IN ('batch','realtime')", "direction IN ('outbound','inbound')", "api_version IN ('v1','v3','trace2')", "status IN ('success','error','pending','retry')"],
+    "cash_drawer_drops": ["drop_type IN ('safe_drop','bank_deposit','petty_cash','paid_out')"],
+    "dutchie_sync_jobs": ["job_type IN ('full','products','customers','inventory','brands','vendors','strains','transactions')", "status IN ('pending','running','completed','failed')"],
+    "guestlist_entries": ["customer_type IN ('recreational','medical')", "source IN ('walk_in','online_pickup','online_delivery','curbside','drive_thru','phone','kiosk')"],
+    "referral_tracking": ["status IN ('pending','completed')"],
+    "product_categories": ["available_for IN ('all','medical','recreational')"],
+    "campaign_recipients": ["status IN ('pending','sent','delivered','opened','clicked','bounced','failed','unsubscribed')"],
+    "printer_assignments": ["assignment_type IN ('labels','receipts')"],
+    "transaction_reasons": ["reason_type IN ('return','cancellation','void','adjustment')"],
+    "workflow_executions": ["status IN ('running','completed','failed','cancelled')"],
+    "discount_constraints": ["threshold_type IN ('total_items','total_spend','total_weight')"],
+    "print_service_config": ["service_type IN ('printnode','google_cloud_print','direct')"],
+    "transaction_payments": ["payment_method IN ('cash','debit','credit','epay','check','loyalty','coupon')"],
+    "product_label_settings": ["customer_type IN ('medical','recreational')"],
+    "reconciliation_reports": ["status IN ('running','completed','failed')"],
+    "discount_reward_filters": ["filter_type IN ('strain','category','brand','vendor','weight','product_tag','inventory_tag','pricing_tier','product')"],
+    "biotrack_destruction_queue": ["status IN ('eligible','ineligible','scheduled','completed','cancelled')"],
+    "discount_constraint_filters": ["filter_type IN ('strain','category','brand','vendor','weight','product_tag','inventory_tag','pricing_tier','product')"]
+  },
+  "verified_key_tables": {
+    "loyalty_balances": {
+      "columns": {"current_points": "INTEGER NOT NULL DEFAULT 0 (migrating to NUMERIC(12,2))", "lifetime_points": "INTEGER NOT NULL DEFAULT 0 (migrating to NUMERIC(12,2))", "customer_id": "UUID NOT NULL", "organization_id": "UUID NOT NULL", "enrolled_at": "TIMESTAMPTZ NOT NULL DEFAULT now()", "updated_at": "TIMESTAMPTZ NOT NULL DEFAULT now()", "tier_id": "UUID NULL"},
+      "unique": "UNIQUE(customer_id, organization_id) — exists on dev, NOT in migration files"
+    },
+    "customers": {"dutchie_customer_id": "INTEGER NULL"}
+  }
+}
