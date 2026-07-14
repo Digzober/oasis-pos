@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { AppError } from '@/lib/utils/errors'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 export interface SessionPayload {
   employeeId: string
@@ -78,11 +79,37 @@ export async function requireSession(): Promise<SessionPayload> {
   const cookieStore = await cookies()
   const locationOverride = cookieStore.get('oasis-location-id')?.value
   if (locationOverride && locationOverride !== session.locationId) {
-    const locationName = cookieStore.get('oasis-location-name')?.value
-    return {
-      ...session,
-      locationId: locationOverride,
-      locationName: locationName ?? session.locationName,
+    try {
+      const sb = await createSupabaseServerClient()
+      const { data: location, error: locationError } = await sb
+        .from('locations')
+        .select('id, name')
+        .eq('id', locationOverride)
+        .eq('organization_id', session.organizationId)
+        .maybeSingle()
+
+      if (locationError || !location) return session
+
+      const canAccessAnyOrgLocation = session.role === 'admin' || session.role === 'owner'
+      if (!canAccessAnyOrgLocation) {
+        const { data: assignment, error: assignmentError } = await sb
+          .from('employee_locations')
+          .select('location_id')
+          .eq('employee_id', session.employeeId)
+          .eq('location_id', locationOverride)
+          .maybeSingle()
+
+        if (assignmentError || !assignment) return session
+      }
+
+      return {
+        ...session,
+        locationId: location.id,
+        locationName: location.name,
+      }
+    } catch {
+      // A location switch must fail closed. The signed session location remains valid.
+      return session
     }
   }
 

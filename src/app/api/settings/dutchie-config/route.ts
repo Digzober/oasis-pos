@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
-import { requireSession } from '@/lib/auth/session'
+import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { clearDutchieConfigCache } from '@/lib/dutchie/configLoader'
 import { logger } from '@/lib/utils/logger'
@@ -82,12 +82,13 @@ function frontendToDbRow(data: Record<string, unknown>, locationId: string) {
 
 export async function GET() {
   try {
-    const session = await requireSession()
+    const session = await requireDutchieManager()
     const sb = await createSupabaseServerClient()
 
     const { data: config, error } = await (sb as any).from('dutchie_config')
-      .select('*')
+      .select('*, locations!inner(organization_id)')
       .eq('location_id', session.locationId)
+      .eq('locations.organization_id', session.organizationId)
       .maybeSingle()
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -108,7 +109,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await requireSession()
+    const session = await requireDutchieManager()
     const sb = await createSupabaseServerClient()
     const body = await request.json()
     const parsed = UpdateDutchieConfigSchema.safeParse(body)
@@ -116,6 +117,15 @@ export async function PATCH(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
+
+    const { data: location, error: locationError } = await sb.from('locations')
+      .select('id')
+      .eq('id', session.locationId)
+      .eq('organization_id', session.organizationId)
+      .maybeSingle()
+
+    if (locationError) return NextResponse.json({ error: locationError.message }, { status: 500 })
+    if (!location) return NextResponse.json({ error: 'Location not found' }, { status: 404 })
 
     const dbRow = frontendToDbRow(parsed.data as Record<string, unknown>, session.locationId)
 
