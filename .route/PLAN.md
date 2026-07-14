@@ -1,6 +1,6 @@
-# PLAN v2: Full-Stack Audit + Dutchie Sync Hardening + Universal Theme System
+# PLAN v3: Full-Stack Audit + Dutchie Sync Hardening + Universal Theme System
 
-Branch: `route/full-audit-sync-theme`. v2 incorporates all 22 findings from plan review round 1 (`.route/plan-review-1.txt`) and adds Phase B3 (scheduled incremental cron sync, user-requested mid-run).
+Branch: `route/full-audit-sync-theme`. v2 incorporated all 22 round-1 findings + Phase B3 (cron). v3 resolves round-2's 2 blockers + 5 majors (`.route/plan-review-2.txt`): atomic loyalty reconciliation via RPC, durable staging-table resume, org-scoped sync state, fail-closed cron auth, window-granular checkpoints, org-vs-location entity classification, settings-route authz.
 
 ## Assumptions (hands-off run)
 
@@ -35,7 +35,8 @@ Branch: `route/full-audit-sync-theme`. v2 incorporates all 22 findings from plan
 
 ### A-SEC (from review — do FIRST)
 - S1: `requireSession` location override: validate the `oasis-location-id` cookie value is a location belonging to the session's organization AND (employee is assigned via `employee_locations` OR role ∈ {admin,owner}). Reject otherwise (fall back to session's own location). Add unit tests incl. negative (foreign-org location id → rejected).
-- S2: Dutchie routes (`/api/dutchie/*`): require role ∈ {manager, admin, owner}. Org-scope every query (config lookups filter by session organization via the locations table join, not location id alone).
+- S2: Dutchie routes (`/api/dutchie/*`) AND `/api/settings/dutchie-config` AND the connection-test endpoint: require role ∈ {manager, admin, owner}. Org-scope every query (config lookups filter by session organization via the locations table join, not location id alone).
+- S6: ALL cron routes fail CLOSED: `/api/dutchie/cron` (new) + existing `/api/biotrack/retry`, `/api/biotrack/inventory-sync`, `/api/orders/expire`, `/api/reconciliation`, `/api/reports/schedules/execute` — if `CRON_SECRET` is unset/empty → 500 refusal (never allow); wrong/missing bearer → 401. Unit-test all three cases on the new route; apply the same guard helper to the existing routes.
 - S3: Remove/neuter `logRawResponse` raw PII sampling in `client.ts` (log counts + ids only). Grep for other logger calls emitting raw customer/employee records; redact.
 - S4: Verify `api_key_encrypted` never appears in any API response payload (settings API must return only a boolean `hasApiKey` + masked tail); fix if it leaks.
 - S5: All other `/api/*` routes: spot-audit that session org/location scoping exists on service-role queries (record per-route status in AUDIT.md matrix).
@@ -63,25 +64,32 @@ Acceptance criteria:
 
 ## Phase B — Dutchie sync: hardening + loyalty + cron
 
-### B1 Loyalty sync (org-scoped, resumable, no-retry)
-- Migration `*_dutchie_loyalty_sync.sql` (defensive, IF NOT EXISTS style): widen `loyalty_balances.current_points`+`lifetime_points` → `NUMERIC(12,2)`; ensure UNIQUE(customer_id,organization_id) exists (create if absent; on duplicate-data failure, raise with clear message); add `dutchie_config.sync_loyalty BOOLEAN NOT NULL DEFAULT TRUE`, `last_synced_loyalty_at TIMESTAMPTZ`; **audit + update ALL dependent SQL functions** (`create_sale_transaction` p_loyalty_points/v_balance_after, void/return functions) to NUMERIC(12,2); check `loyalty_transactions` points column type and widen to match; `NOTIFY pgrst, 'reload schema'`.
-- Client: dedicated `getLoyaltySnapshot()` — exactly ONE HTTP attempt (no retry wrapper, no Retry-After sleep loop; on failure, sync marked failed and next scheduled run retries naturally).
-- Engine `syncLoyalty` (org-level): runs only from designated location (first enabled alphabetically); validates response is a non-empty array of schema-valid records (customerId int, numeric fields) — malformed/empty → fail WITHOUT touching checkpoint or balances; batch-resolve dutchie_customer_id→customers in 1000-row pages; upsert balances (`current_points=loyaltyBalance`, `lifetime_points=loyaltyEarned`) onConflict customer_id,organization_id, deduped, `enrolled_at` OMITTED from payload (DB default; existing values preserved — add explicit test); journal net balance deltas into `loyalty_transactions` (transaction_type per existing CHECK constraint — read live constraints; reason 'dutchie_sync'); chunk-checkpoint progress in the sync_log row (records_processed) so a timeout resumes at offset next run; match-rate guard: if matched/total < 30%, mark failed with diagnostic (likely customers not yet synced) and do NOT update `last_synced_loyalty_at`.
-- Config/UI: loyalty tile in settings dutchie page (toggle + last-synced + sync button), `loyalty` in VALID_ENTITY_TYPES, configLoader fields.
+### B1 Loyalty sync (org-scoped, atomic, durably resumable, no-retry)
+- Migration `*_dutchie_loyalty_sync.sql` (defensive, IF NOT EXISTS style):
+  1. Widen `loyalty_balances.current_points`+`lifetime_points` → `NUMERIC(12,2)`; ensure UNIQUE(customer_id,organization_id); **audit + update ALL dependent SQL functions** (`create_sale_transaction` p_loyalty_points/v_balance_after, void/return fns) to NUMERIC(12,2); widen `loyalty_transactions` points columns to match.
+  2. NEW TABLE `dutchie_org_sync_state` (organization_id UUID, entity_type TEXT, last_synced_at TIMESTAMPTZ, designated_location_id UUID NULL, is_enabled BOOLEAN NOT NULL DEFAULT TRUE, cursor JSONB NULL, UNIQUE(organization_id, entity_type)) — org-wide policy/checkpoints live HERE, not on per-location dutchie_config (round-2 major #3). Loyalty designated credential = explicit `designated_location_id` (settable in UI; default first enabled location, persisted not recomputed).
+  3. NEW TABLE `dutchie_loyalty_staging` (id BIGINT GENERATED, organization_id UUID, run_fingerprint TEXT, dutchie_customer_id INT, balance NUMERIC(12,2), earned NUMERIC(12,2), spent NUMERIC(12,2), applied_at TIMESTAMPTZ NULL, UNIQUE(organization_id, run_fingerprint, dutchie_customer_id)).
+  4. NEW RPC `apply_dutchie_loyalty_chunk(p_org UUID, p_fingerprint TEXT, p_limit INT)`: single transaction — selects next unapplied staging rows, resolves customers by dutchie_customer_id, row-locks matching `loyalty_balances` FOR UPDATE, computes delta vs CURRENT value, updates balances, inserts idempotent journal rows into `loyalty_transactions` (idempotency: unique-guarded on (customer_id, run_fingerprint) via reference column or ON CONFLICT DO NOTHING), marks staging rows applied, returns counts. Atomicity blocker resolved: no read-modify-write race with live sales/adjustments; kill-mid-chunk loses nothing (chunk rolls back whole).
+  5. `NOTIFY pgrst, 'reload schema'`.
+- Client: dedicated `getLoyaltySnapshot()` — exactly ONE HTTP attempt (no retry wrapper/Retry-After loop).
+- Engine `syncLoyalty` (org-level, runs under `(organization_id,'loyalty')` lock): validate response (non-empty, schema-valid) → compute run_fingerprint (record count + hash of sorted customerIds) → bulk-insert into staging (idempotent on refetch of same nightly snapshot) → drain via RPC in chunks until done or deadline → durable: unapplied staging rows + fingerprint ARE the cursor; a resumed run with matching fingerprint continues draining, a changed fingerprint (new nightly data) restarts staging cleanly. On full drain: match-rate guard (matched/total < 30% → mark failed, keep checkpoint), else update `dutchie_org_sync_state.last_synced_at`, purge applied staging rows older than 7 days.
+- `enrolled_at` never in payloads (DB default; existing preserved — tested).
+- Config/UI: loyalty tile in settings dutchie page reads org state (toggle=is_enabled, last-synced, designated location selector, sync button), `loyalty` in VALID_ENTITY_TYPES.
 
 ### B2 Engine quality
-- **DB-backed single-flight**: replace in-memory intent with partial unique index on `dutchie_sync_log(location_id, entity_type) WHERE status='running'` + heartbeat column (`heartbeat_at` updated per batch); acquisition = INSERT (conflict → 409); stale lease (heartbeat > 5 min) is reaped (marked 'failed: stale') by the next acquirer. Kill-mid-run recovery test.
+- **Entity scope classification** (round-2 major #6): org-wide entities = customers, products, employees, reference (brands/strains/vendors/categories/tags/tiers); location-scoped = inventory, rooms, transactions, registers/terminals. Sync + cron build ONE work item per org for org-wide entities (using designated/first-enabled credential) and one per location otherwise.
+- **DB-backed single-flight**: `dutchie_sync_log` gains `organization_id`; two partial unique indexes: `(organization_id, entity_type) WHERE status='running'` for org-wide entities and `(location_id, entity_type) WHERE status='running'` for location-scoped; + `heartbeat_at` updated per batch; acquisition = INSERT (conflict → 409); stale lease (heartbeat > 5 min) reaped as 'failed: stale' by next acquirer — reaper must NOT destroy loyalty staging cursor (fingerprint survives in staging table, not the log row). Kill-mid-run recovery test.
 - Fix `ENTITY_ENABLED_KEY` transactions→syncInventory bug; add `sync_transactions BOOLEAN NOT NULL DEFAULT TRUE` + ensure `last_synced_transactions_at` exists in MIGRATION (drift repair); enumerate every mapping: migration column ↔ configLoader ↔ settings API schema ↔ settings UI state ↔ engine gate. All toggles round-trip.
-- Checkpoint semantics: advance `last_synced_*` ONLY after fully-successful run (zero batch failures); always overlap 15 min on next incremental; zero-fetch success DOES advance.
+- Checkpoint semantics: advance `last_synced_*` ONLY after fully-successful run (zero batch failures); always overlap 15 min on next incremental; zero-fetch success DOES advance. **Transactions: window-granular durable progress** (round-2 major #5) — each completed 55-day window persists a window cursor (in org/location sync state JSONB) so a deadline-stop or crash never re-pulls completed windows; authoritative `last_synced_transactions_at` advances only when all windows complete. Deadline is passed INTO pagination/window loops (clean stop between pages/windows), not only checked between entities.
 - Batch failure isolation: on batch upsert error → bisect (halve until offender isolated), quarantine offender into sync_log error_details, persist the rest; counters accurate. Unit test: 1 poisoned record in 1000 → 999 persist.
 - Transactions atomicity: replace delete-then-reinsert payments with order that cannot strand a header (insert new rows with new txn version before deleting old, or move the pair into a single RPC — choose based on existing code shape); window boundaries exclusive-end to prevent double-day overlap.
 - No per-record awaited queries in loops (batch lookups).
 
 ### B3 Scheduled incremental cron (4x daily until Dutchie cutover)
-- `GET/POST /api/dutchie/cron` — Bearer `CRON_SECRET` (pattern of existing cron routes), no session.
-- Iterate enabled configs least-recently-synced first; INCREMENTAL only: customers/products via fromLastModifiedDateUTC(-15min); transactions from last checkpoint (55d chunks if gap); inventory/employees/rooms/reference full-fetch-upsert (no incremental API) — every entity SKIPPED if its checkpoint is null ("needs initial manual sync" in response) so cron never full-pulls history.
-- Loyalty: only when `last_synced_loyalty_at` null-or->20h, org-designated location only.
-- `vercel.json`: crons 12:00,18:00,23:00,04:00 UTC (≈6a,12p,5p,10p Mountain); `maxDuration: 300` for `/api/dutchie/*` (review blocker #2); time-budget guard stops cleanly at ~250s, reports remainder, next run rotates.
+- `GET/POST /api/dutchie/cron` — Bearer `CRON_SECRET`, **fail-closed** (S6): unset secret → 500 refuse; bad/missing header → 401. No session.
+- Work queue = one item per (org × org-wide entity) + one per (enabled location × location-scoped entity), ordered least-recently-synced first; INCREMENTAL only: customers/products via fromLastModifiedDateUTC(-15min); transactions from window cursor (55d chunks, window-granular durable progress); inventory/employees/rooms/reference full-fetch-upsert (no incremental API) — any entity with null checkpoint is SKIPPED ("needs initial manual sync" in response) so cron never full-pulls history.
+- Loyalty: only when org `last_synced_at` null-or->20h; drains any pending staging cursor first.
+- `vercel.json`: crons 12:00,18:00,23:00,04:00 UTC (≈6a,12p,5p,10p Mountain); `maxDuration: 300` for `/api/dutchie/*`; deadline (~250s) threads into entity loops (window/page granular stops); because progress is durable per work item, a starved item RESUMES mid-entity next run — no starvation loop (round-2 major #5). Vercel does not retry failed cron runs — the durable cursors are the recovery mechanism.
 - Local test: curl with CRON_SECRET (Fable live-verifies incremental behavior: consecutive-run records_fetched << full counts).
 
 Acceptance criteria:
@@ -95,6 +103,9 @@ Acceptance criteria:
 - AC-B8: Two consecutive live cron runs on dev: second run's records_fetched << first (Fable-verified).
 - AC-B9: Poisoned-batch isolation test passes (999/1000 persist, offender quarantined).
 - AC-B10: Migration applies cleanly on dev via MCP AND on a schema built from migration files alone (drift-defensive).
+- AC-B11: Loyalty atomicity: concurrent local adjustment during a sync drain cannot be lost or double-journaled (RPC row-lock test); kill-mid-drain resumes from staging cursor with same fingerprint and completes with correct totals.
+- AC-B12: Cron auth 3-case test: no secret configured → refused; wrong bearer → 401; correct bearer → 200. Existing cron routes use the same fail-closed guard.
+- AC-B13: Org-wide entities produce exactly ONE work item per org per cron run (no duplicate pulls across 17 locations); lock keyed (organization_id, entity_type) proves 409 on concurrent org-wide sync.
 
 ## Phase C — Universal theme system
 
