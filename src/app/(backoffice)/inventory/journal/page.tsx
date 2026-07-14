@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type J = any
@@ -153,7 +154,7 @@ export default function InventoryJournalPage() {
       )}
 
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Date/Time</th><th className="text-left px-4 py-3">Action</th>
             <th className="text-left px-4 py-3">Employee</th><th className="text-right px-4 py-3">Change</th>
@@ -170,7 +171,7 @@ export default function InventoryJournalPage() {
                 {e.delta != null ? (e.delta > 0 ? `+${e.delta}` : String(e.delta)) : '\u2014'}
               </td>
               <td className="px-4 py-2.5 text-right text-secondary tabular-nums">{e.new_quantity ?? '\u2014'}</td>
-              <td className="px-4 py-2.5 text-secondary text-xs truncate max-w-[200px]">{e.reason ?? e.notes ?? '\u2014'}</td>
+              <td className="px-4 py-2.5 text-secondary text-xs"><span title={e.reason ?? e.notes ?? undefined} className="block max-w-[200px] truncate">{e.reason ?? e.notes ?? '\u2014'}</span></td>
             </tr>
           ))}</tbody>
         </table>

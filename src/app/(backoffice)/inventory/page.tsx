@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 import TransactionsModal from '@/components/backoffice/inventory/TransactionsModal'
 import EnhancedSublotModal from '@/components/backoffice/inventory/modals/EnhancedSublotModal'
 import ConvertModal from '@/components/backoffice/inventory/modals/ConvertModal'
@@ -1102,9 +1103,9 @@ export default function InventoryListPage() {
           </Link>
         )
       case 'product':
-        return <span className="text-primary text-sm">{item.products?.name ?? '\u2014'}</span>
+        return <span title={item.products?.name ?? undefined} className="block max-w-[18rem] truncate text-primary">{item.products?.name ?? '\u2014'}</span>
       case 'brand':
-        return <span className="text-secondary text-sm">{item.products?.brands?.name ?? '\u2014'}</span>
+        return <span title={item.products?.brands?.name ?? undefined} className="block max-w-[12rem] truncate text-secondary">{item.products?.brands?.name ?? '\u2014'}</span>
       case 'available': {
         const isLow = item.quantity > 0 && item.quantity <= 5
         return (
@@ -1128,19 +1129,19 @@ export default function InventoryListPage() {
       case 'thc_mg':
         return <span className="text-secondary text-sm tabular-nums">{item.products?.thc_content_mg != null ? `${item.products.thc_content_mg}mg` : '\u2014'}</span>
       case 'category':
-        return <span className="text-secondary text-sm">{item.products?.product_categories?.name ?? '\u2014'}</span>
+        return <span title={item.products?.product_categories?.name ?? undefined} className="block max-w-[12rem] truncate text-secondary">{item.products?.product_categories?.name ?? '\u2014'}</span>
       case 'vendor':
-        return <span className="text-secondary text-sm">{item.products?.vendors?.name ?? '\u2014'}</span>
+        return <span title={item.products?.vendors?.name ?? undefined} className="block max-w-[12rem] truncate text-secondary">{item.products?.vendors?.name ?? '\u2014'}</span>
       case 'strain':
-        return <span className="text-secondary text-sm">{item.products?.strains?.name ?? '\u2014'}</span>
+        return <span title={item.products?.strains?.name ?? undefined} className="block max-w-[12rem] truncate text-secondary">{item.products?.strains?.name ?? '\u2014'}</span>
       case 'expiration':
         return <span className="text-secondary text-sm">{fmtDate(item.expiration_date)}</span>
       case 'received':
         return <span className="text-secondary text-sm">{fmtDate(item.received_at)}</span>
       case 'package_id':
-        return <span className="text-secondary text-xs font-mono truncate max-w-[120px] block">{item.biotrack_barcode ?? '\u2014'}</span>
+        return <span title={item.biotrack_barcode ?? undefined} className="block max-w-[120px] truncate font-mono text-xs text-secondary">{item.biotrack_barcode ?? '\u2014'}</span>
       case 'batch':
-        return <span className="text-secondary text-xs font-mono truncate max-w-[100px] block">{item.batch_id ?? '\u2014'}</span>
+        return <span title={item.batch_id ?? undefined} className="block max-w-[100px] truncate font-mono text-xs text-secondary">{item.batch_id ?? '\u2014'}</span>
       case 'reserved':
         return <span className="text-secondary text-sm tabular-nums">{fmtQty(item.quantity_reserved)}</span>
       case 'flower_eq':
@@ -1416,7 +1417,7 @@ export default function InventoryListPage() {
       {/* ---- Table ---- */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+            <table data-density="compact" className={`${STICKY_DENSE_BESPOKE_TABLE_CLASS} w-full text-left`}>
             <thead>
               <tr className="border-b border-edge bg-surface/80">
                 {/* Checkbox column */}

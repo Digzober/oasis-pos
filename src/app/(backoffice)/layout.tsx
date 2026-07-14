@@ -25,7 +25,7 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
   if (isLoading) {
     return (
       <div className="h-screen bg-bg flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-edge border-t-emerald-400 rounded-full animate-spin" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-edge border-t-accent" />
       </div>
     )
   }
@@ -45,7 +45,7 @@ export default function BackofficeLayout({ children }: { children: React.ReactNo
     <div className="h-screen bg-bg flex flex-col overflow-hidden">
       <BackofficeHeader onToggleSidebar={toggleSidebar} />
       <div className="flex flex-1 min-h-0">
-        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
+        <Sidebar collapsed={collapsed} />
         <main key={locationId ?? 'all'} className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

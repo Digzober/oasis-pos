@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Emp = any
@@ -52,7 +53,7 @@ export default function EmployeeListPage() {
       </div>
 
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Name</th>
             <th className="text-left px-4 py-3">Role</th>
@@ -66,13 +67,18 @@ export default function EmployeeListPage() {
             : employees.map((e: Emp) => (
               <tr key={e.id} className="border-b border-edge/50 hover:bg-raised/30">
                 <td className="px-4 py-2.5">
-                  <Link href={`/employees/${e.id}`} className="text-primary hover:text-accent">{e.first_name} {e.last_name}</Link>
+                  <Link href={`/employees/${e.id}`} title={`${e.first_name} ${e.last_name}`} className="block max-w-[14rem] truncate text-primary hover:text-accent">{e.first_name} {e.last_name}</Link>
                 </td>
                 <td className="px-4 py-2.5 text-secondary capitalize">{e.role?.replace('_', ' ')}</td>
-                <td className="px-4 py-2.5 text-secondary text-xs">{e.email ?? '—'}</td>
+                <td className="px-4 py-2.5 text-secondary text-xs"><span title={e.email ?? undefined} className="block max-w-[16rem] truncate">{e.email ?? '—'}</span></td>
                 <td className="px-4 py-2.5 text-secondary text-xs">{e.employee_locations?.length ?? 0} locations</td>
                 <td className="px-4 py-2.5 text-secondary text-xs">
-                  {(e.user_permission_groups ?? []).map((g: Emp) => g.permission_groups?.name).filter(Boolean).join(', ') || '—'}
+                  <span
+                    title={(e.user_permission_groups ?? []).map((g: Emp) => g.permission_groups?.name).filter(Boolean).join(', ') || undefined}
+                    className="block max-w-[18rem] truncate"
+                  >
+                    {(e.user_permission_groups ?? []).map((g: Emp) => g.permission_groups?.name).filter(Boolean).join(', ') || '—'}
+                  </span>
                 </td>
               </tr>
             ))}

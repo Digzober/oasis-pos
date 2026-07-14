@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 import TransactionDetailDrawer from '@/components/backoffice/TransactionDetailDrawer'
 import type { TransactionSummary } from '@/lib/services/reportingService'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -113,7 +114,7 @@ export default function TransactionLogPage() {
       {/* Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
             <thead>
               <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">#</th>

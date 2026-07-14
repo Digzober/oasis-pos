@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -363,7 +364,7 @@ export default function AuditsListPage() {
       {/* Table */}
       <div className="bg-surface border border-edge rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table data-density="compact" className={`${STICKY_DENSE_BESPOKE_TABLE_CLASS} w-full`}>
             <thead>
               <tr className="border-b border-edge text-secondary text-xs uppercase tracking-wider">
                 <th className="text-left px-4 py-3">Name</th>
@@ -402,7 +403,8 @@ export default function AuditsListPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/inventory/audits/${audit.id}`}
-                      className="text-accent hover:text-accent font-medium transition-colors"
+                      title={audit.name}
+                      className="block max-w-[16rem] truncate font-medium text-accent transition-colors hover:text-accent"
                     >
                       {audit.name}
                     </Link>
@@ -414,14 +416,14 @@ export default function AuditsListPage() {
                     {audit.location?.name ?? '\u2014'}
                   </td>
                   <td className="px-4 py-3 text-secondary">
-                    {audit.scope_room_names.length > 0
-                      ? audit.scope_room_names.join(', ')
-                      : 'All'}
+                    <span title={audit.scope_room_names.length > 0 ? audit.scope_room_names.join(', ') : undefined} className="block max-w-[16rem] truncate">
+                      {audit.scope_room_names.length > 0 ? audit.scope_room_names.join(', ') : 'All'}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-secondary">
-                    {audit.scope_category_names.length > 0
-                      ? audit.scope_category_names.join(', ')
-                      : 'All'}
+                    <span title={audit.scope_category_names.length > 0 ? audit.scope_category_names.join(', ') : undefined} className="block max-w-[16rem] truncate">
+                      {audit.scope_category_names.length > 0 ? audit.scope_category_names.join(', ') : 'All'}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-secondary">
                     {audit.created_by_employee

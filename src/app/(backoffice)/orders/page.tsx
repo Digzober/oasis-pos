@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Order = any
@@ -63,7 +64,7 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead>
             <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Order #</th>
@@ -83,7 +84,7 @@ export default function OrdersPage() {
             ) : orders.map((o: Order) => (
               <tr key={o.id} className="border-b border-edge/50 hover:bg-raised/30">
                 <td className="px-4 py-2.5 text-primary font-mono text-xs">{o.order_number ?? o.id.slice(0, 8)}</td>
-                <td className="px-4 py-2.5 text-secondary">{o.customer_name}</td>
+                <td className="px-4 py-2.5 text-secondary"><span title={o.customer_name ?? undefined} className="block max-w-[16rem] truncate">{o.customer_name}</span></td>
                 <td className="px-4 py-2.5 text-secondary capitalize text-xs">{o.order_type ?? 'pickup'}</td>
                 <td className="px-4 py-2.5 text-center">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded text-primary ${STATUS_COLORS[o.status] ?? 'bg-raised'}`}>

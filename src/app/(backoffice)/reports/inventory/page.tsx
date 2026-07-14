@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 function fmt(n: number) { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,7 +72,7 @@ export default function InventoryReportsPage() {
 
       {tab === 'low' && (
         <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-          <table className="w-full text-sm"><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
+          <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Product</th><th className="text-left px-4 py-3">SKU</th><th className="text-right px-4 py-3">Available</th>
           </tr></thead><tbody>{lowStock.length === 0 ? <tr><td colSpan={3} className="text-center py-8 text-muted">No low stock items</td></tr>
             : lowStock.map((i: R) => (
@@ -83,7 +84,7 @@ export default function InventoryReportsPage() {
 
       {tab === 'expiring' && (
         <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-          <table className="w-full text-sm"><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
+          <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Product</th><th className="text-right px-4 py-3">Qty</th><th className="text-left px-4 py-3">Expires</th><th className="text-right px-4 py-3">Days Left</th>
           </tr></thead><tbody>{expiring.length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-muted">No expiring items</td></tr>
             : expiring.map((i: R) => (

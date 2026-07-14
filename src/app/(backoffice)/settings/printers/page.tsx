@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 
@@ -196,7 +197,7 @@ export default function PrintersPage() {
 
       {/* Printers Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden mb-8">
-        <table className="w-full text-sm">
+          <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead>
             <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">Name</th>

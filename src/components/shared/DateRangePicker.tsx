@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 interface DateRangePickerProps {
   startDate: string | null
   endDate: string | null
@@ -27,16 +25,16 @@ export function DateRangePicker({ startDate, endDate, onChange, presets = DEFAUL
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <input type="date" value={startDate ?? ''} onChange={(e) => onChange(e.target.value, endDate)}
-        className="h-9 px-3 bg-surface border border-edge rounded-lg text-sm text-primary" />
+        className="h-9 rounded-sm border border-edge bg-surface px-3 text-[13px] text-primary focus:outline-none focus:ring-2 focus:ring-ring/25" />
       <span className="text-muted text-xs">to</span>
       <input type="date" value={endDate ?? ''} onChange={(e) => {
         const end = e.target.value
         if (startDate && end < startDate) onChange(end, startDate) // swap if end < start
         else onChange(startDate, end)
-      }} className="h-9 px-3 bg-surface border border-edge rounded-lg text-sm text-primary" />
+      }} className="h-9 rounded-sm border border-edge bg-surface px-3 text-[13px] text-primary focus:outline-none focus:ring-2 focus:ring-ring/25" />
       {(presets ?? []).map((p) => (
         <button key={p.label} onClick={() => { const [s, e] = p.getRange(); onChange(s, e) }}
-          className="h-9 px-3 bg-raised text-secondary rounded-lg text-xs hover:bg-raised transition-colors">{p.label}</button>
+          className="h-8 rounded-sm border border-edge bg-raised px-3 text-xs font-medium text-secondary transition-colors hover:bg-overlay">{p.label}</button>
       ))}
     </div>
   )

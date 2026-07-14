@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 const STATUS_COLORS: Record<string, string> = { draft: 'bg-raised', scheduled: 'bg-info', sending: 'bg-info', sent: 'bg-accent', cancelled: 'bg-danger' }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,7 +22,7 @@ export default function CampaignsPage() {
         </div>
       </div>
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Name</th><th className="text-center px-4 py-3">Status</th><th className="text-right px-4 py-3">Sent</th><th className="text-left px-4 py-3">Date</th>
           </tr></thead>

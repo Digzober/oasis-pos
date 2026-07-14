@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Zone = any
@@ -53,7 +54,7 @@ export default function DeliveryPage() {
       {loading ? <p className="text-muted text-center py-8">Loading...</p> : (
         <div className="bg-surface rounded-xl border border-edge overflow-hidden">
           {tab === 'zones' && (
-            <table className="w-full text-sm">
+            <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
               <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Zone Name</th>
                 <th className="text-right px-4 py-3">Fee</th>
@@ -79,7 +80,7 @@ export default function DeliveryPage() {
           )}
 
           {tab === 'vehicles' && (
-            <table className="w-full text-sm">
+            <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
               <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Vehicle</th>
                 <th className="text-left px-4 py-3">License Plate</th>
@@ -103,7 +104,7 @@ export default function DeliveryPage() {
           )}
 
           {tab === 'drivers' && (
-            <table className="w-full text-sm">
+            <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
               <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
                 <th className="text-left px-4 py-3">Driver</th>
                 <th className="text-left px-4 py-3">License #</th>

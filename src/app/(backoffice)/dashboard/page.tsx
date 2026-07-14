@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
+import { BadgeDollarSign, DollarSign, ReceiptText, ShoppingCart, Users } from 'lucide-react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
 import { KPICard } from '@/components/backoffice/KPICard'
 import { DashboardAlerts } from '@/components/backoffice/DashboardAlerts'
@@ -76,11 +77,11 @@ export default function DashboardPage() {
         <>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-            <KPICard label="Transactions" value={kpis.transactions} />
-            <KPICard label="Gross Sales" value={kpis.gross_sales} format="currency" />
-            <KPICard label="Net Sales" value={kpis.net_sales} format="currency" />
-            <KPICard label="Customers" value={kpis.customer_count} />
-            <KPICard label="Avg Cart" value={kpis.average_cart} format="currency" />
+            <KPICard label="Transactions" value={kpis.transactions} icon={<ReceiptText />} />
+            <KPICard label="Gross Sales" value={kpis.gross_sales} format="currency" icon={<DollarSign />} />
+            <KPICard label="Net Sales" value={kpis.net_sales} format="currency" icon={<BadgeDollarSign />} />
+            <KPICard label="Customers" value={kpis.customer_count} icon={<Users />} />
+            <KPICard label="Avg Cart" value={kpis.average_cart} format="currency" icon={<ShoppingCart />} />
           </div>
 
           {/* Chart */}

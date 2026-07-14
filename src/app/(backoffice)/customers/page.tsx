@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
+import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -446,12 +447,13 @@ export default function CustomersPage() {
   /* Render cell */
   const renderCell = useCallback((col: ColumnDef, c: Customer) => {
     const loyalty = getLoyalty(c)
+    const fullName = [c.first_name, c.middle_name, c.last_name].filter(Boolean).join(' ') || '\u2014'
     switch (col.key) {
-      case 'full_name': return <Link href={`/customers/${c.id}`} className="text-primary hover:text-accent">{[c.first_name, c.middle_name, c.last_name].filter(Boolean).join(' ') || '\u2014'}</Link>
-      case 'first_name': return <span className="text-primary text-sm">{c.first_name ?? '\u2014'}</span>
-      case 'last_name': return <span className="text-primary text-sm">{c.last_name ?? '\u2014'}</span>
+      case 'full_name': return <Link href={`/customers/${c.id}`} title={fullName} className="block max-w-[16rem] truncate text-primary hover:text-accent">{fullName}</Link>
+      case 'first_name': return <span title={c.first_name ?? undefined} className="block max-w-[12rem] truncate text-primary">{c.first_name ?? '\u2014'}</span>
+      case 'last_name': return <span title={c.last_name ?? undefined} className="block max-w-[12rem] truncate text-primary">{c.last_name ?? '\u2014'}</span>
       case 'phone': return <span className="text-secondary text-sm">{c.phone ?? '\u2014'}</span>
-      case 'email': return <span className="text-secondary text-xs">{c.email ?? '\u2014'}</span>
+      case 'email': return <span title={c.email ?? undefined} className="block max-w-[16rem] truncate text-secondary text-xs">{c.email ?? '\u2014'}</span>
       case 'type': { const b = typeBadge(c.customer_type); return <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full border ${b.cls}`}>{b.label}</span> }
       case 'status': { const b = statusBadge(c.status); return <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full border ${b.cls}`}>{b.label}</span> }
       case 'city': return <span className="text-secondary text-sm">{c.city ?? '\u2014'}</span>
@@ -474,7 +476,7 @@ export default function CustomersPage() {
       case 'groups': return <span className="text-muted text-xs">\u2014</span>
       case 'opted_email': return c.opted_into_marketing ? <span className="text-accent text-xs">Yes</span> : <span className="text-muted text-xs">No</span>
       case 'opted_sms': return c.opted_into_sms ? <span className="text-accent text-xs">Yes</span> : <span className="text-muted text-xs">No</span>
-      case 'notes': return <span className="text-secondary text-xs truncate max-w-[150px] block">{c.notes ? c.notes.slice(0, 50) : '\u2014'}</span>
+      case 'notes': return <span title={c.notes ?? undefined} className="block max-w-[150px] truncate text-secondary text-xs">{c.notes ? c.notes.slice(0, 50) : '\u2014'}</span>
       case 'created': return <span className="text-secondary text-sm">{fmtDate(c.created_at)}</span>
       case 'actions': return (
         <div className="relative" data-row-menu>
@@ -592,7 +594,7 @@ export default function CustomersPage() {
       {/* Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+            <table data-density="compact" className={`${STICKY_DENSE_BESPOKE_TABLE_CLASS} w-full text-left`}>
             <thead>
               <tr className="border-b border-edge bg-surface/80">
                 <th className="w-10 px-3 py-3"><input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded border-edge-strong bg-bg text-accent focus:ring-accent" /></th>

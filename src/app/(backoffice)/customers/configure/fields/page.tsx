@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
@@ -229,7 +230,7 @@ export default function FieldsPage() {
                 </button>
                 {!isCollapsed && (
                   <div className="border-t border-edge">
-                    <table className="w-full text-sm">
+            <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
                       <thead>
                         <tr className="border-b border-edge">
                           <th className="px-4 py-2 text-left text-xs font-medium text-secondary uppercase">Field</th>

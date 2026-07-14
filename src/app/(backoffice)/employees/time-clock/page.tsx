@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Entry = any
@@ -40,7 +41,7 @@ export default function TimeClockPage() {
       </div>
 
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
             <th className="text-left px-4 py-3">Employee</th>
             <th className="text-left px-4 py-3">Clock In</th>

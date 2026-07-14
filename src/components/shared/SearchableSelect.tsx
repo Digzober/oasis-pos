@@ -39,7 +39,7 @@ export function SearchableSelect({
   return (
     <div className="relative">
       <button type="button" onClick={() => !disabled && setOpen(!open)} disabled={disabled}
-        className="w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-left flex items-center justify-between text-primary disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-accent">
+        className="flex h-9 w-full items-center justify-between rounded-sm border border-edge bg-surface px-3 text-left text-[13px] text-primary disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ring/25">
         <span className={selectedOption ? 'text-primary' : 'text-muted'}>{selectedOption?.label ?? placeholder}</span>
         <span className="text-muted text-xs">▾</span>
       </button>
@@ -47,10 +47,10 @@ export function SearchableSelect({
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-edge rounded-lg shadow-xl z-50 max-h-60 overflow-hidden flex flex-col">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-edge-strong rounded-sm shadow-lg z-50 max-h-60 overflow-hidden flex flex-col">
             <div className="p-2 border-b border-edge">
               <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={searchPlaceholder}
-                className="w-full h-8 px-2 bg-bg border border-edge-strong rounded text-sm text-primary focus:outline-none" />
+                className="h-8 w-full rounded-sm border border-edge bg-surface px-2 text-[13px] text-primary focus:outline-none focus:ring-2 focus:ring-ring/25" />
             </div>
             <div className="overflow-y-auto flex-1">
               {loading ? <p className="p-3 text-muted text-xs">Loading...</p>
@@ -64,7 +64,7 @@ export function SearchableSelect({
                   </div>
                 ) : filtered.map((opt) => (
                   <button key={opt.value} onClick={() => { onChange(opt.value); setOpen(false); setQuery('') }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-raised ${opt.value === value ? 'text-accent' : 'text-secondary'}`}>
+                    className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-raised ${opt.value === value ? 'bg-accent-soft text-accent' : 'text-secondary'}`}>
                     {opt.label}
                     {opt.description && <span className="text-xs text-muted ml-2">{opt.description}</span>}
                   </button>

@@ -427,3 +427,69 @@ The lowest shipped pairing is Oasis Light muted text on the overlay surface at 4
 | `npm run check:theme` | 0 | PASS — 441 files scanned, 7 documented exemptions, all computed pairs >= 4.50:1. |
 
 Final trio rerun after blocked-storage/cross-tab persistence hardening: `typecheck=0`, `test=0` (377/377), `check:theme=0`.
+
+## Redesign v2 — High-contrast utilitarian
+
+### Findings and implementation ledger
+
+| ID | File:line | Class | Fix / decision |
+|---|---|---|---|
+| R2-001 | `src/app/globals.css:3` | Theme tokens / visual hierarchy | Retuned `oasis-dark` to the approved stepped near-black surfaces (`#0a0f0d` → `#141c19` → `#1c2723` → `#243430`), brighter text, crisp edge roles, vivid emerald accent/status colors, smaller radii, and minimal shadows. Retuned `oasis-light` and `oasis-contrast` with the same stepped-surface, crisp-edge intent while preserving the existing semantic properties and Tailwind v4 mappings. The registry/provider architecture was not changed. |
+| R2-002 | `src/components/shared/StatCard.tsx:14`; `src/components/backoffice/KPICard.tsx:14` | KPI information design | Rebuilt the KPI primitive as a dense bordered card with a 1px top accent hairline, uppercase 11px micro-label and 14px icon, 22px tabular value, optional detail, and compact directional delta chip. Delta UI renders only for an actual finite delta value; no comparison data is inferred or fabricated. `KPICard` delegates to this shared primitive. |
+| R2-003 | `src/app/(backoffice)/dashboard/page.tsx:5` | Dashboard KPI wiring | Wired distinct Lucide icons to all five dashboard KPIs: transactions, gross sales, net sales, customers, and average cart. The current dashboard response has no prior-period delta fields, so the optional trend chips are intentionally absent until real delta data exists. This was the only individual page restyled. |
+| R2-004 | `src/components/shared/DataTable.tsx:101` | Dense data display | Tightened table typography and spacing to 36px rows / `py-1.5`, added crisp `border-edge` row dividers, a sticky uppercase 11px `bg-raised` header with strong divider, raised-surface hover feedback, and automatic tabular numerals for right-aligned numeric columns. Search, pagination, empty, and loading states remain shared and theme-aware. |
+| R2-005 | `src/components/shared/Card.tsx:11`; `Button.tsx:18`; `Input.tsx:13`; `Select.tsx:14`; `SearchableSelect.tsx:49`; `MoneyInput.tsx:33`; `DateRangePicker.tsx:51` | Shared primitives | Tightened cards, buttons, text inputs, selects, searchable selects, money fields, and date controls to compact heights, `rounded-sm`, visible semantic borders, dense 13px type, and crisp focus rings. Added the shared uppercase micro-heading `CardHeader` variant. Pages inherit these changes through their existing shared components. |
+| R2-006 | `src/components/backoffice/Sidebar.tsx:79`; `BackofficeHeader.tsx:14`; `LocationSwitcher.tsx:20` | Application shell | Reduced sidebar navigation and header controls to the specified compact dimensions, strengthened shell edges, and changed active navigation to `bg-accent-soft` plus a precise 2px emerald left indicator. Location switching remains functionally unchanged and now matches the dense header treatment. |
+| R2-007 | `src/components/shared/__tests__/redesign-v2.test.tsx:24` | Regression tests | Added a shared-component contract covering stat typography/real-delta behavior, dense sticky tables and numeric columns, compact controls, exact dark surface tokens, small-radius tokens, sidebar active indicator, compact header, and preservation of the theme registry architecture. TDD RED: 4/4 expectations initially failed; GREEN: the focused shared/layout/theme run passed 26/26. |
+
+### WCAG AA contrast after Redesign v2
+
+`npm run check:theme` recomputed every shipped normal-text pairing at the 4.50:1 threshold. All three themes pass. The lowest pairing is Oasis Light muted text on the overlay surface at **4.56:1**; Oasis Dark's lowest normal-text pairing is **5.36:1**, and Oasis Contrast's is **6.67:1**.
+
+```text
+oasis-dark: primary surfaces=18.47/16.59/14.72/12.48; secondary=13.46/12.09/10.73/9.09; muted=8.50/7.64/6.78/5.74; accent=10.14; status-soft minimum=5.36
+oasis-light: primary surfaces=15.33/17.59/14.42/13.15; secondary=9.17/10.53/8.63/7.87; muted=5.32/6.10/5.00/4.56; accent=5.30; status-soft minimum=5.04
+oasis-contrast: primary surfaces=20.25/18.42/15.74/12.03; secondary=17.53/15.95/13.62/10.42; muted=12.51/11.38/9.72/7.43; accent=12.12; status-soft minimum=6.67
+```
+
+### Supplemental verification
+
+- `npm run lint`: exit 0, **0 errors** (224 existing warnings).
+- Focused Vitest + type/theme cluster: exit 0, **26/26 tests**, typecheck 0, theme gate 0.
+- Changed-file security scan: no secret, credential, debug logging, unsafe HTML injection, or new runtime environment access found.
+- `npm run build`: exit 1 at the external font-fetch stage because this restricted environment could not reach the pre-existing Google-hosted `Geist` and `Geist Mono` CSS. Next emitted no redesign compilation error before that environmental failure; existing `next.config.ts` option and middleware deprecation warnings remain outside this redesign.
+- `npm audit --audit-level=moderate`: exit 1 because the restricted environment could not reach npm's advisory endpoint. This redesign added no dependencies.
+
+### Redesign v2 final verification — 2026-07-14
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm run typecheck` | 0 | PASS — TypeScript emitted no errors. |
+| `npm run test` | 0 | PASS — 51 files, 383/383 tests. |
+| `npm run check:theme` | 0 | PASS — 442 files scanned, 7 documented exemptions, all computed pairs >= 4.50:1. |
+
+## Redesign v2 — density pass
+
+### Findings and implementation ledger
+
+| ID | File:line | Class | Fix / decision |
+|---|---|---|---|
+| R2-D01 | `src/lib/constants/tableDensity.ts:1` | Bespoke table consistency | Added one page-style constant for inline backoffice tables without changing the shared `DataTable` or theme tokens. It enforces 40px rows, `py-2` maximum cell padding, middle alignment, 13px single-line cells, crisp `border-edge` dividers, `bg-raised/50` hover, and 11px uppercase muted raised headers. A sticky variant is used only by horizontally scrollable tables. |
+| R2-D02 | `src/app/(backoffice)/**/page.tsx` | List-page density audit | Audited every inline backoffice table. Applied the compact contract to 34 tables across 31 list/report/settings pages, including customers, inventory, products, employees, orders, inventory audits/journal/manifests/purchase orders/transfers, customer configuration lists, delivery, marketing lists, reports, and tabular settings pages. Dynamic detail-page sub-tables and already-compact inline tables were left unchanged. Existing columns, fetches, links, badges, selections, pagination, and row actions were preserved. |
+| R2-D03 | `src/app/(backoffice)/customers/page.tsx:447`; `inventory/page.tsx:1093`; `products/page.tsx:937`; `employees/page.tsx:55`; `orders/page.tsx:66` | Long-value wrapping | Added bounded single-line truncation plus native `title` disclosure to names, emails, notes, products, brands, categories, vendors, strains, package/batch identifiers, permission groups, and order customer names. Product thumbnails were reduced to 24px and product tags now stay in one clipped, titled strip, keeping populated rows near 40px without removing data or actions. Audit scope lists and journal reasons received the same treatment. |
+| R2-D04 | `src/components/shared/__tests__/redesign-v2.test.tsx:127` | Regression coverage | Added a source contract that inventories the 31 audited pages, requires every inline table to opt into compact density, and verifies the shared row/header/nowrap/divider/hover utilities. TDD RED failed on the first unconverted customer table; GREEN passed 5/5 focused tests. Updated the pre-existing token assertion to the already-shipped dark surface values (`#19221e`, `#24312c`, `#486054`) without modifying any token. |
+
+### Supplemental verification
+
+- `npm run lint`: exit 0, **0 errors** (224 existing warnings).
+- Changed-file security scan: no secret, credential, debug logging, unsafe HTML injection, privileged SQL, or runtime environment access was introduced.
+- `npm run build`: exit 1 only because the restricted environment could not fetch the pre-existing Google-hosted `Geist` and `Geist Mono` CSS. Next emitted no application compile error before the external font failure; existing `next.config.ts` and middleware warnings remain outside this density pass.
+- `npm audit --audit-level=moderate`: exit 1 because the restricted environment could not reach npm's advisory endpoint. No dependency was added or changed.
+
+### Redesign v2 density pass final verification — 2026-07-14
+
+| Command | Exit | Result |
+|---|---:|---|
+| `npm run typecheck` | 0 | PASS — TypeScript emitted no errors. |
+| `npm run test` | 0 | PASS — 51 files, 384/384 tests. |
+| `npm run check:theme` | 0 | PASS — 442 files scanned, 7 documented exemptions, all computed pairs >= 4.50:1. |

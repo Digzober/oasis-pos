@@ -1,0 +1,31 @@
+export const DENSE_BESPOKE_TABLE_CLASS = [
+  'text-[13px]',
+  '[&_thead]:bg-raised',
+  '[&_th]:bg-raised',
+  '[&_th]:px-3!',
+  '[&_th]:py-2!',
+  '[&_th]:text-[11px]!',
+  '[&_th]:font-semibold',
+  '[&_th]:uppercase',
+  '[&_th]:tracking-wide',
+  '[&_th]:text-muted!',
+  '[&_th]:whitespace-nowrap',
+  '[&_tbody_tr]:h-10',
+  '[&_tbody_tr]:border-b',
+  '[&_tbody_tr]:border-edge!',
+  '[&_tbody_tr]:transition-colors',
+  '[&_tbody_tr:hover]:bg-raised/50!',
+  '[&_td]:px-3!',
+  '[&_td]:py-2!',
+  '[&_td]:align-middle',
+  '[&_td]:text-[13px]!',
+  '[&_td]:leading-5',
+  '[&_td]:whitespace-nowrap',
+].join(' ')
+
+export const STICKY_DENSE_BESPOKE_TABLE_CLASS = [
+  DENSE_BESPOKE_TABLE_CLASS,
+  '[&_thead]:sticky',
+  '[&_thead]:top-0',
+  '[&_thead]:z-10',
+].join(' ')

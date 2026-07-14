@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type S = any
@@ -44,7 +45,7 @@ export default function SchedulesPage() {
         </button>
       </div>
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm"><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}><thead><tr className="border-b border-edge text-secondary text-xs uppercase">
           <th className="text-left px-4 py-3">Subject</th><th className="text-left px-4 py-3">Type</th><th className="text-left px-4 py-3">Frequency</th><th className="text-center px-4 py-3">Active</th><th className="text-right px-4 py-3">Actions</th>
         </tr></thead><tbody>{schedules.length === 0 ? <tr><td colSpan={5} className="text-center py-8 text-muted">No schedules</td></tr>
           : schedules.map((s: S) => (

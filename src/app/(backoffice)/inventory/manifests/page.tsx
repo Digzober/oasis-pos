@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -562,7 +563,7 @@ export default function ManifestsPage() {
       {/* Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[1400px]">
+          <table data-density="compact" className={`${STICKY_DENSE_BESPOKE_TABLE_CLASS} w-full min-w-[1400px]`}>
             <thead>
               <tr className="border-b border-edge text-secondary text-xs uppercase">
                 <SortHeader label="Title" field="title" currentSort={sortBy} currentDir={sortDir} onSort={handleSort} />

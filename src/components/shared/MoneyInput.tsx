@@ -34,10 +34,10 @@ export function MoneyInput({ value, onChange, placeholder = '0.00', min, max, di
 
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm">$</span>
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted">$</span>
       <input type="text" inputMode="decimal" value={display} onChange={(e) => handleChange(e.target.value)} onBlur={handleBlur}
         placeholder={placeholder} disabled={disabled}
-        className="w-full h-10 pl-7 pr-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50" />
+        className="h-9 w-full rounded-sm border border-edge bg-surface pl-7 pr-3 text-right text-[13px] tabular-nums text-primary focus:outline-none focus:ring-2 focus:ring-ring/25 disabled:opacity-50" />
     </div>
   )
 }

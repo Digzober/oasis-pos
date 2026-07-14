@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import Cookies from 'js-cookie'
 import { LayoutDashboard, Package, Users, Megaphone, Truck, BarChart3, Settings, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
@@ -77,7 +76,9 @@ const navigation: NavItem[] = [
   ]},
 ]
 
-export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+const activeItem = 'bg-accent-soft text-accent font-medium before:absolute before:inset-y-1 before:left-0 before:w-0.5 before:bg-accent'
+
+export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
@@ -104,10 +105,10 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
   return (
     <aside className={cn(
-      'bg-surface border-r border-edge flex flex-col shrink-0 transition-all duration-200 overflow-hidden',
+      'bg-surface border-r border-edge-strong flex flex-col shrink-0 transition-all duration-200 overflow-hidden',
       collapsed ? 'w-16' : 'w-60',
     )}>
-      <nav className="flex-1 py-2 overflow-y-auto">
+      <nav className="flex-1 overflow-y-auto py-1">
         {navigation.map((item) => {
           const Icon = item.icon
           const active = item.href ? isActive(item.href) : item.children?.some(c => isActive(c.href))
@@ -116,9 +117,9 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
           if (item.href) {
             return (
               <Link key={item.label} href={item.href}
-                className={cn('flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                  active ? 'bg-raised text-accent font-medium' : 'text-secondary hover:bg-raised/50 hover:text-primary')}>
-                <Icon size={18} className="shrink-0" />
+                className={cn('relative flex h-8 items-center gap-2.5 px-3 text-[13px] transition-colors',
+                  active ? activeItem : 'text-secondary hover:bg-raised/60 hover:text-primary')}>
+                <Icon size={16} className="shrink-0" />
                 {!collapsed && <span className="truncate">{item.label}</span>}
               </Link>
             )
@@ -127,22 +128,22 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
           return (
             <div key={item.label}>
               <button onClick={() => toggle(item.label)}
-                className={cn('w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors',
-                  active ? 'text-accent' : 'text-secondary hover:bg-raised/50 hover:text-primary')}>
-                <Icon size={18} className="shrink-0" />
+                className={cn('relative flex h-8 w-full items-center gap-2.5 px-3 text-[13px] transition-colors',
+                  active ? activeItem : 'text-secondary hover:bg-raised/60 hover:text-primary')}>
+                <Icon size={16} className="shrink-0" />
                 {!collapsed && (
                   <>
                     <span className="flex-1 text-left truncate">{item.label}</span>
-                    <ChevronDown size={14} className={cn('transition-transform', isExpanded && 'rotate-180')} />
+                    <ChevronDown size={12} className={cn('transition-transform', isExpanded && 'rotate-180')} />
                   </>
                 )}
               </button>
               {!collapsed && isExpanded && item.children && (
-                <div className="ml-7 border-l border-edge">
+                <div className="ml-6 border-l border-edge">
                   {item.children.map(child => (
                     <Link key={child.href} href={child.href}
-                      className={cn('block pl-4 py-1.5 text-xs transition-colors',
-                        isActive(child.href) ? 'text-accent font-medium' : 'text-secondary hover:text-primary')}>
+                      className={cn('relative flex h-8 items-center pl-4 pr-2 text-xs transition-colors',
+                        isActive(child.href) ? activeItem : 'text-secondary hover:bg-raised/60 hover:text-primary')}>
                       {child.label}
                     </Link>
                   ))}

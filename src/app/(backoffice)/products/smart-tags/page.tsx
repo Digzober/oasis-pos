@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Play, Trash2, Pencil, Zap, X, Loader2 } from 'lucide-react'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 interface Tag {
   id: string
@@ -337,7 +338,7 @@ export default function SmartTagsPage() {
         </div>
       ) : (
         <div className="bg-surface rounded-lg border border-edge overflow-hidden">
-          <table className="w-full text-sm">
+            <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
             <thead>
               <tr className="border-b border-edge">
                 <th className="text-left px-4 py-3 text-secondary font-medium">Name</th>

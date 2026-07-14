@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -934,7 +935,7 @@ export default function ProductListPage() {
       {/* Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+            <table data-density="compact" className={`${STICKY_DENSE_BESPOKE_TABLE_CLASS} w-full`}>
             <thead>
               <tr className="border-b border-edge text-secondary text-xs uppercase">
                 {/* Select All Checkbox */}
@@ -998,13 +999,13 @@ export default function ProductListPage() {
                         <Image
                           src={imgUrl}
                           alt={p.name}
-                          width={36}
-                          height={36}
-                          className="rounded object-cover w-9 h-9"
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 rounded object-cover"
                           unoptimized
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded bg-raised flex items-center justify-center">
+                        <div className="flex h-6 w-6 items-center justify-center rounded bg-raised">
                           <svg className="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
@@ -1014,7 +1015,7 @@ export default function ProductListPage() {
 
                     {/* Name */}
                     <td className="px-4 py-2.5">
-                      <Link href={`/products/${p.id}/edit`} className="text-primary hover:text-accent font-medium">
+                      <Link href={`/products/${p.id}/edit`} title={p.name} className="block max-w-[18rem] truncate font-medium text-primary hover:text-accent">
                         {p.name}
                       </Link>
                     </td>
@@ -1034,10 +1035,10 @@ export default function ProductListPage() {
                     </td>
 
                     {/* Category */}
-                    <td className="px-4 py-2.5 text-secondary">{p.category?.name ?? '\u2014'}</td>
+                    <td className="px-4 py-2.5 text-secondary"><span title={p.category?.name ?? undefined} className="block max-w-[12rem] truncate">{p.category?.name ?? '\u2014'}</span></td>
 
                     {/* Brand */}
-                    <td className="px-4 py-2.5 text-secondary">{p.brand?.name ?? '\u2014'}</td>
+                    <td className="px-4 py-2.5 text-secondary"><span title={p.brand?.name ?? undefined} className="block max-w-[12rem] truncate">{p.brand?.name ?? '\u2014'}</span></td>
 
                     {/* Rec Price */}
                     <td className="px-4 py-2.5 text-right text-primary tabular-nums">{fmt(p.rec_price)}</td>
@@ -1093,7 +1094,7 @@ export default function ProductListPage() {
 
                     {/* Tags */}
                     <td className="px-4 py-2.5 max-w-[200px]">
-                      <div className="flex flex-wrap">
+                      <div className="flex max-w-[200px] flex-nowrap gap-1 overflow-hidden" title={productTags.map(tag => tag.name).join(', ') || undefined}>
                         {productTags.length > 0
                           ? productTags.map(pt => (
                               <TagPill key={pt.id} name={pt.name} color={pt.color} />

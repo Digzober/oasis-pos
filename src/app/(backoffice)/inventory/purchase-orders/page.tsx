@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSelectedLocation } from '@/hooks/useSelectedLocation'
+import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 interface PurchaseOrder {
   id: string
@@ -156,7 +157,7 @@ export default function PurchaseOrdersPage() {
 
       {/* Table */}
       <div className="bg-surface rounded-xl border border-edge overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
           <thead>
             <tr className="border-b border-edge text-secondary text-xs uppercase">
               <th className="text-left px-4 py-3">PO Number</th>
