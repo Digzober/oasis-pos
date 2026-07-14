@@ -11,6 +11,8 @@ export interface DutchieLocationConfig {
   syncProducts: boolean
   syncInventory: boolean
   syncRooms: boolean
+  syncTransactions: boolean
+  syncLoyalty: boolean
   lastSyncedEmployeesAt: Date | null
   lastSyncedCustomersAt: Date | null
   lastSyncedProductsAt: Date | null
@@ -18,6 +20,7 @@ export interface DutchieLocationConfig {
   lastSyncedRoomsAt: Date | null
   lastSyncedReferenceAt: Date | null
   lastSyncedTransactionsAt: Date | null
+  lastSyncedLoyaltyAt: Date | null
 }
 
 const cache = new Map<string, { config: DutchieLocationConfig; timestamp: number }>()
@@ -49,6 +52,8 @@ export async function loadDutchieConfig(locationId: string, organizationId?: str
     syncProducts: data.sync_products,
     syncInventory: data.sync_inventory,
     syncRooms: data.sync_rooms,
+    syncTransactions: data.sync_transactions ?? true,
+    syncLoyalty: data.sync_loyalty ?? true,
     lastSyncedEmployeesAt: data.last_synced_employees_at ? new Date(data.last_synced_employees_at) : null,
     lastSyncedCustomersAt: data.last_synced_customers_at ? new Date(data.last_synced_customers_at) : null,
     lastSyncedProductsAt: data.last_synced_products_at ? new Date(data.last_synced_products_at) : null,
@@ -56,6 +61,7 @@ export async function loadDutchieConfig(locationId: string, organizationId?: str
     lastSyncedRoomsAt: data.last_synced_rooms_at ? new Date(data.last_synced_rooms_at) : null,
     lastSyncedReferenceAt: data.last_synced_reference_at ? new Date(data.last_synced_reference_at) : null,
     lastSyncedTransactionsAt: data.last_synced_transactions_at ? new Date(data.last_synced_transactions_at) : null,
+    lastSyncedLoyaltyAt: data.last_synced_loyalty_at ? new Date(data.last_synced_loyalty_at) : null,
   }
 
   cache.set(cacheKey, { config, timestamp: Date.now() })
@@ -63,13 +69,20 @@ export async function loadDutchieConfig(locationId: string, organizationId?: str
 }
 
 export function clearDutchieConfigCache(locationId?: string): void {
-  if (locationId) cache.delete(locationId)
-  else cache.clear()
+  if (!locationId) {
+    cache.clear()
+    return
+  }
+
+  cache.delete(locationId)
+  for (const key of cache.keys()) {
+    if (key.endsWith(`:${locationId}`)) cache.delete(key)
+  }
 }
 
 export async function updateSyncTimestamp(
   locationId: string,
-  entityType: 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'transactions',
+  entityType: 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'transactions' | 'loyalty',
   timestamp: Date,
 ): Promise<void> {
   const sb = await createSupabaseServerClient()

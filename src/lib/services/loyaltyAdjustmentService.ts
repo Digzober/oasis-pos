@@ -9,24 +9,33 @@ export async function adjustLoyaltyPoints(
 
   // Verify reason
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: reason } = await (sb.from('loyalty_adjustment_reasons') as any).select('*').eq('id', reasonId).eq('is_active', true).single()
+  const { data: reason } = await (sb.from('loyalty_adjustment_reasons') as any)
+    .select('*')
+    .eq('id', reasonId)
+    .eq('organization_id', orgId)
+    .eq('is_active', true)
+    .single()
   if (!reason) throw new AppError('INVALID_REASON', 'Adjustment reason not found', undefined, 400)
 
-  // Load current balance
-  const { data: balance } = await sb.from('loyalty_balances').select('current_points').eq('customer_id', customerId).single()
-  if (!balance) throw new AppError('NO_BALANCE', 'Customer has no loyalty balance', undefined, 400)
-
-  const newBalance = balance.current_points + points
-  if (newBalance < 0) throw new AppError('INSUFFICIENT_POINTS', 'Adjustment would make balance negative', undefined, 400)
-
-  await sb.from('loyalty_balances').update({ current_points: newBalance, updated_at: new Date().toISOString() }).eq('customer_id', customerId)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (sb.from('loyalty_transactions') as any).insert({
-    customer_id: customerId, organization_id: orgId, points_change: points,
-    balance_after: newBalance, reason: 'manual_adjust', adjustment_reason_id: reasonId,
-    created_by: employeeId,
+  const { data, error } = await (sb as any).rpc('adjust_loyalty_points', {
+    p_customer: customerId,
+    p_org: orgId,
+    p_delta: points,
+    p_reason: 'manual_adjust',
+    p_lifetime_delta: Math.max(points, 0),
+    p_adjustment_reason: reasonId,
+    p_created_by: employeeId,
   })
+  if (error) {
+    const insufficient = error.message?.includes('negative')
+    throw new AppError(
+      insufficient ? 'INSUFFICIENT_POINTS' : 'LOYALTY_ADJUST_FAILED',
+      insufficient ? 'Adjustment would make balance negative' : error.message,
+      error,
+      insufficient ? 400 : 500,
+    )
+  }
+  const newBalance = Number(data?.new_balance ?? 0)
 
   // Audit
    
@@ -36,6 +45,7 @@ export async function adjustLoyaltyPoints(
   } as any)
 
   logger.info('Loyalty adjusted', { customerId, points, newBalance })
+  return newBalance
 }
 
 export async function listAdjustmentReasons(orgId: string) {

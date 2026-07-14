@@ -16,7 +16,7 @@ import type { EntityType } from '@/lib/dutchie/types'
  * Delegates to syncEngine which handles fetch, mapping, upsert, and logging.
  */
 
-const VALID_ENTITY_TYPES: EntityType[] = ['employees', 'customers', 'products', 'inventory', 'rooms', 'transactions']
+const VALID_ENTITY_TYPES: EntityType[] = ['employees', 'customers', 'products', 'inventory', 'rooms', 'transactions', 'loyalty']
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,6 +85,9 @@ export async function POST(request: NextRequest) {
       const a = err as { code: string; message?: string; statusCode?: number }
       if (a.code === 'UNAUTHORIZED' || a.code === 'FORBIDDEN') {
         return NextResponse.json({ error: a.message ?? 'Access denied' }, { status: a.statusCode ?? 403 })
+      }
+      if (a.code === 'SYNC_ALREADY_RUNNING') {
+        return NextResponse.json({ error: a.message ?? 'Sync already running' }, { status: 409 })
       }
     }
     logger.error('Dutchie sync error', { error: String(err) })

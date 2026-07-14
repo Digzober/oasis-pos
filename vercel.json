@@ -11,6 +11,9 @@
     },
     "src/app/api/biotrack/**/*.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/dutchie/**/*.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [
@@ -48,6 +51,22 @@
     {
       "path": "/api/reports/schedules/execute",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/dutchie/cron",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/dutchie/cron",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/dutchie/cron",
+      "schedule": "0 23 * * *"
+    },
+    {
+      "path": "/api/dutchie/cron",
+      "schedule": "0 4 * * *"
     }
   ]
 }

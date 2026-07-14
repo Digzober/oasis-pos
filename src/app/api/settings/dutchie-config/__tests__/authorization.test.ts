@@ -25,10 +25,14 @@ describe('Dutchie settings authorization', () => {
     const query = {
       select: vi.fn(),
       eq: vi.fn(),
+      is: vi.fn(),
+      order: vi.fn(),
       maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
     }
     query.select.mockReturnValue(query)
     query.eq.mockReturnValue(query)
+    query.is.mockReturnValue(query)
+    query.order.mockReturnValue(query)
     mocks.createSupabaseServerClient.mockResolvedValue({
       from: vi.fn(() => query),
     })
@@ -51,6 +55,8 @@ describe('Dutchie settings authorization', () => {
     const query = {
       select: vi.fn(),
       eq: vi.fn(),
+      is: vi.fn(),
+      order: vi.fn(),
       maybeSingle: vi.fn().mockResolvedValue({
         data: {
           location_id: 'location-1',
@@ -62,6 +68,8 @@ describe('Dutchie settings authorization', () => {
     }
     query.select.mockReturnValue(query)
     query.eq.mockReturnValue(query)
+    query.is.mockReturnValue(query)
+    query.order.mockReturnValue(query)
     mocks.createSupabaseServerClient.mockResolvedValue({ from: vi.fn(() => query) })
 
     const response = await GET()

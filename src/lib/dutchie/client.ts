@@ -5,6 +5,8 @@ import type {
   DutchieTag, DutchiePricingTier, DutchieTerminal, DutchieDiscount,
   DutchieTransaction,
 } from './types'
+import type { DutchieLoyaltySnapshot } from './types'
+import { incrementalSince } from './syncPolicy'
 
 const BASE_URL = 'https://api.pos.dutchie.com' // NO /v1 suffix
 const MAX_RETRIES = 4
@@ -91,11 +93,13 @@ export class DutchieClient {
     path: string,
     params?: Record<string, string | number | boolean | undefined>,
     pageSize = 100,
+    deadline?: number,
   ): Promise<T[]> {
     const all: T[] = []
     let offset = 0
 
     while (true) {
+      if (deadline && Date.now() >= deadline) throw new Error('Dutchie sync deadline reached')
       const data = await this.get<unknown>(path, { ...params, offset, limit: pageSize })
       const items = this.unwrap<T>(data)
       if (items.length === 0) break
@@ -115,11 +119,13 @@ export class DutchieClient {
     path: string,
     params?: Record<string, string | number | boolean | undefined>,
     pageSize = 100,
+    deadline?: number,
   ): Promise<T[]> {
     const all: T[] = []
     let page = 1
 
     while (true) {
+      if (deadline && Date.now() >= deadline) throw new Error('Dutchie sync deadline reached')
       const data = await this.get<unknown>(path, { ...params, PageNumber: page, PageSize: pageSize })
       const items = this.unwrap<T>(data)
       if (items.length === 0) break
@@ -157,22 +163,21 @@ export class DutchieClient {
     return items
   }
 
-  async fetchCustomers(since?: Date): Promise<DutchieCustomer[]> {
+  async fetchCustomers(since?: Date, deadline?: number): Promise<DutchieCustomer[]> {
     const params: Record<string, string> = {}
     if (since) {
-      const buffered = new Date(since.getTime() - 60_000)
-      params.fromLastModifiedDateUTC = buffered.toISOString()
+      params.fromLastModifiedDateUTC = incrementalSince(since).toISOString()
     }
     // Customers endpoint always paginates — must use PageNumber/PageSize
-    return this.fetchAllPaged<DutchieCustomer>('/customer/customers-paginated', params, 1000)
+    return this.fetchAllPaged<DutchieCustomer>('/customer/customers-paginated', params, 1000, deadline)
   }
 
-  async fetchProducts(since?: Date): Promise<DutchieProduct[]> {
+  async fetchProducts(since?: Date, deadline?: number): Promise<DutchieProduct[]> {
     const params: Record<string, string> = {}
     if (since) {
-      const buffered = new Date(since.getTime() - 60_000)
-      params.fromLastModifiedDateUTC = buffered.toISOString()
+      params.fromLastModifiedDateUTC = incrementalSince(since).toISOString()
     }
+    if (deadline && Date.now() >= deadline) throw new Error('Dutchie sync deadline reached')
     // Try single request first (the-vault pattern) — Dutchie may return all products at once
     const data = await this.get<unknown>('/products', params)
     const items = this.unwrap<DutchieProduct>(data)
@@ -181,10 +186,10 @@ export class DutchieClient {
       return items
     }
     // Fall back to pagination if single request returned empty
-    return this.fetchAllOffset<DutchieProduct>('/products', params, 500)
+    return this.fetchAllOffset<DutchieProduct>('/products', params, 500, deadline)
   }
 
-  async fetchInventory(opts?: { includeLabResults?: boolean; includeRoomQuantities?: boolean }): Promise<DutchieInventoryItem[]> {
+  async fetchInventory(opts?: { includeLabResults?: boolean; includeRoomQuantities?: boolean; deadline?: number }): Promise<DutchieInventoryItem[]> {
     const params: Record<string, string | boolean> = {}
     if (opts?.includeLabResults) params.includeLabResults = true
     if (opts?.includeRoomQuantities) params.includeRoomQuantities = true
@@ -194,6 +199,7 @@ export class DutchieClient {
     const pageSize = 5000
 
     while (true) {
+      if (opts?.deadline && Date.now() >= opts.deadline) throw new Error('Dutchie sync deadline reached')
       const data = await this.get<unknown>('/reporting/inventory', { ...params, Skip: skip, Take: pageSize })
       const items = this.unwrap<DutchieInventoryItem>(data)
       if (items.length === 0) break
@@ -206,10 +212,13 @@ export class DutchieClient {
     return all
   }
 
-  async fetchTransactions(opts: { startDate: string; endDate: string }): Promise<DutchieTransaction[]> {
+  async fetchTransactions(opts: { startDate: string; endDate: string; endExclusive?: boolean }): Promise<DutchieTransaction[]> {
     // /reporting/transactions uses FromDateUTC/ToDateUTC (ISO 8601 datetime)
     const fromDate = opts.startDate.includes('T') ? opts.startDate : `${opts.startDate.slice(0, 10)}T00:00:00Z`
-    const toDate = opts.endDate.includes('T') ? opts.endDate : `${opts.endDate.slice(0, 10)}T23:59:59Z`
+    const rawToDate = opts.endDate.includes('T') ? opts.endDate : `${opts.endDate.slice(0, 10)}T23:59:59Z`
+    const toDate = opts.endExclusive
+      ? new Date(new Date(rawToDate).getTime() - 1).toISOString()
+      : rawToDate
 
     // /reporting/transactions with FromDateUTC/ToDateUTC in YYYY-MM-DD format
     const data = await this.get<unknown>('/reporting/transactions', {
@@ -220,6 +229,27 @@ export class DutchieClient {
     })
     const items = this.unwrap<DutchieTransaction>(data)
     logger.info('Dutchie transactions fetch complete', { total: items.length })
+    return items
+  }
+
+  /**
+   * The snapshot endpoint is limited to one request per minute. It deliberately
+   * bypasses the retrying GET wrapper so one sync run can issue exactly one HTTP
+   * attempt, including for 429 and timeout responses.
+   */
+  async getLoyaltySnapshot(): Promise<DutchieLoyaltySnapshot[]> {
+    const path = '/reporting/loyalty-snapshot'
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method: 'GET',
+      headers: { Authorization: this.authHeader, Accept: 'application/json' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
+    if (!res.ok) {
+      throw new Error(`Dutchie loyalty snapshot failed with status ${res.status}`)
+    }
+    const data: unknown = await res.json()
+    const items = this.unwrap<DutchieLoyaltySnapshot>(data)
+    logger.info('Dutchie loyalty snapshot fetched', { total: items.length })
     return items
   }
 

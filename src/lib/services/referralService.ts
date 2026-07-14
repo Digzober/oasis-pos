@@ -10,45 +10,17 @@ export async function awardReferralPoints(
   organizationId: string,
   rewardPoints: number,
 ) {
-  const { data: balance, error: balanceError } = await sb
-    .from('loyalty_balances')
-    .select('current_points, lifetime_points')
-    .eq('customer_id', customerId)
-    .eq('organization_id', organizationId)
-    .maybeSingle()
-
-  if (balanceError) {
-    throw new AppError('LOYALTY_BALANCE_READ_FAILED', balanceError.message, balanceError, 500)
-  }
-
-  const currentPoints = balance?.current_points ?? 0
-  const lifetimePoints = balance?.lifetime_points ?? 0
-  const nextCurrentPoints = currentPoints + rewardPoints
-
-  const { error: upsertError } = await sb.from('loyalty_balances').upsert({
-    customer_id: customerId,
-    organization_id: organizationId,
-    current_points: nextCurrentPoints,
-    lifetime_points: lifetimePoints + rewardPoints,
-  }, { onConflict: 'customer_id,organization_id' })
-
-  if (upsertError) {
-    throw new AppError('LOYALTY_BALANCE_WRITE_FAILED', upsertError.message, upsertError, 500)
-  }
-
-  const { error: journalError } = await sb.from('loyalty_transactions').insert({
-    customer_id: customerId,
-    organization_id: organizationId,
-    points_change: rewardPoints,
-    balance_after: nextCurrentPoints,
-    reason: 'referral_bonus',
+  const { data, error } = await (sb as any).rpc('adjust_loyalty_points', {
+    p_customer: customerId,
+    p_org: organizationId,
+    p_delta: rewardPoints,
+    p_reason: 'referral_bonus',
+    p_lifetime_delta: rewardPoints,
   })
-
-  if (journalError) {
-    throw new AppError('LOYALTY_JOURNAL_WRITE_FAILED', journalError.message, journalError, 500)
+  if (error) {
+    throw new AppError('LOYALTY_ADJUST_FAILED', error.message, error, 500)
   }
-
-  return nextCurrentPoints
+  return Number(data?.new_balance ?? 0)
 }
 
 export async function getReferralConfig(orgId: string) {

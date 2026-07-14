@@ -77,35 +77,22 @@ describe('segments and referrals', () => {
   })
 
   it('11. referral reward creates a numeric balance when no loyalty row exists', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
-    const upsert = vi.fn().mockResolvedValue({ error: null })
-    const insert = vi.fn().mockResolvedValue({ error: null })
-    const from = vi.fn((table: string) => {
-      if (table === 'loyalty_balances') {
-        return {
-          select: () => ({
-            eq: () => ({
-              eq: () => ({ maybeSingle }),
-            }),
-          }),
-          upsert,
-        }
-      }
-      return { insert }
-    })
+    const rpc = vi.fn().mockResolvedValue({ data: { new_balance: 50 }, error: null })
 
     const nextBalance = await awardReferralPoints(
-      { from } as unknown as Parameters<typeof awardReferralPoints>[0],
+      { rpc } as unknown as Parameters<typeof awardReferralPoints>[0],
       'customer-1',
       'org-1',
       50,
     )
 
     expect(nextBalance).toBe(50)
-    expect(upsert).toHaveBeenCalledWith(expect.objectContaining({
-      current_points: 50,
-      lifetime_points: 50,
-    }), { onConflict: 'customer_id,organization_id' })
-    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ balance_after: 50 }))
+    expect(rpc).toHaveBeenCalledWith('adjust_loyalty_points', {
+      p_customer: 'customer-1',
+      p_org: 'org-1',
+      p_delta: 50,
+      p_reason: 'referral_bonus',
+      p_lifetime_delta: 50,
+    })
   })
 })

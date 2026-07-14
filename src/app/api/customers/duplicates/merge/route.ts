@@ -74,42 +74,21 @@ export async function POST(request: NextRequest) {
 
     const transactionsMoved = movedTxns?.length ?? 0
 
-    // Step 4: Merge loyalty balances
-    let loyaltyPointsMoved = 0
-    const { data: loserLoyalty } = await sb
-      .from('loyalty_balances')
-      .select('current_points')
-      .eq('customer_id', loser_id)
-      .single()
-
-    if (loserLoyalty && loserLoyalty.current_points > 0) {
-      loyaltyPointsMoved = loserLoyalty.current_points
-
-      const { data: winnerLoyalty } = await sb
-        .from('loyalty_balances')
-        .select('id, current_points')
-        .eq('customer_id', winner_id)
-        .single()
-
-      if (winnerLoyalty) {
-        await sb
-          .from('loyalty_balances')
-          .update({ current_points: winnerLoyalty.current_points + loyaltyPointsMoved })
-          .eq('id', winnerLoyalty.id)
-      } else {
-        // Winner has no loyalty record; reassign loser's record to winner
-        await sb
-          .from('loyalty_balances')
-          .update({ customer_id: winner_id })
-          .eq('customer_id', loser_id)
-      }
-
-      // Reassign loyalty transaction history
-      await sb
-        .from('loyalty_transactions')
-        .update({ customer_id: winner_id })
-        .eq('customer_id', loser_id)
+    // Step 4: transfer loyalty under deterministic row locks. The loser id is
+    // the idempotency reference, so a retried merge cannot double the points.
+    const { data: loyaltyMerge, error: loyaltyError } = await (sb as any).rpc('adjust_loyalty_points', {
+      p_customer: winner_id,
+      p_org: session.organizationId,
+      p_reason: 'customer_merge',
+      p_reference: loser_id,
+      p_source_customer: loser_id,
+      p_created_by: session.employeeId,
+    })
+    if (loyaltyError) {
+      logger.error('Merge loyalty transfer error', { error: loyaltyError.message })
+      return NextResponse.json({ error: 'Failed to transfer loyalty points' }, { status: 500 })
     }
+    const loyaltyPointsMoved = Number(loyaltyMerge?.delta ?? 0)
 
     // Step 5: Reassign group memberships (upsert to winner, then clean up loser)
     const { data: loserGroups } = await sb
@@ -168,17 +147,17 @@ export async function POST(request: NextRequest) {
         organization_id: session.organizationId,
         entity_type: 'customer',
         entity_id: winner_id,
-        event_type: 'merge_winner',
+        event_type: 'combine',
         employee_id: session.employeeId,
-        metadata: { loser_id, transactions_moved: transactionsMoved, loyalty_points_moved: loyaltyPointsMoved, groups_moved: groupsMoved },
+        metadata: { merge_role: 'winner', loser_id, transactions_moved: transactionsMoved, loyalty_points_moved: loyaltyPointsMoved, groups_moved: groupsMoved },
       },
       {
         organization_id: session.organizationId,
         entity_type: 'customer',
         entity_id: loser_id,
-        event_type: 'merge_loser',
+        event_type: 'combine',
         employee_id: session.employeeId,
-        metadata: { winner_id, deactivated: true },
+        metadata: { merge_role: 'loser', winner_id, deactivated: true },
       },
     ]
 

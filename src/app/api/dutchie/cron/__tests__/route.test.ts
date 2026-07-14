@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+const mocks = vi.hoisted(() => ({
+  runDutchieCron: vi.fn().mockResolvedValue({ processed: [], skipped: [], deadlineReached: false }),
+}))
+
+vi.mock('@/lib/dutchie/cronRunner', () => ({ runDutchieCron: mocks.runDutchieCron }))
+
 import { POST } from '../route'
 
 describe('Dutchie cron authorization boundary', () => {
@@ -30,7 +37,7 @@ describe('Dutchie cron authorization boundary', () => {
     expect(response.status).toBe(401)
   })
 
-  it('passes a valid bearer token through to the Phase A stub', async () => {
+  it('runs the scheduler with a valid bearer token', async () => {
     process.env.CRON_SECRET = 'configured-secret'
 
     const response = await POST(new Request('http://localhost/api/dutchie/cron', {
@@ -38,6 +45,7 @@ describe('Dutchie cron authorization boundary', () => {
       headers: { authorization: 'Bearer configured-secret' },
     }) as never)
 
-    expect(response.status).toBe(501)
+    expect(response.status).toBe(200)
+    expect(mocks.runDutchieCron).toHaveBeenCalledOnce()
   })
 })

@@ -34,4 +34,43 @@ describe('DutchieClient safe logging', () => {
     expect(logged).not.toContain('Sensitive Employee Name')
     expect(logged).not.toContain('private@example.com')
   })
+
+  it('attempts the rate-limited loyalty snapshot exactly once', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('', { status: 429 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(new DutchieClient('test-key').getLoyaltySnapshot()).rejects.toThrow('status 429')
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('uses a 15-minute overlap for incremental customers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('[]', {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await new DutchieClient('test-key').fetchCustomers(new Date('2026-07-14T12:00:00.000Z'))
+
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]))
+    expect(url.searchParams.get('fromLastModifiedDateUTC')).toBe('2026-07-14T11:45:00.000Z')
+  })
+
+  it('uses an exclusive transaction window end without duplicating the boundary day', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('[]', {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await new DutchieClient('test-key').fetchTransactions({
+      startDate: '2026-07-01T00:00:00.000Z',
+      endDate: '2026-07-03T00:00:00.000Z',
+      endExclusive: true,
+    })
+
+    const url = new URL(String(fetchMock.mock.calls[0]?.[0]))
+    expect(url.searchParams.get('FromDateUTC')).toBe('2026-07-01')
+    expect(url.searchParams.get('ToDateUTC')).toBe('2026-07-02')
+  })
 })

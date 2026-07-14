@@ -248,6 +248,13 @@ export interface DutchieTransaction {
   [key: string]: unknown
 }
 
+export interface DutchieLoyaltySnapshot {
+  customerId: number
+  loyaltyBalance: number
+  loyaltySpent: number
+  loyaltyEarned: number
+}
+
 // Sync result tracking
 export interface SyncResult {
   entityType: string
@@ -268,4 +275,4 @@ export interface LocationSyncResult {
   totalDurationMs: number
 }
 
-export type EntityType = 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'transactions'
+export type EntityType = 'employees' | 'customers' | 'products' | 'inventory' | 'rooms' | 'reference' | 'registers' | 'transactions' | 'loyalty'

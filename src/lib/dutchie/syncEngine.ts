@@ -13,8 +13,14 @@ import {
   mapTag, mapPricingTier, mapTerminal,
 } from './mappers/referenceMapper'
 import type { SyncResult, LocationSyncResult, EntityType, DutchieProduct, DutchieTransaction } from './types'
+import { syncLoyalty } from './loyaltySync'
+import { ENTITY_ENABLED_KEY, ORG_WIDE_ENTITIES, utcDayEndExclusive, utcDayStart } from './syncPolicy'
+import { acquireSyncLease, completeSyncLease, heartbeatSyncLease } from './syncLease'
+import { checkpointSuccessfulSync, loadSyncState, saveSyncCursor } from './syncState'
+import { upsertWithBisection } from './batchIsolation'
 
 const BATCH_SIZE = 1000
+const resultLeases = new WeakMap<SyncResult, string>()
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -27,17 +33,11 @@ function emptySyncResult(entityType: string, syncType: 'full' | 'incremental'): 
 async function createSyncLog(
   sb: ReturnType<typeof Object>,
   locationId: string,
-  entityType: string,
+  organizationId: string,
+  entityType: EntityType,
   syncType: 'full' | 'incremental',
 ): Promise<string> {
-  const { data } = await (sb as any).from('dutchie_sync_log').insert({
-    location_id: locationId,
-    entity_type: entityType,
-    sync_type: syncType,
-    status: 'running',
-    started_at: new Date().toISOString(),
-  }).select('id').single()
-  return data?.id ?? ''
+  return acquireSyncLease(sb, { locationId, organizationId, entityType, syncType })
 }
 
 async function completeSyncLog(
@@ -45,18 +45,7 @@ async function completeSyncLog(
   logId: string,
   result: SyncResult,
 ): Promise<void> {
-  if (!logId) return
-  await (sb as any).from('dutchie_sync_log').update({
-    status: result.errored > 0 && result.created + result.updated === 0 ? 'failed' : 'completed',
-    completed_at: new Date().toISOString(),
-    records_fetched: result.fetched,
-    records_created: result.created,
-    records_updated: result.updated,
-    records_skipped: result.skipped,
-    records_errored: result.errored,
-    error_details: result.errors.length > 0 ? result.errors : null,
-    duration_ms: result.durationMs,
-  }).eq('id', logId)
+  await completeSyncLease(sb, logId, result)
 }
 
 async function batchUpsert<T extends object>(
@@ -82,23 +71,60 @@ async function batchUpsert<T extends object>(
 
   for (let i = 0; i < deduped.length; i += BATCH_SIZE) {
     const batch = deduped.slice(i, i + BATCH_SIZE)
-    const { data, error } = await (sb as any).from(table)
-      .upsert(batch, { onConflict: conflictColumns, ignoreDuplicates: false })
-      .select('id')
-    if (error) {
-      result.errored += batch.length
-      result.errors.push(`${table} batch ${i}: ${error.message}`)
-      logger.error('Batch upsert failed', { table, batch: i, error: error.message })
-    } else {
-      result.updated += data?.length ?? batch.length
+    const isolated = await upsertWithBisection(
+      batch,
+      async candidateRows => {
+        const { error } = await (sb as any).from(table)
+          .upsert(candidateRows, { onConflict: conflictColumns, ignoreDuplicates: false })
+          .select('id')
+        if (error) throw new Error(error.message)
+      },
+      row => conflictKeys.map(key => String(row[key] ?? '')).join('|'),
+    )
+    result.updated += isolated.persisted
+    result.errored += isolated.failed.length
+    for (const failure of isolated.failed) {
+      const message = `${table} record ${failure.key}: ${failure.error}`
+      result.errors.push(message)
+      logger.error('Batch upsert record quarantined', { table, key: failure.key, error: failure.error })
     }
+    const leaseId = resultLeases.get(result)
+    if (leaseId) await heartbeatSyncLease(sb, leaseId)
+  }
+}
+
+async function checkpointIfSuccessful(
+  sb: ReturnType<typeof Object>,
+  result: SyncResult,
+  locationId: string,
+  organizationId: string,
+  entityType: EntityType,
+  startedAt: number,
+): Promise<void> {
+  if (result.errored > 0) return
+  const checkpoint = new Date(startedAt)
+  try {
+    await checkpointSuccessfulSync(sb, {
+      organizationId,
+      locationId,
+      entityType,
+      checkpoint,
+    })
+    if (entityType !== 'registers') {
+      await updateSyncTimestamp(locationId, entityType, checkpoint)
+    }
+  } catch (error) {
+    handleSyncError(error, result)
   }
 }
 
 type LoadedDutchieConfig = NonNullable<Awaited<ReturnType<typeof loadDutchieConfig>>>
 
-async function getClient(locationId: string): Promise<{ client: DutchieClient; config: LoadedDutchieConfig } | null> {
-  const config = await loadDutchieConfig(locationId)
+async function getClient(
+  locationId: string,
+  organizationId: string,
+): Promise<{ client: DutchieClient; config: LoadedDutchieConfig } | null> {
+  const config = await loadDutchieConfig(locationId, organizationId)
   if (!config || !config.isEnabled || !config.apiKey) return null
   return { client: new DutchieClient(config.apiKey), config }
 }
@@ -109,14 +135,15 @@ async function getClient(locationId: string): Promise<{ client: DutchieClient; c
 
 export async function syncEmployees(locationId: string, organizationId: string): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('employees', 'full'), durationMs: Date.now() - start }
   const { client, config } = setup
 
   const syncType: 'full' | 'incremental' = config.lastSyncedEmployeesAt ? 'incremental' : 'full'
   const result = emptySyncResult('employees', syncType)
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'employees', syncType)
+  const logId = await createSyncLog(sb, locationId, organizationId, 'employees', syncType)
+  resultLeases.set(result, logId)
 
   try {
     const dutchieEmployees = await client.fetchEmployees()
@@ -131,9 +158,7 @@ export async function syncEmployees(locationId: string, organizationId: string):
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'employees', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'employees', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -147,10 +172,11 @@ async function syncEmployeeLocations(
   organizationId: string,
   dutchieEmployees: Array<Record<string, unknown>>,
 ): Promise<void> {
-  const { data: employees } = await (sb as any).from('employees')
+  const { data: employees, error: employeesError } = await (sb as any).from('employees')
     .select('id, dutchie_employee_id')
     .eq('organization_id', organizationId)
     .not('dutchie_employee_id', 'is', null)
+  if (employeesError) throw employeesError
 
   if (!employees?.length) return
   // dutchie_employee_id is stored as string in DB
@@ -176,8 +202,9 @@ async function syncEmployeeLocations(
   })
 
   if (uniqueRows.length > 0) {
-    await (sb as any).from('employee_locations')
+    const { error } = await (sb as any).from('employee_locations')
       .upsert(uniqueRows, { onConflict: 'employee_id,location_id', ignoreDuplicates: true })
+    if (error) throw error
   }
 }
 
@@ -185,20 +212,27 @@ async function syncEmployeeLocations(
 // syncCustomers
 // ---------------------------------------------------------------------------
 
-export async function syncCustomers(locationId: string, organizationId: string): Promise<SyncResult> {
+export async function syncCustomers(
+  locationId: string,
+  organizationId: string,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('customers', 'full'), durationMs: Date.now() - start }
   const { client, config } = setup
 
-  const syncType: 'full' | 'incremental' = config.lastSyncedCustomersAt ? 'incremental' : 'full'
-  const result = emptySyncResult('customers', syncType)
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'customers', syncType)
+  const state = await loadSyncState(sb, organizationId, null, 'customers')
+  const checkpoint = state?.lastSyncedAt ?? config.lastSyncedCustomersAt
+  const syncType: 'full' | 'incremental' = checkpoint ? 'incremental' : 'full'
+  const result = emptySyncResult('customers', syncType)
+  const logId = await createSyncLog(sb, locationId, organizationId, 'customers', syncType)
+  resultLeases.set(result, logId)
 
   try {
-    const since = config.lastSyncedCustomersAt ?? undefined
-    const dutchieCustomers = await client.fetchCustomers(since)
+    const since = checkpoint ?? undefined
+    const dutchieCustomers = await client.fetchCustomers(since, options.deadline)
     result.fetched = dutchieCustomers.length
 
     const mapped = dutchieCustomers.map((c) => mapCustomer(c, organizationId))
@@ -209,9 +243,7 @@ export async function syncCustomers(locationId: string, organizationId: string):
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'customers', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'customers', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -258,11 +290,16 @@ async function dedupAndUpsertCustomers(
     toUpsert.push(record as Record<string, unknown>)
   }
 
-  // Stamp existing email matches
-  for (const upd of toUpdate) {
-    await (sb as any).from('customers')
-      .update({ dutchie_customer_id: upd.dutchie_customer_id })
-      .eq('id', upd.id)
+  if (toUpdate.length > 0) {
+    const { error } = await (sb as any).rpc('stamp_dutchie_customer_ids', {
+      p_org: organizationId,
+      p_matches: toUpdate,
+    })
+    if (error) {
+      result.errored += toUpdate.length
+      result.errors.push(`Customer identity matching: ${error.message}`)
+      return
+    }
   }
 
   // Batch upsert all
@@ -273,20 +310,27 @@ async function dedupAndUpsertCustomers(
 // syncProducts
 // ---------------------------------------------------------------------------
 
-export async function syncProducts(locationId: string, organizationId: string): Promise<SyncResult> {
+export async function syncProducts(
+  locationId: string,
+  organizationId: string,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('products', 'full'), durationMs: Date.now() - start }
   const { client, config } = setup
 
-  const syncType: 'full' | 'incremental' = config.lastSyncedProductsAt ? 'incremental' : 'full'
-  const result = emptySyncResult('products', syncType)
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'products', syncType)
+  const state = await loadSyncState(sb, organizationId, locationId, 'products')
+  const checkpoint = state?.lastSyncedAt ?? config.lastSyncedProductsAt
+  const syncType: 'full' | 'incremental' = checkpoint ? 'incremental' : 'full'
+  const result = emptySyncResult('products', syncType)
+  const logId = await createSyncLog(sb, locationId, organizationId, 'products', syncType)
+  resultLeases.set(result, logId)
 
   try {
-    const since = config.lastSyncedProductsAt ?? undefined
-    const dutchieProducts = await client.fetchProducts(since)
+    const since = checkpoint ?? undefined
+    const dutchieProducts = await client.fetchProducts(since, options.deadline)
     result.fetched = dutchieProducts.length
 
     // Phase 1: resolve FK lookups + pre-create missing FKs in bulk
@@ -321,10 +365,7 @@ export async function syncProducts(locationId: string, organizationId: string): 
     handleSyncError(err, result)
   }
 
-  // Always save timestamp so next sync is incremental (even if some batches errored)
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'products', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'products', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -348,6 +389,8 @@ async function buildProductFkCache(sb: ReturnType<typeof Object>, orgId: string)
     (sb as any).from('strains').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
     (sb as any).from('product_categories').select('id, name, external_id').eq('organization_id', orgId).limit(10000),
   ])
+  const lookupError = [brands, vendors, strains, categories].find(result => result.error)?.error
+  if (lookupError) throw lookupError
 
   for (const b of brands.data ?? []) {
     cache.brands.set(b.name?.toLowerCase(), b.id)
@@ -410,9 +453,10 @@ async function bulkResolveNewFks(
     const upsertRows = rows.map(r => ({ organization_id: orgId, name: r.name, external_id: r.externalId }))
     for (let i = 0; i < upsertRows.length; i += BATCH_SIZE) {
       const batch = upsertRows.slice(i, i + BATCH_SIZE)
-      const { data } = await (sb as any).from(table)
+      const { data, error } = await (sb as any).from(table)
         .upsert(batch, { onConflict: 'organization_id,name', ignoreDuplicates: false })
         .select('id, name, external_id')
+      if (error) throw error
       for (const row of data ?? []) {
         cache[table].set(row.name?.toLowerCase(), row.id)
         if (row.external_id) cache[table].set(`ext:${row.external_id}`, row.id)
@@ -434,9 +478,10 @@ async function bulkResolveNewFks(
     })
     for (let i = 0; i < catRows.length; i += BATCH_SIZE) {
       const batch = catRows.slice(i, i + BATCH_SIZE)
-      const { data } = await (sb as any).from('product_categories')
+      const { data, error } = await (sb as any).from('product_categories')
         .upsert(batch, { onConflict: 'organization_id,slug', ignoreDuplicates: false })
         .select('id, name, external_id')
+      if (error) throw error
       for (const row of data ?? []) {
         cache.categories.set(row.name?.toLowerCase(), row.id)
         if (row.external_id) cache.categories.set(`ext:${row.external_id}`, row.id)
@@ -591,23 +636,32 @@ async function upsertLocationPrices(
 // syncInventory
 // ---------------------------------------------------------------------------
 
-export async function syncInventory(locationId: string, organizationId: string): Promise<SyncResult> {
+export async function syncInventory(
+  locationId: string,
+  organizationId: string,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('inventory', 'full'), durationMs: Date.now() - start }
   const { client } = setup
 
   const result = emptySyncResult('inventory', 'full')
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'inventory', 'full')
+  const logId = await createSyncLog(sb, locationId, organizationId, 'inventory', 'full')
+  resultLeases.set(result, logId)
 
   try {
-    const dutchieItems = await client.fetchInventory({ includeLabResults: true, includeRoomQuantities: true })
+    const dutchieItems = await client.fetchInventory({
+      includeLabResults: true,
+      includeRoomQuantities: true,
+      deadline: options.deadline,
+    })
     result.fetched = dutchieItems.length
 
     // Build product_id lookup from dutchie_product_id
     const productIdMap = await buildDutchieProductMap(sb, organizationId)
-    logger.info('Inventory product map built', { orgId: organizationId, mapSize: productIdMap.size, sampleKeys: [...productIdMap.keys()].slice(0, 5) })
+    logger.info('Inventory product map built', { mapSize: productIdMap.size })
 
     // Build room lookup by name
     const roomMap = await buildRoomMap(sb, locationId)
@@ -670,9 +724,7 @@ export async function syncInventory(locationId: string, organizationId: string):
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'inventory', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'inventory', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -686,12 +738,13 @@ async function buildDutchieProductMap(sb: ReturnType<typeof Object>, orgId: stri
   let offset = 0
   const pageSize = 1000
   while (true) {
-    const { data } = await (sb as any).from('products')
+    const { data, error } = await (sb as any).from('products')
       .select('id, dutchie_product_id')
       .eq('organization_id', orgId)
       .not('dutchie_product_id', 'is', null)
       .order('dutchie_product_id', { ascending: true })
       .range(offset, offset + pageSize - 1)
+    if (error) throw error
     if (!data?.length) break
     for (const p of data) map.set(p.dutchie_product_id, p.id)
     if (data.length < pageSize) break
@@ -701,10 +754,11 @@ async function buildDutchieProductMap(sb: ReturnType<typeof Object>, orgId: stri
 }
 
 async function buildRoomMap(sb: ReturnType<typeof Object>, locationId: string): Promise<Map<string, string>> {
-  const { data } = await (sb as any).from('rooms')
+  const { data, error } = await (sb as any).from('rooms')
     .select('id, name')
     .eq('location_id', locationId)
     .eq('is_active', true)
+  if (error) throw error
 
   const map = new Map<string, string>()
   for (const r of data ?? []) map.set(r.name?.toLowerCase(), r.id)
@@ -714,9 +768,10 @@ async function buildRoomMap(sb: ReturnType<typeof Object>, locationId: string): 
 async function softDeleteBatch(sb: ReturnType<typeof Object>, table: string, ids: string[]): Promise<void> {
   for (let i = 0; i < ids.length; i += BATCH_SIZE) {
     const batch = ids.slice(i, i + BATCH_SIZE)
-    await (sb as any).from(table)
+    const { error } = await (sb as any).from(table)
       .update({ is_active: false, deactivated_at: new Date().toISOString() })
       .in('id', batch)
+    if (error) throw error
   }
 }
 
@@ -724,24 +779,30 @@ async function softDeleteBatch(sb: ReturnType<typeof Object>, table: string, ids
 // syncRooms
 // ---------------------------------------------------------------------------
 
-export async function syncRooms(locationId: string, _organizationId: string): Promise<SyncResult> {
+export async function syncRooms(locationId: string, organizationId: string): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('rooms', 'full'), durationMs: Date.now() - start }
   const { client } = setup
 
   const result = emptySyncResult('rooms', 'full')
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'rooms', 'full')
+  const logId = await createSyncLog(sb, locationId, organizationId, 'rooms', 'full')
+  resultLeases.set(result, logId)
 
   try {
     const dutchieRooms = await client.fetchRooms()
     result.fetched = dutchieRooms.length
 
     // Load existing rooms — need both name and external_id for matching
-    const { data: existing } = await (sb as any).from('rooms')
+    const mappedRooms = dutchieRooms.map(dutchieRoom => mapRoom(dutchieRoom, locationId))
+    const roomRows = mappedRooms.map(({ room }) => ({ ...room, is_active: true }))
+    await batchUpsert(sb, 'rooms', roomRows, 'location_id,name', result)
+
+    const { data: existing, error: roomsError } = await (sb as any).from('rooms')
       .select('id, name, external_id')
       .eq('location_id', locationId)
+    if (roomsError) throw roomsError
 
     const byExternalId = new Map<string, string>()
     const byName = new Map<string, { id: string; external_id: string | null }>()
@@ -751,6 +812,7 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
     }
 
     const incomingExternalIds = new Set<string>()
+    const allSubroomRows: Record<string, unknown>[] = []
 
     for (const dr of dutchieRooms) {
       try {
@@ -762,17 +824,11 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
         const nameMatch = byName.get(room.name)
         if (nameMatch && !nameMatch.external_id) {
           // Stamp external_id on the existing seeded room
-          await (sb as any).from('rooms')
-            .update({ external_id: extId, room_types: room.room_types, is_active: true })
-            .eq('id', nameMatch.id)
           byExternalId.set(extId, nameMatch.id)
-          result.updated++
 
           // Upsert subrooms
           if (subrooms.length > 0) {
-            const subroomRows = subrooms.map((s) => ({ ...s, room_id: nameMatch.id }))
-            await (sb as any).from('subrooms')
-              .upsert(subroomRows, { onConflict: 'room_id,name', ignoreDuplicates: false })
+            allSubroomRows.push(...subrooms.map((subroom) => ({ ...subroom, room_id: nameMatch.id })))
           }
           continue
         }
@@ -781,39 +837,22 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
         const existingId = byExternalId.get(extId)
         if (existingId) {
           // Update existing
-          await (sb as any).from('rooms')
-            .update({ name: room.name, room_types: room.room_types, is_active: true })
-            .eq('id', existingId)
-          result.updated++
-
           if (subrooms.length > 0) {
-            const subroomRows = subrooms.map((s) => ({ ...s, room_id: existingId }))
-            await (sb as any).from('subrooms')
-              .upsert(subroomRows, { onConflict: 'room_id,name', ignoreDuplicates: false })
+            allSubroomRows.push(...subrooms.map((subroom) => ({ ...subroom, room_id: existingId })))
           }
           continue
         }
 
         // Step 3: New room — insert
-        const { data: inserted } = await (sb as any).from('rooms')
-          .insert({ ...room, is_active: true })
-          .select('id').single()
-
-        if (inserted) {
-          byExternalId.set(extId, inserted.id)
-          result.created++
-
-          if (subrooms.length > 0) {
-            const subroomRows = subrooms.map((s) => ({ ...s, room_id: inserted.id }))
-            await (sb as any).from('subrooms')
-              .upsert(subroomRows, { onConflict: 'room_id,name', ignoreDuplicates: false })
-          }
-        }
+        result.errored++
+        result.errors.push(`Room ${dr.roomId}: room missing after batch upsert`)
       } catch (err) {
         result.errored++
         result.errors.push(`Room ${dr.roomId}: ${err instanceof Error ? err.message : String(err)}`)
       }
     }
+
+    await batchUpsert(sb, 'subrooms', allSubroomRows, 'room_id,name', result)
 
     // Soft-deactivate rooms removed from Dutchie (only ones that have external_id)
     const toDeactivate = [...byExternalId.entries()]
@@ -829,9 +868,7 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'rooms', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'rooms', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -843,31 +880,42 @@ export async function syncRooms(locationId: string, _organizationId: string): Pr
 // syncReferenceData
 // ---------------------------------------------------------------------------
 
-export async function syncReferenceData(locationId: string, organizationId: string): Promise<SyncResult> {
+export async function syncReferenceData(
+  locationId: string,
+  organizationId: string,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('reference', 'full'), durationMs: Date.now() - start }
   const { client } = setup
 
   const result = emptySyncResult('reference', 'full')
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'reference', 'full')
+  const logId = await createSyncLog(sb, locationId, organizationId, 'reference', 'full')
+  resultLeases.set(result, logId)
 
   try {
+    const checkDeadline = () => {
+      if (options.deadline && Date.now() >= options.deadline) throw new Error('Dutchie sync deadline reached')
+    }
+    checkDeadline()
     await syncBrands(sb, client, organizationId, result)
+    checkDeadline()
     await syncStrains(sb, client, organizationId, result)
+    checkDeadline()
     await syncVendors(sb, client, organizationId, result)
+    checkDeadline()
     await syncCategories(sb, client, organizationId, result)
+    checkDeadline()
     await syncTags(sb, client, organizationId, result)
+    checkDeadline()
     await syncPricingTiers(sb, client, organizationId, result)
-    await syncTerminals(sb, client, locationId, result)
   } catch (err) {
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'reference', new Date(start))
-  }
+  await checkpointIfSuccessful(sb, result, locationId, organizationId, 'reference', start)
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
@@ -923,148 +971,224 @@ async function syncTerminals(sb: ReturnType<typeof Object>, client: DutchieClien
   result.fetched += items.length
 
   // Match seeded registers by name first, stamp external_id
-  const { data: existing } = await (sb as any).from('registers')
-    .select('id, name, external_id')
-    .eq('location_id', locationId)
+  const rows = items.map(terminal => mapTerminal(terminal, locationId))
+  await batchUpsert(
+    sb,
+    'registers',
+    rows as unknown as Record<string, unknown>[],
+    'location_id,name',
+    result,
+  )
+}
 
-  const byName = new Map<string, { id: string; external_id: string | null }>()
-  for (const row of existing ?? []) {
-    byName.set(row.name, { id: row.id, external_id: row.external_id })
-  }
+export async function syncRegisters(locationId: string, organizationId: string): Promise<SyncResult> {
+  const start = Date.now()
+  const setup = await getClient(locationId, organizationId)
+  if (!setup) return { ...emptySyncResult('registers', 'full'), durationMs: Date.now() - start }
+  const sb = await createSupabaseServerClient()
+  const state = await loadSyncState(sb, organizationId, locationId, 'registers')
+  const syncType = state?.lastSyncedAt ? 'incremental' : 'full'
+  const result = emptySyncResult('registers', syncType)
+  const logId = await createSyncLog(sb, locationId, organizationId, 'registers', syncType)
+  resultLeases.set(result, logId)
 
-  for (const t of items) {
-    const mapped = mapTerminal(t, locationId)
-    const nameMatch = byName.get(mapped.name as string)
-
-    if (nameMatch && !nameMatch.external_id) {
-      // Stamp external_id on seeded register
-      await (sb as any).from('registers')
-        .update({ external_id: mapped.external_id, is_active: mapped.is_active })
-        .eq('id', nameMatch.id)
-      result.updated++
-    } else {
-      // Upsert by external_id
-      const { error } = await (sb as any).from('registers')
-        .upsert(mapped, { onConflict: 'location_id,name', ignoreDuplicates: false })
-      if (error) {
-        result.errored++
-        result.errors.push(`Terminal ${t.terminalId}: ${error.message}`)
-      } else {
-        result.updated++
-      }
+  try {
+    await syncTerminals(sb, setup.client, locationId, result)
+    if (result.errored === 0) {
+      await checkpointSuccessfulSync(sb, {
+        organizationId,
+        locationId,
+        entityType: 'registers',
+        checkpoint: new Date(start),
+      })
     }
+  } catch (error) {
+    handleSyncError(error, result)
   }
+
+  result.durationMs = Date.now() - start
+  await completeSyncLog(sb, logId, result)
+  logger.info('syncRegisters complete', { locationId, ...result })
+  return result
 }
 
 // ---------------------------------------------------------------------------
 // syncTransactions
 // ---------------------------------------------------------------------------
 
-export async function syncTransactions(locationId: string, organizationId: string): Promise<SyncResult> {
+export async function syncTransactions(
+  locationId: string,
+  organizationId: string,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
   const start = Date.now()
-  const setup = await getClient(locationId)
+  const setup = await getClient(locationId, organizationId)
   if (!setup) return { ...emptySyncResult('transactions', 'full'), durationMs: Date.now() - start }
   const { client, config } = setup
 
-  const result = emptySyncResult('transactions', 'full')
   const sb = await createSupabaseServerClient()
-  const logId = await createSyncLog(sb, locationId, 'transactions', 'full')
+  const state = await loadSyncState(sb, organizationId, locationId, 'transactions')
+  const authoritativeCheckpoint = state?.lastSyncedAt ?? config.lastSyncedTransactionsAt
+  const syncType = authoritativeCheckpoint ? 'incremental' : 'full'
+  const result = emptySyncResult('transactions', syncType)
+  const logId = await createSyncLog(sb, locationId, organizationId, 'transactions', syncType)
+  resultLeases.set(result, logId)
+  let completedAllWindows = false
+  let nextWindowStart: number | null = null
+  let transactionRangeEnd = start
 
   try {
-    // Fetch from last sync or last 90 days
-    const startMs = (config.lastSyncedTransactionsAt ?? new Date(Date.now() - 730 * 24 * 60 * 60 * 1000)).getTime()
-    const endMs = Date.now()
-    const maxWindowMs = 55 * 24 * 60 * 60 * 1000 // 55 days per chunk (under 1440hr limit)
-
-    // Chunk into windows if range exceeds max
-    const dutchieTransactions: DutchieTransaction[] = []
-    let windowStart = startMs
-    while (windowStart < endMs) {
-      const windowEnd = Math.min(windowStart + maxWindowMs, endMs)
+    const cursor = state?.cursor as { windowStart?: string; rangeEnd?: string } | null
+    const overlappedStart = authoritativeCheckpoint
+      ? new Date(authoritativeCheckpoint.getTime() - 15 * 60 * 1000)
+      : new Date(start - 730 * 24 * 60 * 60 * 1000)
+    const defaultStart = utcDayStart(overlappedStart)
+    let windowStart = cursor?.windowStart ? new Date(cursor.windowStart).getTime() : defaultStart.getTime()
+    const rangeEnd = cursor?.rangeEnd
+      ? new Date(cursor.rangeEnd).getTime()
+      : utcDayEndExclusive(new Date(start)).getTime()
+    transactionRangeEnd = rangeEnd
+    while (windowStart < rangeEnd) {
+      if (options.deadline && Date.now() >= options.deadline) break
+      const windowEnd = Math.min(windowStart + 55 * 24 * 60 * 60 * 1000, rangeEnd)
       const startDate = new Date(windowStart).toISOString()
       const endDate = new Date(windowEnd).toISOString()
       logger.info('syncTransactions date range', { startDate: startDate.slice(0, 10), endDate: endDate.slice(0, 10) })
-      const chunk = await client.fetchTransactions({ startDate, endDate })
-      for (const t of chunk) dutchieTransactions.push(t)
+      const chunk = await client.fetchTransactions({ startDate, endDate, endExclusive: true })
+      result.fetched += chunk.length
+      const errorsBeforeWindow = result.errored
+      await persistTransactionBatch(sb, chunk, locationId, organizationId, result)
+      if (result.errored > errorsBeforeWindow) break
       windowStart = windowEnd
+      await saveSyncCursor(sb, {
+        organizationId,
+        locationId,
+        entityType: 'transactions',
+        cursor: windowStart < rangeEnd
+          ? { windowStart: new Date(windowStart).toISOString(), rangeEnd: new Date(rangeEnd).toISOString() }
+          : null,
+      })
+      await heartbeatSyncLease(sb, logId)
     }
-    result.fetched = dutchieTransactions.length
-
-    if (dutchieTransactions.length === 0) {
-      result.durationMs = Date.now() - start
-      await completeSyncLog(sb, logId, result)
-      return result
-    }
-
-    // Build FK lookup maps (paginated to avoid 1000-row cap)
-    const customerMap = await buildPaginatedMap(sb, 'customers', 'dutchie_customer_id', 'id', { organization_id: organizationId })
-    const employeeMap = await buildPaginatedMap(sb, 'employees', 'dutchie_employee_id', 'id', { organization_id: organizationId })
-
-    // Map all transactions
-    const txRows: Record<string, unknown>[] = []
-    const paymentRows: Array<{ dutchie_txn_id: string; payments: Array<{ payment_method: string; amount: number }> }> = []
-
-    for (const dt of dutchieTransactions) {
-      try {
-        const { transaction, payments } = mapTransaction(dt, locationId)
-        // Resolve FKs
-        if (dt.customerId) {
-          transaction.customer_id = customerMap.get(String(dt.customerId)) ?? null
-        }
-        if (dt.employeeId) {
-          transaction.employee_id = employeeMap.get(String(dt.employeeId)) ?? null
-        }
-        txRows.push(transaction as unknown as Record<string, unknown>)
-        paymentRows.push({ dutchie_txn_id: String(dt.transactionId), payments })
-      } catch (err) {
-        result.errored++
-        result.errors.push(`Txn ${dt.transactionId}: ${err instanceof Error ? err.message : String(err)}`)
-      }
-    }
-
-    // Batch upsert transactions
-    await batchUpsert(sb, 'transactions', txRows, 'location_id,dutchie_transaction_id', result)
-
-    // Upsert payments — need to resolve transaction IDs first
-    const txIdMap = await buildPaginatedMap(sb, 'transactions', 'dutchie_transaction_id', 'id', { location_id: locationId })
-
-    const allPayments: Record<string, unknown>[] = []
-    for (const pr of paymentRows) {
-      const txId = txIdMap.get(pr.dutchie_txn_id)
-      if (!txId) continue
-      for (const p of pr.payments) {
-        allPayments.push({ transaction_id: txId, ...p })
-      }
-    }
-
-    if (allPayments.length > 0) {
-      // Delete existing payments for these transactions and re-insert
-      const txIds = [...new Set(allPayments.map(p => p.transaction_id as string))]
-      for (let i = 0; i < txIds.length; i += BATCH_SIZE) {
-        const batch = txIds.slice(i, i + BATCH_SIZE)
-        await (sb as any).from('transaction_payments').delete().in('transaction_id', batch)
-      }
-      // Insert fresh payments
-      for (let i = 0; i < allPayments.length; i += BATCH_SIZE) {
-        const batch = allPayments.slice(i, i + BATCH_SIZE)
-        await (sb as any).from('transaction_payments').insert(batch)
-      }
-    }
-
-    // Update customer aggregates (lifetime_spend, visit_count, last_visit_at)
-    await updateCustomerAggregates(sb, organizationId)
+    completedAllWindows = windowStart >= rangeEnd
+    nextWindowStart = windowStart
   } catch (err) {
     handleSyncError(err, result)
   }
 
-  if (result.fetched > 0) {
-    await updateSyncTimestamp(locationId, 'transactions', new Date(start))
+  try {
+    if (result.errored === 0 && completedAllWindows) {
+      await checkpointSuccessfulSync(sb, {
+        organizationId,
+        locationId,
+        entityType: 'transactions',
+        checkpoint: new Date(start),
+        cursor: null,
+      })
+      await updateSyncTimestamp(locationId, 'transactions', new Date(start))
+    } else if (result.errored === 0) {
+      await saveSyncCursor(sb, {
+        organizationId,
+        locationId,
+        entityType: 'transactions',
+        cursor: {
+          windowStart: new Date(nextWindowStart ?? transactionRangeEnd).toISOString(),
+          rangeEnd: new Date(transactionRangeEnd).toISOString(),
+        },
+      })
+    }
+  } catch (error) {
+    handleSyncError(error, result)
   }
 
   result.durationMs = Date.now() - start
   await completeSyncLog(sb, logId, result)
-  logger.info('syncTransactions complete', { locationId, ...result })
+  logger.info('syncTransactions complete', { locationId, completedAllWindows, ...result })
   return result
+}
+
+async function persistTransactionBatch(
+  sb: ReturnType<typeof Object>,
+  dutchieTransactions: DutchieTransaction[],
+  locationId: string,
+  organizationId: string,
+  result: SyncResult,
+): Promise<void> {
+  if (dutchieTransactions.length === 0) return
+  const customerMap = await buildPaginatedMap(
+    sb,
+    'customers',
+    'dutchie_customer_id',
+    'id',
+    { organization_id: organizationId },
+  )
+  const employeeMap = await buildPaginatedMap(
+    sb,
+    'employees',
+    'dutchie_employee_id',
+    'id',
+    { organization_id: organizationId },
+  )
+  const transactionRows: Record<string, unknown>[] = []
+  const paymentRows: Array<{
+    dutchieTransactionId: string
+    payments: Array<{ payment_method: string; amount: number }>
+  }> = []
+
+  for (const dutchieTransaction of dutchieTransactions) {
+    try {
+      const { transaction, payments } = mapTransaction(dutchieTransaction, locationId)
+      if (dutchieTransaction.customerId) {
+        transaction.customer_id = customerMap.get(String(dutchieTransaction.customerId)) ?? null
+      }
+      if (dutchieTransaction.employeeId) {
+        transaction.employee_id = employeeMap.get(String(dutchieTransaction.employeeId)) ?? null
+      }
+      transactionRows.push(transaction as unknown as Record<string, unknown>)
+      paymentRows.push({
+        dutchieTransactionId: String(dutchieTransaction.transactionId),
+        payments,
+      })
+    } catch (error) {
+      result.errored++
+      result.errors.push(
+        `Txn ${dutchieTransaction.transactionId}: ${error instanceof Error ? error.message : String(error)}`,
+      )
+    }
+  }
+
+  await batchUpsert(
+    sb,
+    'transactions',
+    transactionRows,
+    'location_id,dutchie_transaction_id',
+    result,
+  )
+  if (result.errored > 0) return
+
+  const transactionIdMap = await buildPaginatedMap(
+    sb,
+    'transactions',
+    'dutchie_transaction_id',
+    'id',
+    { location_id: locationId },
+  )
+  const replacements = paymentRows.flatMap(row => {
+    const transactionId = transactionIdMap.get(row.dutchieTransactionId)
+    return transactionId ? [{ transaction_id: transactionId, payments: row.payments }] : []
+  })
+  if (replacements.length > 0) {
+    const { error } = await (sb as any).rpc('replace_dutchie_transaction_payments', {
+      p_location: locationId,
+      p_replacements: replacements,
+    })
+    if (error) {
+      result.errored++
+      result.errors.push(`Transaction payments: ${error.message}`)
+      return
+    }
+  }
+  await updateCustomerAggregates(sb, organizationId)
 }
 
 async function buildPaginatedMap(
@@ -1080,7 +1204,8 @@ async function buildPaginatedMap(
   while (true) {
     let query = (sb as any).from(table).select(`${valueCol}, ${keyCol}`).not(keyCol, 'is', null)
     for (const [k, v] of Object.entries(filters)) query = query.eq(k, v)
-    const { data } = await query.order(keyCol, { ascending: true }).range(offset, offset + pageSize - 1)
+    const { data, error } = await query.order(keyCol, { ascending: true }).range(offset, offset + pageSize - 1)
+    if (error) throw error
     if (!data?.length) break
     for (const row of data) map.set(String(row[keyCol]), row[valueCol])
     if (data.length < pageSize) break
@@ -1103,29 +1228,33 @@ async function updateCustomerAggregates(sb: ReturnType<typeof Object>, orgId: st
 // Orchestrators
 // ---------------------------------------------------------------------------
 
-const SYNC_ORDER: EntityType[] = ['reference', 'rooms', 'employees', 'products', 'customers', 'inventory', 'transactions']
-
-// Org-wide entities only need to sync once across all locations (same catalog)
-const ORG_WIDE_ENTITIES: Set<EntityType> = new Set(['reference', 'employees', 'products', 'customers'])
+const SYNC_ORDER: EntityType[] = ['reference', 'rooms', 'registers', 'employees', 'products', 'customers', 'inventory', 'transactions', 'loyalty']
 
 const SYNC_FN_MAP: Record<EntityType, (locationId: string, organizationId: string) => Promise<SyncResult>> = {
   reference: syncReferenceData,
   rooms: syncRooms,
+  registers: syncRegisters,
   employees: syncEmployees,
   products: syncProducts,
   customers: syncCustomers,
   inventory: syncInventory,
   transactions: syncTransactions,
+  loyalty: syncLoyalty,
 }
 
-const ENTITY_ENABLED_KEY: Record<EntityType, string> = {
-  reference: 'isEnabled',
-  rooms: 'syncRooms',
-  employees: 'syncEmployees',
-  products: 'syncProducts',
-  customers: 'syncCustomers',
-  inventory: 'syncInventory',
-  transactions: 'syncInventory',
+export async function syncEntity(
+  locationId: string,
+  organizationId: string,
+  entityType: EntityType,
+  options: { deadline?: number } = {},
+): Promise<SyncResult> {
+  if (entityType === 'transactions') return syncTransactions(locationId, organizationId, options)
+  if (entityType === 'loyalty') return syncLoyalty(locationId, organizationId, options)
+  if (entityType === 'customers') return syncCustomers(locationId, organizationId, options)
+  if (entityType === 'products') return syncProducts(locationId, organizationId, options)
+  if (entityType === 'inventory') return syncInventory(locationId, organizationId, options)
+  if (entityType === 'reference') return syncReferenceData(locationId, organizationId, options)
+  return SYNC_FN_MAP[entityType](locationId, organizationId)
 }
 
 export async function syncLocation(
@@ -1134,7 +1263,7 @@ export async function syncLocation(
   entityTypes?: EntityType[],
 ): Promise<LocationSyncResult> {
   const start = Date.now()
-  const config = await loadDutchieConfig(locationId)
+  const config = await loadDutchieConfig(locationId, organizationId)
   const locationName = config?.dutchieLocationName ?? locationId
 
   const results: SyncResult[] = []
@@ -1152,7 +1281,7 @@ export async function syncLocation(
       continue
     }
 
-    const syncResult = await SYNC_FN_MAP[entityType](locationId, organizationId)
+    const syncResult = await syncEntity(locationId, organizationId, entityType)
     results.push(syncResult)
   }
 
@@ -1167,8 +1296,9 @@ export async function syncLocation(
 export async function syncAllLocations(organizationId: string): Promise<LocationSyncResult[]> {
   const sb = await createSupabaseServerClient()
   const { data: configs } = await (sb as any).from('dutchie_config')
-    .select('location_id')
+    .select('location_id, locations!inner(organization_id)')
     .eq('is_enabled', true)
+    .eq('locations.organization_id', organizationId)
 
   if (!configs?.length) {
     logger.info('No enabled Dutchie configs found', { organizationId })

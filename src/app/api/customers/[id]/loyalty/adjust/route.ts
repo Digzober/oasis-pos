@@ -27,88 +27,22 @@ export async function POST(
     const { points, reason, notes } = parsed.data
     const sb = await createSupabaseServerClient()
 
-    // Fetch or create loyalty balance
-    const { data: existing, error: fetchError } = await sb
-      .from('loyalty_balances')
-      .select('id, current_points, lifetime_points')
-      .eq('customer_id', customerId)
-      .eq('organization_id', session.organizationId)
-      .maybeSingle()
-
-    if (fetchError) {
-      logger.error('Loyalty balance fetch failed', { error: fetchError.message, customerId })
-      return NextResponse.json({ error: 'Failed to fetch loyalty balance' }, { status: 500 })
+    const { data, error } = await (sb as any).rpc('adjust_loyalty_points', {
+      p_customer: customerId,
+      p_org: session.organizationId,
+      p_delta: points,
+      p_reason: reason,
+      p_lifetime_delta: Math.max(points, 0),
+      p_created_by: session.employeeId,
+    })
+    if (error) {
+      const negative = error.message?.includes('negative')
+      return NextResponse.json(
+        { error: negative ? 'Adjustment would result in negative balance' : 'Failed to adjust loyalty balance' },
+        { status: negative ? 400 : 500 },
+      )
     }
-
-    let balanceId: string
-    let currentPoints: number
-    let lifetimePoints: number
-
-    if (!existing) {
-      // Create a new loyalty balance record
-      const { data: created, error: createError } = await sb
-        .from('loyalty_balances')
-        .insert({
-          customer_id: customerId,
-          organization_id: session.organizationId,
-          current_points: 0,
-          lifetime_points: 0,
-        })
-        .select('id, current_points, lifetime_points')
-        .single()
-
-      if (createError || !created) {
-        logger.error('Loyalty balance creation failed', { error: createError?.message, customerId })
-        return NextResponse.json({ error: 'Failed to create loyalty balance' }, { status: 500 })
-      }
-
-      balanceId = created.id
-      currentPoints = created.current_points
-      lifetimePoints = created.lifetime_points
-    } else {
-      balanceId = existing.id
-      currentPoints = existing.current_points
-      lifetimePoints = existing.lifetime_points
-    }
-
-    const newCurrentPoints = currentPoints + points
-    const newLifetimePoints = lifetimePoints + Math.max(0, points)
-
-    if (newCurrentPoints < 0) {
-      return NextResponse.json({ error: 'Adjustment would result in negative balance' }, { status: 400 })
-    }
-
-    // Update the balance
-    const { error: updateError } = await sb
-      .from('loyalty_balances')
-      .update({
-        current_points: newCurrentPoints,
-        lifetime_points: newLifetimePoints,
-      })
-      .eq('id', balanceId)
-
-    if (updateError) {
-      logger.error('Loyalty balance update failed', { error: updateError.message, customerId })
-      return NextResponse.json({ error: 'Failed to update loyalty balance' }, { status: 500 })
-    }
-
-    // Insert loyalty transaction record
-    const { error: txnError } = await sb
-      .from('loyalty_transactions')
-      .insert({
-        customer_id: customerId,
-        organization_id: session.organizationId,
-        points_change: points,
-        balance_after: newCurrentPoints,
-        reason,
-        notes: notes ?? null,
-        created_by: session.employeeId,
-      })
-
-    if (txnError) {
-      logger.error('Loyalty transaction insert failed', { error: txnError.message, customerId })
-      return NextResponse.json({ error: 'Failed to record loyalty transaction' }, { status: 500 })
-    }
+    const newCurrentPoints = Number(data?.new_balance ?? 0)
 
     // Audit log
     const { error: auditError } = await sb
@@ -116,17 +50,16 @@ export async function POST(
       .insert({
         organization_id: session.organizationId,
         entity_type: 'loyalty_balance',
-        entity_id: balanceId,
+        entity_id: customerId,
         event_type: 'adjust',
-        details: {
+        metadata: {
           customer_id: customerId,
           points_change: points,
-          balance_before: currentPoints,
           balance_after: newCurrentPoints,
           reason,
           notes: notes ?? null,
         },
-        performed_by: session.employeeId,
+        employee_id: session.employeeId,
       })
 
     if (auditError) {

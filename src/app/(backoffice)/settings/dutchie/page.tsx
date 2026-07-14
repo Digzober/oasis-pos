@@ -18,6 +18,7 @@ interface DutchieConfig {
   syncInventory: boolean
   syncRooms: boolean
   syncTransactions: boolean
+  syncLoyalty: boolean
   lastSyncedEmployeesAt: string | null
   lastSyncedCustomersAt: string | null
   lastSyncedProductsAt: string | null
@@ -25,7 +26,11 @@ interface DutchieConfig {
   lastSyncedRoomsAt: string | null
   lastSyncedReferenceAt: string | null
   lastSyncedTransactionsAt: string | null
+  lastSyncedLoyaltyAt: string | null
+  designatedLoyaltyLocationId: string | null
 }
+
+interface AvailableLocation { id: string; name: string }
 
 interface SyncEntityResult {
   entityType: string
@@ -66,6 +71,7 @@ const DEFAULT_CONFIG: DutchieConfig = {
   syncInventory: true,
   syncRooms: true,
   syncTransactions: true,
+  syncLoyalty: true,
   lastSyncedEmployeesAt: null,
   lastSyncedCustomersAt: null,
   lastSyncedProductsAt: null,
@@ -73,6 +79,8 @@ const DEFAULT_CONFIG: DutchieConfig = {
   lastSyncedRoomsAt: null,
   lastSyncedReferenceAt: null,
   lastSyncedTransactionsAt: null,
+  lastSyncedLoyaltyAt: null,
+  designatedLoyaltyLocationId: null,
 }
 
 const ENTITY_TYPES = [
@@ -82,6 +90,7 @@ const ENTITY_TYPES = [
   { key: 'inventory' as const, label: 'Inventory', configKey: 'syncInventory' as const, tsKey: 'lastSyncedInventoryAt' as const },
   { key: 'rooms' as const, label: 'Rooms', configKey: 'syncRooms' as const, tsKey: 'lastSyncedRoomsAt' as const },
   { key: 'transactions' as const, label: 'Transactions', configKey: 'syncTransactions' as const, tsKey: 'lastSyncedTransactionsAt' as const },
+  { key: 'loyalty' as const, label: 'Loyalty', configKey: 'syncLoyalty' as const, tsKey: 'lastSyncedLoyaltyAt' as const },
 ] as const
 
 function sanitizeConfig(raw: Record<string, unknown>): DutchieConfig {
@@ -148,6 +157,7 @@ export default function DutchieSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [availableLocations, setAvailableLocations] = useState<AvailableLocation[]>([])
   const [syncingEntity, setSyncingEntity] = useState<string | null>(null)
   const [showApiKey, setShowApiKey] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'connected' | 'failed'>('none')
@@ -162,6 +172,7 @@ export default function DutchieSettingsPage() {
         const d = await res.json()
         if (d.config) {
           setConfig(sanitizeConfig(d.config))
+          setAvailableLocations(Array.isArray(d.availableLocations) ? d.availableLocations : [])
           // Infer connection status from dutchieLocationName
           if (d.config.dutchieLocationName) {
             setConnectionStatus('connected')
@@ -210,6 +221,8 @@ export default function DutchieSettingsPage() {
           syncInventory: config.syncInventory,
           syncRooms: config.syncRooms,
           syncTransactions: config.syncTransactions,
+          syncLoyalty: config.syncLoyalty,
+          designatedLoyaltyLocationId: config.designatedLoyaltyLocationId,
         }),
         cache: 'no-store',
       })
@@ -378,6 +391,19 @@ export default function DutchieSettingsPage() {
                 <p className="text-xs text-gray-500 mt-0.5">
                   Last synced: {relativeTime(config[et.tsKey])}
                 </p>
+                {et.key === 'loyalty' && (
+                  <select
+                    value={config.designatedLoyaltyLocationId ?? ''}
+                    onChange={event => updateField('designatedLoyaltyLocationId', event.target.value || null)}
+                    className="mt-2 h-8 px-2 bg-gray-900 border border-gray-600 rounded text-xs text-gray-200"
+                    aria-label="Designated loyalty sync location"
+                  >
+                    <option value="">Use first enabled location</option>
+                    {availableLocations.map(location => (
+                      <option key={location.id} value={location.id}>{location.name}</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <button
                 onClick={() => updateField(et.configKey, !config[et.configKey])}
