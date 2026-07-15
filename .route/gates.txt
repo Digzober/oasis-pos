@@ -1,4 +1,4 @@
+=== run: settings-wiring-audit ===
+scope gate: git status --porcelain shows only SETTINGS-WIRING-AUDIT.md added
 npm run typecheck
-npm run lint
-npm run test
-npm run build
+fable spot-check: >=8 verdicts verified against code

@@ -22,3 +22,8 @@
 
 ## Build
 - Phase A build dispatched to Sol (workspace-write, high reasoning). Session captured in .route/session-a.
+
+
+=== NEW RUN 2026-07-14: route/settings-wiring-audit ===
+Preflight: codex READY (gpt-5.6-sol, xhigh). Tree had .route-only noise from prior run (devserver.log modified + untracked scratch) — recorded, not stashed; harmless for doc-only audit. Baseline typecheck green. Branch forked from route/full-audit-sync-theme HEAD so audit reflects the tree Kane sees.
+Class STANDARD: 1 plan-review round, doc-only build.
