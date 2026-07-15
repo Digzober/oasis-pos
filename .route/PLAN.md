@@ -1,79 +1,84 @@
-# PLAN v3: Settings wiring audit (wired vs placeholder)
+# PLAN: Settings consolidation + full wiring fix
 
-Branch: `route/settings-wiring-audit`. v2 resolved round-1 review (`.route/plan-review-audit-1.txt`); v3 resolves round-2 (`.route/plan-review-audit-2.txt`): row identity = control+surface, REDIRECT/READ-ONLY classifications added, systemic write defects moved out of per-row precedence, deterministic spot-check sampling.
-Class: STANDARD (read-only investigation, doc deliverable, no code changes).
-
-## Assumptions (hands-off mode)
-- A-1: Scope = every settings/configuration surface reachable from the backoffice sidebar. Kane's question: "are all of these settings wired up? I have a feeling lots of things are placeholders."
-- A-2: Deliverable is an audit document + recommendation. NO code fixes in this run.
-- A-3: This is a STATIC WIRING audit: "wired" is proven by a complete static code path from writer to a behavioral branch reachable from a production entry point. Live runtime/DB verification is out of scope; the doc must state this limitation. (Resolves F5.)
+Branch: `route/settings-fix` (from route/settings-wiring-audit `8117d4c`).
+Class: HIGH-RISK (schema/migrations, money, tax, BioTrack compliance, auth surface).
+Plan review: WAIVED by Kane ("adversarial reviews are done, go straight to building") — the spec is the approved SETTINGS-WIRING-AUDIT.md (consolidation recommendation + concrete migration map + 12 cross-surface findings), which was itself produced under two adversarial review rounds. Recorded in LOG.md.
+Iteration budget: build↔gate ≤3 per phase, review↔fix ≤3, hard cap 8 total.
 
 ## Goal
-Produce `SETTINGS-WIRING-AUDIT.md` (repo root) classifying every independently mutable settings control exposed in the backoffice as wired or not, with evidence, plus an explanation of the two location-settings surfaces and an evidence-based consolidation recommendation.
+Implement the audit's consolidation recommendation and migration map in full: one settings hub (org defaults + per-location overrides), Surface B killed, canonical keys migrated, every keeper setting actually wired to a behavioral branch, all 12 cross-surface findings fixed, placeholder controls that have no consumer surface removed.
 
-## Out of scope (Sol must NOT touch)
-- No source-code changes. The ONLY file created is `SETTINGS-WIRING-AUDIT.md` at repo root.
+## Non-negotiable constraints
+- READ `DATABASE-CONSTRAINTS.md` (repo root, and parent OCC-POS copy if referenced) BEFORE any insert/update code or migration. Never invent enum values; ALTER constraints via migration first if a new value is required.
+- Compliance direction is fail-safe: purchase-limit enforcement stays ALWAYS ON (delete the toggle); BioTrack sync defaults ON and is skipped only when `biotrack_config.is_enabled` is explicitly false.
+- Supabase patterns from repo conventions: for new tables, extend `src/types/database.ts` manually in the established style (no network type-regen available); use upsert patterns consistent with existing services.
+- New migrations go in `supabase/migrations/` with timestamped names; they must be idempotent-safe and include backfill statements for key migrations. Do NOT attempt to apply them to a remote DB.
+- TypeScript strict; no new `any` without justification; functions ≤50 lines; follow Forbidden Patterns in CLAUDE.md.
+- Tests: extend existing Vitest suites for every newly wired behavioral branch (calculations/services level). 301 existing tests must keep passing.
 
-## Surface inventory (F1, F2 — complete, from Sidebar.tsx; one verdict row per independently mutable control)
-1. `/settings/location-settings` (Surface A — 46 controls, 8 sections at current HEAD)
-2. `/settings/locations` (READ-ONLY list) + `/settings/locations/[id]/settings` (Surface B — the 13-control writer tab) + other `[id]/*` tabs per their own controls (R2-F2)
-3. `LOCATION-SETTINGS-KEYS.md` registry (89 paths; union with A+B = 96 keys). Registry is a CANDIDATE source, not authority (F6) — it is already stale (missing `package_id_formats`, `product_field_config`).
-4. Other `/settings/*` pages: appearance, biotrack, delivery (org config + zones + vehicles + drivers separately, F2), dosages, dutchie, fees, inventory-statuses, labels, limits, package-formats, printers, product-fields, receipts, registers, rooms, taxes.
-5. `/registers/configure/*` (8 tabs) and `/customers/configure/*` pages.
-6. `/products/configure/*` (8 tabs), `/marketing/loyalty`, `/customers/referrals`, marketing configure surfaces.
-7. Entity-CRUD pages (rooms, taxes, fees, printers, zones…): audit the CONFIG FIELDS of the entities (e.g. `max_delivery_value`, `tax rate applies_to`) — a row per field whose value should change runtime behavior; plain identity fields (name, address) get one collective row.
+## Phase A — P0 correctness bugs + settings core + consolidation
+1. **Loyalty cross-org bug**: `transactionService.ts:229-241` — add `.eq('organization_id', organizationId)` to the `loyalty_config` accrual query.
+2. **Tax cache invalidation**: every tax mutation route calls `clearTaxRateCache()`.
+3. **Discount cache invalidation**: discount builder/list mutations clear the discount loader cache.
+4. **Discount loader fidelity**: honor full `customer_types` array (not `[0]`); honor `weekly_recurrence` (stop hardcoding `is_recurring: false`); load the constraint/reward filter types the loader currently drops; fix the 16 BROKEN-WRITE discount-builder controls (audit §registers/discount rows) so every builder field persists and round-trips.
+5. **Settings core module** `src/lib/settings/`:
+   - Zod schema = single source of truth for canonical keys (namespaced: `checkout.*`, `compliance.*`, `printing.*`, `inventory.*`, `online.*`, `receipt.*`), types + defaults exported.
+   - New migration: `organization_settings` table (organization_id UNIQUE FK, settings JSONB, updated_at trigger, RLS as per existing tables).
+   - `getEffectiveSettings(locationId)`: location override > org default > code default; server-side, cached ≤60s with mutation invalidation.
+   - **Key-level atomic writes**: new RPC migration (`jsonb deep-merge of validated patch`) or column-guarded update — eliminates read-merge-upsert clobber (audit finding 1). All JSON sub-writers (location-settings, receipts, register configure, customer fields, product fields, marketing configure) switch to it. Reject unknown keys.
+6. **Key migration** (one data migration): coalesce per audit map with explicit precedence (location value wins over stale alias; document in migration comments): `require_customer_checkout`+`require_customer` → `checkout.require_customer`; `require_id_scan`+`require_id_verification` → `compliance.require_id_scan`; `auto_print_receipt`+`print_receipt_auto` → `printing.auto_print_receipt_default`; `auto_print_label` → `printing.auto_print_label_default`; `auto_sync_biotrack`+`biotrack_auto_sync` → backfill `biotrack_config.is_enabled`; `enable_online_ordering` → backfill `locations.allows_online_orders`; `enable_reservations` → `online.reserve_inventory`; `low_stock_threshold` → `inventory.low_stock_threshold`; delete from JSON: the coalesced aliases plus dropped controls (`enforce_purchase_limits`, `auto_deduct_on_sale`, integrations `sync_*`, mobile checkout group, security group, admin group, pricing group toggles that have no consumer and no keeper mapping).
+7. **Hub UI**: rebuild `/settings/location-settings` as the settings hub — scope selector (Organization defaults | per-location override with location picker honoring employee_locations), sections ONLY for keeper settings (each rendered control must be consumed by runtime after Phase B). Per-control override indicator (inherits vs overridden). Follow existing dark-theme component patterns.
+8. **Kill Surface B**: delete `/settings/locations/[id]/settings` page; `/api/locations/[id]/settings` returns 410 or is removed with references cleaned; Locations list links to the hub with the location preselected. `settingsService.updateLocationSettings` either deleted or rewritten on the atomic patch path with error propagation (no swallowed Supabase errors anywhere in it).
+9. Regenerate `LOCATION-SETTINGS-KEYS.md` from the Zod schema (script or hand-sync) — registry must match code exactly, including `product_field_config` and `package_id_formats`.
 
-## Row identity (R2-F1)
-One row per (control × writer surface): Surface A = 46 rows, Surface B = 13 rows, registry-only paths = additional rows (UNEXPOSED), other surfaces per their own controls. Keys appearing on multiple surfaces (e.g. `auto_deduct_on_sale`) get one row PER surface; the concept matrix links duplicates. The doc states computed row counts per surface.
+## Phase B — wire every keeper setting to a behavioral branch
+1. `checkout.require_customer`: terminal checkout blocks (UI) AND transaction API rejects `customer_id: null` when effective setting true.
+2. `compliance.require_id_scan`: terminal requires ID verification step before checkout when true (gate at checkout start; API-side validation that customer has verified ID when true).
+3. `printing.auto_print_receipt_default` + nullable `registers.auto_print_receipts` override (migration alters column nullable if needed): post-sale receipt print call honors register override else location default. Same model for `auto_print_label_default` + `registers.auto_print_labels`, wired into the existing label print flow.
+4. **BioTrack**: `saleSync`, void/return sync, and retry queue honor `biotrack_config.is_enabled` (default true when row missing). Manifest paths keep their existing credential source. Config PATCH clears BOTH the 5-min loader cache and the 10-min client cache (audit finding 7).
+5. **Online ordering**: orders API + storefront menu gate on `locations.allows_online_orders`; `onlineOrderService` reserves inventory only when `online.reserve_inventory` true; `online.pickup_window_minutes` and `online.max_advance_order_days` validated at order creation.
+6. **Low stock**: replace hardcoded `5` in the advanced/low-stock report with precedence: per-product/location threshold field > `inventory.low_stock_threshold` > 5.
+7. **Receipts**: terminal receipt renderer reads `receipt_config` (per location). Data migration maps nested `settings.receipt.*` → `receipt_config` columns per audit map (header/line_item/footer/additional), then deletes the nested JSON. Receipts settings page writes `receipt_config` via key-level updates. Preview and production render from the same config reader.
+8. **Rounding**: implement `checkout.rounding_method` in the totals calculation (the 11 documented methods; cash-total rounding, applied once, itemized on receipt as rounding adjustment) OR — if terminal totals flow makes this unsafe within budget — drop the control entirely and remove from schema. Prefer implementing; it is Tier-2 money with an existing calculations module and test suite.
 
-## Verdict taxonomy (F3, F4, R2-F2, R2-F3 — single primary verdict, deterministic precedence, nuance in fixed columns)
-Systemic write-path defects shared by a whole surface (Surface A whole-blob clobber; Surface B error swallowing) are recorded ONCE in the findings section and reflected per-row in the `Writer OK?` column — they do NOT set the primary verdict, so they cannot mask DRIFT/PLACEHOLDER counts (R2-F3).
-Surface-level classifications for non-writer pages: **REDIRECT/ALIAS** (page only redirects, e.g. `/settings/dosages`, `/registers/configure` index) and **READ-ONLY** (renders data without writes, e.g. `/settings/locations` list). These get one surface-level row each, no per-control rows (R2-F2).
-Primary verdict, first match wins:
-1. **BROKEN-WRITE** — a write defect SPECIFIC to this control's own path (not the surface-wide systemic defects above); cite the defect.
-2. **DRIFT** — written under a key/store that no runtime consumer reads, while an equivalent concept IS consumed under a different key/store/scope. Cite both sides.
-3. **WIRED** — complete chain: writer → stored value → loader → behavioral branch → reachable production entry point (terminal, storefront, API, cron, printing, sync). Cite the branch file:line. Settings whose intended effect IS display (receipt fields, POS visibility) are WIRED if the display actually changes. (F4, F16.)
-4. **PARTIAL** — chain exists but is incomplete/gated/dead-ended; Notes must say which link is missing.
-5. **PLACEHOLDER** — persists but no consumer outside settings UIs/APIs.
-6. **UNEXPOSED** — documented in registry, no UI writer.
-7. **STATIC/REFERENCE** — page renders hardcoded content, nothing persisted (e.g. limits page if static).
-Required columns: `Control | Surface | Store + scope (org/location/register/device) | Writer OK? | Runtime consumer (file:line) | Verdict | Default mismatch? | Notes`.
-
-## Method (required)
-1. Pin the audited commit SHA in the doc header. Record the pre-run `git status --porcelain` snapshot in the evidence appendix (F19).
-2. Search with `git grep -n` (rg is NOT installed — F13). For nested JSONB paths (`receipt.show_sku` stored as nested object) search parent key AND leaf key separately (F12). Log every command + result count in an evidence ledger; negative results logged too (F5, F13).
-3. Trace indirection: `getLocationSettings`, session/bootstrap payloads, Zustand stores, client fetches, AND background/cached paths — Dutchie cron, BioTrack sync, `public/sw.js` GET caching, `taxRateLoader` 5-min cache & invalidation (F15).
-4. Scope tracing end-to-end (F9): a key consumed at a different scope than written (e.g. delivery page sends location_id, API ignores it and reads org config) is NOT WIRED — classify DRIFT or PARTIAL and note the scope break.
-5. Writer validation (F8): confirm the write path actually persists and propagates errors (Surface B's `updateLocationSettings` ignores Supabase errors; its UI ignores the PUT response). Cross-surface clobber risk (Surface A posts whole blob back; register-configure does similar; APIs do non-transactional read-merge-upsert) must be documented (F14).
-6. Default-drift check (F11): compare registry default vs UI initial render vs consumer fallback for every Surface A/B key (e.g. registry says `auto_print_receipt` default true; UI renders missing as false; security placeholder 90 vs registry 0).
-7. Concept-level source-of-truth matrix (F7): for every concept stored in ≥2 places (receipt JSON vs `receipt_config` table; 3 auto-print variants incl. `registers.auto_print_receipts`; BioTrack JSON keys vs `biotrack_config.is_enabled`; online ordering JSON vs `locations.allows_online_orders`) map all stores + which one runtime actually uses.
-8. Two-surfaces history: state facts only (Surface B introduced `6f34be0` 2026-03-30; Surface A + registry `ce398f4` 2026-04-01); label motive as inference (F18).
-
-## Deliverable format (`SETTINGS-WIRING-AUDIT.md`)
-- Header: audited commit SHA, method statement, static-audit limitation.
-- Executive summary: verdict counts per surface; top-10 impact list ranked by rubric (F18): tier 1 compliance/legal (purchase limits, ID, BioTrack), tier 2 money (rounding, tax order, pricing, loyalty), tier 3 workflow, tier 4 cosmetic; within tier, order by blast radius (checkout > backoffice).
-- Per-surface tables with the required columns.
-- Concept-level source-of-truth matrix (F7).
-- Cross-surface clobber & error-swallowing findings (F8, F14).
-- Two-surfaces explanation (facts vs inference).
-- Consolidation recommendation (F10): evidence-based. Evaluate Kane's stated preference (one global settings surface for all locations) against the actual scope map; if some stores are legitimately org/register/device-scoped, recommend the closest sound design (e.g. one settings hub, org-level defaults + per-location overrides) and say why. Include concrete key-migration map naming which page dies, which keys rename, which stores merge.
-- Evidence appendix: command ledger, porcelain baseline, spot-check sample definition.
+## Phase C — remaining findings + placeholder disposition
+1. **Guestlist mappings**: new typed table `guestlist_workflow_mappings` (location_id, workflow_event TEXT CHECK per the 10 events, status_id FK); migrate non-null UI aliases; register-configure guestlist tab writes it; queue/order status transitions read it; delete the 20 JSON names. Default-status selection stays on `guestlist_statuses.is_default`.
+9. (ordering note: keep numbering) 
+2. **Customer card fields**: terminal guestlist/customer cards honor `customer_card_fields` per-status visibility JSON (the consumer surface exists — wire it, don't delete). Cards writer switches to key-level patch.
+3. **Customer field visibility**: POS/backend/prescription visibility consumed by customer form surfaces (wire `customer_field_visibility` where forms exist).
+4. **Entity create scope**: rooms, registers, fees, taxes create APIs require and set `location_id` (session location or explicit param); delivery zones get explicit organization ownership consistent with schema; delivery config UI/API renamed to schema columns (`max_total_value`, `max_total_weight_grams`), bogus `is_active` filter removed, errors propagated, section presented as org-scoped.
+5. **Dutchie loyalty dual-write**: sequence writes with error propagation and reconcile-on-failure (org state authoritative; location write failure surfaces an error and does not report success).
+6. **Secrets at rest**: AES-256-GCM encrypt BioTrack/Dutchie/print-service credentials server-side using `SETTINGS_SECRET_KEY` env (add to `.env.example`; runtime falls back to plaintext-read for legacy rows and re-encrypts on next save). GET endpoints return masked values only (`••••` + last 4); never send secrets to the browser. Update all consumers (sync engines, clients) to decrypt server-side.
+7. **Service worker**: `/api/*` GETs network-first (cache only as offline fallback); settings mutations trigger cache invalidation message. Offline transaction queue behavior unchanged.
+8. **Printer nullable fields**: UI and Zod accept null/blank for IP, port, account email symmetrically with DB nullability; clearing a field persists NULL.
+9. **Placeholder disposition sweep**: every remaining PLACEHOLDER control from the audit manifest is either (a) wired if its consumer surface already exists and wiring is ≤ small effort, or (b) REMOVED from UI + schema + registry. Nothing decorative survives: after this run, every visible settings control changes behavior. Keep a disposition table in `.route/DISPOSITION.md` (control → wired|removed → evidence/commit).
 
 ## Acceptance criteria
-- AC-1: Every Surface A control (46 rows), Surface B control (13 rows), and registry-only path has exactly one verdict row per (control × surface); doc states computed row counts per surface and the audited SHA (F17, R2-F1).
-- AC-2: Every key with an equivalent concept elsewhere appears in the source-of-truth matrix with all backing stores listed (F7).
-- AC-3: Every surface in the inventory (§Surface inventory 1–7) has verdict rows per independently mutable control; entity-CRUD pages per §7 rule (F1, F2).
-- AC-4: Every WIRED verdict cites a behavioral branch file:line reachable from a production entry point, not merely a read (F16); every PLACEHOLDER verdict has ledger evidence incl. the exact command (F5).
-- AC-5: Every Surface A/B row records writer-validation status and default-mismatch status (F8, F11).
-- AC-6: Doc includes two-surfaces explanation (facts labeled vs inference), clobber/error findings, and the consolidation recommendation with key-migration map (F10, F14).
-- AC-7: Post-run `git status --porcelain` equals recorded baseline + exactly `SETTINGS-WIRING-AUDIT.md` (F19).
+- AC-1: Loyalty accrual query filters by organization_id (test proves cross-org isolation).
+- AC-2: Tax + discount mutations invalidate their caches (tests).
+- AC-3: Discount loader honors full customer_types, weekly recurrence, and previously dropped filters; 16 builder controls round-trip (tests).
+- AC-4: `organization_settings` + effective-settings precedence works: org default, location override, code default (tests).
+- AC-5: All JSON sub-writers use validated key-level atomic writes; concurrent stale-tab write cannot clobber unrelated keys (test at service level).
+- AC-6: Surface B page+API gone; hub is the only writer; Locations list deep-links to hub.
+- AC-7: `checkout.require_customer` and `compliance.require_id_scan` block at BOTH terminal UI and API (tests on API path).
+- AC-8: BioTrack sale/void/retry honor `biotrack_config.is_enabled`, default ON; both caches cleared on config PATCH (tests).
+- AC-9: Online ordering gates + reservation flag + window validations enforced (tests).
+- AC-10: Receipt renderer consumes `receipt_config`; nested `receipt.*` JSON migrated and deleted.
+- AC-11: Rounding method implemented in totals calc with tests for all 11 methods (or control fully removed with rationale logged — implementation preferred).
+- AC-12: Low-stock precedence implemented (test).
+- AC-13: Guestlist mapping table live end-to-end; 20 JSON aliases gone.
+- AC-14: Customer card fields + field visibility consumed by terminal/customer surfaces.
+- AC-15: Entity create scope fixed (rooms/registers/fees/taxes/zones/delivery config) with propagated errors.
+- AC-16: Secrets encrypted at rest, masked in responses, no secret reaches the browser (test asserts masking).
+- AC-17: sw.js network-first for `/api/*` GETs.
+- AC-18: Printer nullables round-trip NULL.
+- AC-19: `.route/DISPOSITION.md` lists every audited PLACEHOLDER control as wired or removed; no decorative control remains in any settings UI.
+- AC-20: All gates green: typecheck, lint, full test suite (301+ new), build. Registry doc matches Zod schema.
 
-## Gates (`.route/gates.txt`)
-- Scope gate: porcelain diff vs baseline = only `SETTINGS-WIRING-AUDIT.md`.
-- `npm run typecheck` green (regression tripwire only — doc can't affect it; a failure means environment drift, not the doc) (F19).
-- Fable stratified spot-check (F18, R2-F3): deterministic selection from the completed manifest — within each stratum (WIRED, PLACEHOLDER, DRIFT, PARTIAL, other-surface, registry-only) sort rows alphabetically by control key and take the FIRST 2 (target 10+ total). If a stratum has fewer rows than its target, take all and reallocate the remainder to the next stratum alphabetically. Fable independently verifies each selected row against code before APPROVE.
+## Out of scope
+- Applying migrations to any remote Supabase project (Kane applies via `npx supabase db push`).
+- Weedmaps/Leafly/SpringBig/Headset actual integrations (controls are removed, not built).
+- Marketing campaign send infrastructure beyond existing code.
 
-## Round-1 findings NOT fully adopted (rationale)
-- F4 multi-axis verdict matrix: rejected as primary format — Kane needs one answer per control. Adopted instead: deterministic precedence + fixed nuance columns.
-- F5 runtime smoke tests per key: rejected for this run — static audit with stated limitation (A-3). Live verification is a follow-up.
-- F18 stratified sample: adopted with fixed strata above rather than random selection (no RNG available; strata prevent cherry-picking).
+## Gates
+`.route/gates.txt`: typecheck, lint, test, build. Cheap gates + targeted tests per fix round; FULL suite once before Fable review.
