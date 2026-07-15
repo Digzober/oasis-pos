@@ -1,6 +1,6 @@
-# PLAN v2: Settings wiring audit (wired vs placeholder)
+# PLAN v3: Settings wiring audit (wired vs placeholder)
 
-Branch: `route/settings-wiring-audit`. v2 resolves round-1 review (`.route/plan-review-audit-1.txt`): all 5 blockers + 11 majors accepted or resolved with rationale below.
+Branch: `route/settings-wiring-audit`. v2 resolved round-1 review (`.route/plan-review-audit-1.txt`); v3 resolves round-2 (`.route/plan-review-audit-2.txt`): row identity = control+surface, REDIRECT/READ-ONLY classifications added, systemic write defects moved out of per-row precedence, deterministic spot-check sampling.
 Class: STANDARD (read-only investigation, doc deliverable, no code changes).
 
 ## Assumptions (hands-off mode)
@@ -16,16 +16,21 @@ Produce `SETTINGS-WIRING-AUDIT.md` (repo root) classifying every independently m
 
 ## Surface inventory (F1, F2 — complete, from Sidebar.tsx; one verdict row per independently mutable control)
 1. `/settings/location-settings` (Surface A — 46 controls, 8 sections at current HEAD)
-2. `/settings/locations` + `/settings/locations/[id]/*` (Surface B — location CRUD + 13-control settings tab)
+2. `/settings/locations` (READ-ONLY list) + `/settings/locations/[id]/settings` (Surface B — the 13-control writer tab) + other `[id]/*` tabs per their own controls (R2-F2)
 3. `LOCATION-SETTINGS-KEYS.md` registry (89 paths; union with A+B = 96 keys). Registry is a CANDIDATE source, not authority (F6) — it is already stale (missing `package_id_formats`, `product_field_config`).
 4. Other `/settings/*` pages: appearance, biotrack, delivery (org config + zones + vehicles + drivers separately, F2), dosages, dutchie, fees, inventory-statuses, labels, limits, package-formats, printers, product-fields, receipts, registers, rooms, taxes.
 5. `/registers/configure/*` (8 tabs) and `/customers/configure/*` pages.
 6. `/products/configure/*` (8 tabs), `/marketing/loyalty`, `/customers/referrals`, marketing configure surfaces.
 7. Entity-CRUD pages (rooms, taxes, fees, printers, zones…): audit the CONFIG FIELDS of the entities (e.g. `max_delivery_value`, `tax rate applies_to`) — a row per field whose value should change runtime behavior; plain identity fields (name, address) get one collective row.
 
-## Verdict taxonomy (F3, F4 — single primary verdict, deterministic precedence, nuance in fixed columns)
+## Row identity (R2-F1)
+One row per (control × writer surface): Surface A = 46 rows, Surface B = 13 rows, registry-only paths = additional rows (UNEXPOSED), other surfaces per their own controls. Keys appearing on multiple surfaces (e.g. `auto_deduct_on_sale`) get one row PER surface; the concept matrix links duplicates. The doc states computed row counts per surface.
+
+## Verdict taxonomy (F3, F4, R2-F2, R2-F3 — single primary verdict, deterministic precedence, nuance in fixed columns)
+Systemic write-path defects shared by a whole surface (Surface A whole-blob clobber; Surface B error swallowing) are recorded ONCE in the findings section and reflected per-row in the `Writer OK?` column — they do NOT set the primary verdict, so they cannot mask DRIFT/PLACEHOLDER counts (R2-F3).
+Surface-level classifications for non-writer pages: **REDIRECT/ALIAS** (page only redirects, e.g. `/settings/dosages`, `/registers/configure` index) and **READ-ONLY** (renders data without writes, e.g. `/settings/locations` list). These get one surface-level row each, no per-control rows (R2-F2).
 Primary verdict, first match wins:
-1. **BROKEN-WRITE** — UI exists but the write path can silently fail or clobber other keys (cite the defect).
+1. **BROKEN-WRITE** — a write defect SPECIFIC to this control's own path (not the surface-wide systemic defects above); cite the defect.
 2. **DRIFT** — written under a key/store that no runtime consumer reads, while an equivalent concept IS consumed under a different key/store/scope. Cite both sides.
 3. **WIRED** — complete chain: writer → stored value → loader → behavioral branch → reachable production entry point (terminal, storefront, API, cron, printing, sync). Cite the branch file:line. Settings whose intended effect IS display (receipt fields, POS visibility) are WIRED if the display actually changes. (F4, F16.)
 4. **PARTIAL** — chain exists but is incomplete/gated/dead-ended; Notes must say which link is missing.
@@ -55,7 +60,7 @@ Required columns: `Control | Surface | Store + scope (org/location/register/devi
 - Evidence appendix: command ledger, porcelain baseline, spot-check sample definition.
 
 ## Acceptance criteria
-- AC-1: Every Surface A control (46), Surface B control (13), and registry path (89) — union 96 keys — has exactly one verdict row; doc states the counts and audited SHA (F17).
+- AC-1: Every Surface A control (46 rows), Surface B control (13 rows), and registry-only path has exactly one verdict row per (control × surface); doc states computed row counts per surface and the audited SHA (F17, R2-F1).
 - AC-2: Every key with an equivalent concept elsewhere appears in the source-of-truth matrix with all backing stores listed (F7).
 - AC-3: Every surface in the inventory (§Surface inventory 1–7) has verdict rows per independently mutable control; entity-CRUD pages per §7 rule (F1, F2).
 - AC-4: Every WIRED verdict cites a behavioral branch file:line reachable from a production entry point, not merely a read (F16); every PLACEHOLDER verdict has ledger evidence incl. the exact command (F5).
@@ -66,7 +71,7 @@ Required columns: `Control | Surface | Store + scope (org/location/register/devi
 ## Gates (`.route/gates.txt`)
 - Scope gate: porcelain diff vs baseline = only `SETTINGS-WIRING-AUDIT.md`.
 - `npm run typecheck` green (regression tripwire only — doc can't affect it; a failure means environment drift, not the doc) (F19).
-- Fable stratified spot-check (F18): Fable (not Sol) picks ≥10 rows — ≥2 WIRED, ≥4 PLACEHOLDER, ≥2 DRIFT, ≥1 other-surface, ≥1 registry-only — and independently verifies each against code before APPROVE.
+- Fable stratified spot-check (F18, R2-F3): deterministic selection from the completed manifest — within each stratum (WIRED, PLACEHOLDER, DRIFT, PARTIAL, other-surface, registry-only) sort rows alphabetically by control key and take the FIRST 2 (target 10+ total). If a stratum has fewer rows than its target, take all and reallocate the remainder to the next stratum alphabetically. Fable independently verifies each selected row against code before APPROVE.
 
 ## Round-1 findings NOT fully adopted (rationale)
 - F4 multi-axis verdict matrix: rejected as primary format — Kane needs one answer per control. Adopted instead: deterministic precedence + fixed nuance columns.
