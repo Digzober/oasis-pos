@@ -27,21 +27,23 @@ export default function DeliverySettingsPage() {
   const [newZone, setNewZone] = useState({ name: '', delivery_fee: '', min_order: '' })
   const [showZoneForm, setShowZoneForm] = useState(false)
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(() => {
     const q = locationId ? `?location_id=${locationId}` : ''
-    try {
-      const [zoneData, vehicleData, driverData, configData] = await Promise.all([
-        fetchJson<{ zones: DeliveryZone[] }>('/api/delivery/zones'),
-        fetchJson<{ vehicles: Vehicle[] }>(`/api/delivery/vehicles${q}`),
-        fetchJson<{ drivers: Driver[] }>(`/api/delivery/drivers${q}`),
-        fetchJson<{ config: DeliveryConfig | null }>('/api/delivery/config'),
-      ])
+    return Promise.all([
+      fetchJson<{ zones: DeliveryZone[] }>('/api/delivery/zones'),
+      fetchJson<{ vehicles: Vehicle[] }>(`/api/delivery/vehicles${q}`),
+      fetchJson<{ drivers: Driver[] }>(`/api/delivery/drivers${q}`),
+      fetchJson<{ config: DeliveryConfig | null }>('/api/delivery/config'),
+    ]).then(([zoneData, vehicleData, driverData, configData]) => {
       setZones(zoneData.zones); setVehicles(vehicleData.vehicles); setDrivers(driverData.drivers)
       if (configData.config) setConfigForm({ max_total_value: String(configData.config.max_total_value ?? ''), max_total_weight_grams: String(configData.config.max_total_weight_grams ?? '') })
       setError('')
-    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to load delivery settings') }
+    }).catch((cause: unknown) => { setError(cause instanceof Error ? cause.message : 'Unable to load delivery settings') })
   }, [locationId])
-  useEffect(() => { if (hydrated) fetchAll() }, [hydrated, fetchAll])
+  useEffect(() => {
+    if (!hydrated) return
+    void fetchAll()
+  }, [hydrated, fetchAll])
 
   const saveConfig = async () => {
     try {

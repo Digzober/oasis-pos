@@ -1,25 +1,27 @@
 VERDICT: APPROVE
-AC COVERAGE: 7/7
-RUN: settings-wiring-audit — Fable review of SETTINGS-WIRING-AUDIT.md (Sol build, session 019f634e-0a9f-7d40-a97b-255f671bad62)
+AC COVERAGE: 20/20
+RUN: settings-fix — Fable review of phases A–C (Sol session 019f6380-d3b0-7af1-accf-1854f36c9a30)
 
-FABLE INDEPENDENT VERIFICATION (deterministic sample per PLAN v3 gate):
-- V1 WIRED Dutchie `apiKey` — confirmed: syncEngine.ts client construction + api/dutchie/sync route; consistent with live Dutchie sync feature. PASS
-- V2 WIRED Discounts `customer_types` — confirmed: discountLoader.ts:55 maps it; discountEvaluator branch cited. PASS (noted: loader takes only [0]; fidelity gap correctly captured in doc's top-10 #7)
-- V3 PLACEHOLDER A `allow_partial_payments` — grep: only Surface A page + registry. PASS
-- V4 PLACEHOLDER A `allow_offline_mode` — grep: only Surface A page + registry; offline workers unconditional. PASS
-- V5 DRIFT B `auto_apply_discounts` — grep: single src hit (B page writer); runtime authority is discounts table via loader/evaluator, verified loader loads all active org discounts unconditionally. PASS
-- V6 DRIFT A `auto_sync_biotrack` — verified transactionService.ts:278-281 fire-and-forget sync ignores the flag. PASS
-- V7 PARTIAL Loyalty `accrual_rate` — verified transactionService.ts:233-236 queries loyalty_config with .eq('is_active',true).limit(1) and NO organization_id filter. Real cross-org defect. PASS
-- V8 PARTIAL Discounts `application_method` — loader line 51 reads it only as fallback for discount_type. PASS
-- V9 BROKEN-WRITE Print service `account_email` — ledger command + schema/UI mismatch documented. PASS (doc-level)
-- V10/V11 UNEXPOSED `cfd_enabled`, `cfd_wallpaper_url` — grep: zero src hits, registry only. PASS
-- Bonus: loader hardcodes is_recurring:false (discountLoader.ts:65) — matches doc claim independently.
-- Row counts: Surface A = 46 rows, Surface B = 13 rows (counted from manifest). Matches AC-1.
-- Two-surfaces history matches Fable's own git log (B: 6f34be0 2026-03-30; A+registry: ce398f4 2026-04-01).
+GATES (final, run by Fable outside sandbox):
+- typecheck: PASS
+- lint: PASS 0 errors (after F2 fix; 194 pre-existing warnings)
+- tests: 577/577 PASS (up from 301 baseline; +276 covering new wiring)
+- build: PASS (production)
 
-GATES:
-- Scope: porcelain = baseline + SETTINGS-WIRING-AUDIT.md only (+ .route artifacts written by Fable/output redirects, disclosed). PASS
-- typecheck: PASS (Sol ran tsc --noEmit exit 0).
-- AC-7 caveat disclosed in doc (build-audit.txt output redirect postdates baseline — Fable's artifact, accepted).
+FINDINGS (both found and fixed during the run, verified):
+- F1 [blocker, FIXED by Fable mid-run] Phase A put requireSession() on /api/auth/locations, breaking the pre-auth PIN login location picker (Kane hit it live). Fixed contextually: no session → public id/name/city/state list; session → accessible locations. Verified intact post-Phase-C.
+- F2 [minor, FIXED by Fable] react-hooks/set-state-in-effect lint error in reworked delivery page; rewrote fetchAll to the repo's .then pattern. Lint now 0 errors.
 
-FINDINGS: none blocking. No fix round required.
+FABLE HIGH-RISK VERIFICATION:
+- Money: cashRounding.ts — 11 methods, integer cents, cash-only application via calculatePaymentTotal; wired into transaction totals (transactionService:179) with adjustment persisted/receipted. Tests cover all 11.
+- Compliance: isBioTrackEnabled defaults ON (missing row → on, load error → on, only explicit false skips); sale AND void sync gated. Purchase limits load/enforce unconditionally at transaction creation (misleading toggle deleted).
+- Loyalty: accrual query org-filtered (cross-org bug fixed, test added).
+- Secrets: AES-256-GCM, random IV per write, auth tag + AAD, versioned envelope, legacy plaintext fallback with re-encrypt on save, masked GET (••••+last4), mask-echo cannot overwrite stored secret.
+- sw.js: /api/* GET network-first with cache fallback; mutation-driven invalidation.
+- Cleanup migration: JSON key removals only; grep confirms zero src consumers of removed keys.
+- Branch hygiene: giant Sol exec logs kept out of history (soft-reset rebuild + .gitignore); code changes fully preserved.
+
+INTERRUPTION NOTE: Phase C exec was killed once by host-process death; resumed same Sol session against surviving working tree; reconciliation verified by disposition coverage 355/355 (236 wired, 119 removed) in .route/DISPOSITION.md.
+
+REMAINING FOR KANE (out of scope per plan):
+- Apply 6 migrations to dev (npx supabase db push), regen types, set SETTINGS_SECRET_KEY env (all envs; .env.example updated).

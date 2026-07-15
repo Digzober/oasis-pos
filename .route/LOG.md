@@ -40,3 +40,5 @@ Phase A: gates verified by Fable (typecheck clean, 417/417). Committed.
 Phase B: gates verified by Fable (typecheck clean, 480/480). Committed. Build gate deferred to final (sandbox blocks font fetch).
 
 HOTFIX (Fable, mid-Phase-C): /api/auth/locations regression — Phase A put requireSession() on the endpoint the pre-auth PIN login screen uses, so login showed no locations. Restored contextual behavior: no session -> public id/name/city/state list; session -> accessible locations. Logged as review finding F1 (fixed). Kane unblocked.
+
+Fable review: APPROVE 20/20. F1 login regression + F2 lint error found+fixed by Fable (small-fix override). Final gates green: typecheck, lint 0 err, 577/577, build.
