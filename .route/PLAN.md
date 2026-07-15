@@ -1,63 +1,74 @@
-# PLAN: Settings wiring audit (wired vs placeholder)
+# PLAN v2: Settings wiring audit (wired vs placeholder)
 
-Branch: `route/settings-wiring-audit` (forked from route/full-audit-sync-theme HEAD — that is the tree Kane's sidebar reflects).
+Branch: `route/settings-wiring-audit`. v2 resolves round-1 review (`.route/plan-review-audit-1.txt`): all 5 blockers + 11 majors accepted or resolved with rationale below.
 Class: STANDARD (read-only investigation, doc deliverable, no code changes).
 
 ## Assumptions (hands-off mode)
-- A-1: Scope = every backoffice settings surface, with location settings as the priority. Kane's question: "are all of these settings wired up? I have a feeling lots of things are placeholders."
-- A-2: Deliverable is an audit document + recommendation. NO code fixes in this run — consolidation to a global settings surface is a follow-up task Kane approves after reading the audit.
-- A-3: "Wired up" means: toggling the setting changes actual runtime behavior (POS terminal, checkout API, storefront, printing, reports) — not merely that it persists to the DB.
+- A-1: Scope = every settings/configuration surface reachable from the backoffice sidebar. Kane's question: "are all of these settings wired up? I have a feeling lots of things are placeholders."
+- A-2: Deliverable is an audit document + recommendation. NO code fixes in this run.
+- A-3: This is a STATIC WIRING audit: "wired" is proven by a complete static code path from writer to a behavioral branch reachable from a production entry point. Live runtime/DB verification is out of scope; the doc must state this limitation. (Resolves F5.)
 
 ## Goal
-Produce `SETTINGS-WIRING-AUDIT.md` (repo root) classifying every settings key/field exposed in the backoffice settings UIs as WIRED / PARTIAL / PLACEHOLDER / DRIFT, with file:line evidence, plus an explanation of why two location-settings surfaces exist and a consolidation recommendation.
+Produce `SETTINGS-WIRING-AUDIT.md` (repo root) classifying every independently mutable settings control exposed in the backoffice as wired or not, with evidence, plus an explanation of the two location-settings surfaces and an evidence-based consolidation recommendation.
 
 ## Out of scope (Sol must NOT touch)
-- No source-code changes of any kind. The ONLY file created/modified is `SETTINGS-WIRING-AUDIT.md` at repo root.
-- No migrations, no fixes, no deleting the duplicate page.
+- No source-code changes. The ONLY file created is `SETTINGS-WIRING-AUDIT.md` at repo root.
 
-## Known context (verified by Fable, use as starting points)
-- Surface A: `src/app/(backoffice)/settings/location-settings/page.tsx` — ~50 keys across 9 sections, saves via PATCH `/api/settings/location-settings` → `location_settings.settings` JSONB for **session.locationId only** (despite the page implying global).
-- Surface B: `src/app/(backoffice)/settings/locations/[id]/settings/page.tsx` — 13 keys, saves via PUT `/api/locations/[id]/settings`. Key names DIVERGE from Surface A for the same concepts (e.g. `require_customer` vs `require_customer_checkout`, `print_receipt_auto` vs `auto_print_receipt`, `require_id_verification` vs `require_id_scan`, `biotrack_auto_sync` vs `auto_sync_biotrack`).
-- Registry doc: `LOCATION-SETTINGS-KEYS.md` (repo root) lists the intended canonical keys.
-- Central reads: `src/lib/services/settingsService.ts#getLocationSettings`, `packageFormatService.ts`, `productFieldConfigService.ts`, `api/registers/configure/settings`, `api/customers/configure/*`.
-- Fable's sample grep: `rounding_method|require_customer_checkout|enforce_purchase_limits|auto_print_receipt` appear ONLY in the two settings pages, generated types, and (substring artifacts) settingsService/registers page — no terminal/checkout/runtime consumer found.
+## Surface inventory (F1, F2 — complete, from Sidebar.tsx; one verdict row per independently mutable control)
+1. `/settings/location-settings` (Surface A — 46 controls, 8 sections at current HEAD)
+2. `/settings/locations` + `/settings/locations/[id]/*` (Surface B — location CRUD + 13-control settings tab)
+3. `LOCATION-SETTINGS-KEYS.md` registry (89 paths; union with A+B = 96 keys). Registry is a CANDIDATE source, not authority (F6) — it is already stale (missing `package_id_formats`, `product_field_config`).
+4. Other `/settings/*` pages: appearance, biotrack, delivery (org config + zones + vehicles + drivers separately, F2), dosages, dutchie, fees, inventory-statuses, labels, limits, package-formats, printers, product-fields, receipts, registers, rooms, taxes.
+5. `/registers/configure/*` (8 tabs) and `/customers/configure/*` pages.
+6. `/products/configure/*` (8 tabs), `/marketing/loyalty`, `/customers/referrals`, marketing configure surfaces.
+7. Entity-CRUD pages (rooms, taxes, fees, printers, zones…): audit the CONFIG FIELDS of the entities (e.g. `max_delivery_value`, `tax rate applies_to`) — a row per field whose value should change runtime behavior; plain identity fields (name, address) get one collective row.
 
-## Verdict definitions
-- **WIRED**: UI writes it AND a runtime consumer reads it and changes behavior. Cite consumer file:line.
-- **PARTIAL**: read somewhere, but the read is display-only, dead, or gated off — behavior does not actually change; or only some of its documented effect exists.
-- **PLACEHOLDER**: persisted but nothing outside settings UIs/APIs ever reads it.
-- **DRIFT**: written under a key that runtime (or the other surface) reads under a DIFFERENT name — the two never meet. Note both key names.
+## Verdict taxonomy (F3, F4 — single primary verdict, deterministic precedence, nuance in fixed columns)
+Primary verdict, first match wins:
+1. **BROKEN-WRITE** — UI exists but the write path can silently fail or clobber other keys (cite the defect).
+2. **DRIFT** — written under a key/store that no runtime consumer reads, while an equivalent concept IS consumed under a different key/store/scope. Cite both sides.
+3. **WIRED** — complete chain: writer → stored value → loader → behavioral branch → reachable production entry point (terminal, storefront, API, cron, printing, sync). Cite the branch file:line. Settings whose intended effect IS display (receipt fields, POS visibility) are WIRED if the display actually changes. (F4, F16.)
+4. **PARTIAL** — chain exists but is incomplete/gated/dead-ended; Notes must say which link is missing.
+5. **PLACEHOLDER** — persists but no consumer outside settings UIs/APIs.
+6. **UNEXPOSED** — documented in registry, no UI writer.
+7. **STATIC/REFERENCE** — page renders hardcoded content, nothing persisted (e.g. limits page if static).
+Required columns: `Control | Surface | Store + scope (org/location/register/device) | Writer OK? | Runtime consumer (file:line) | Verdict | Default mismatch? | Notes`.
 
 ## Method (required)
-1. Enumerate keys from Surface A SECTIONS, Surface B SETTING_CATEGORIES, and LOCATION-SETTINGS-KEYS.md (union).
-2. For each key: `rg` the exact key across `src/` (and `supabase/` if present). Trace indirection — settings may flow through `getLocationSettings`, session/bootstrap payloads, Zustand stores, or client fetches of the settings APIs; a key consumed via `settings.foo` or destructuring counts. Check terminal `(terminal)`, storefront `(storefront)`, API routes, `lib/calculations`, printing/receipt code.
-3. Sweep the other settings surfaces under `src/app/(backoffice)/settings/*` (appearance, biotrack, delivery, dosages, dutchie, fees, inventory-statuses, labels, limits, package-formats, printers, product-fields, receipts, registers, rooms, taxes) plus `registers/configure/*` and `customers/configure/*`: for each page, state what store it saves to and whether that data drives runtime behavior; per-key tables for toggle-style pages (receipts especially).
-4. Answer "why two surfaces" from git history (`git log --follow --oneline` on both pages) and code structure.
+1. Pin the audited commit SHA in the doc header. Record the pre-run `git status --porcelain` snapshot in the evidence appendix (F19).
+2. Search with `git grep -n` (rg is NOT installed — F13). For nested JSONB paths (`receipt.show_sku` stored as nested object) search parent key AND leaf key separately (F12). Log every command + result count in an evidence ledger; negative results logged too (F5, F13).
+3. Trace indirection: `getLocationSettings`, session/bootstrap payloads, Zustand stores, client fetches, AND background/cached paths — Dutchie cron, BioTrack sync, `public/sw.js` GET caching, `taxRateLoader` 5-min cache & invalidation (F15).
+4. Scope tracing end-to-end (F9): a key consumed at a different scope than written (e.g. delivery page sends location_id, API ignores it and reads org config) is NOT WIRED — classify DRIFT or PARTIAL and note the scope break.
+5. Writer validation (F8): confirm the write path actually persists and propagates errors (Surface B's `updateLocationSettings` ignores Supabase errors; its UI ignores the PUT response). Cross-surface clobber risk (Surface A posts whole blob back; register-configure does similar; APIs do non-transactional read-merge-upsert) must be documented (F14).
+6. Default-drift check (F11): compare registry default vs UI initial render vs consumer fallback for every Surface A/B key (e.g. registry says `auto_print_receipt` default true; UI renders missing as false; security placeholder 90 vs registry 0).
+7. Concept-level source-of-truth matrix (F7): for every concept stored in ≥2 places (receipt JSON vs `receipt_config` table; 3 auto-print variants incl. `registers.auto_print_receipts`; BioTrack JSON keys vs `biotrack_config.is_enabled`; online ordering JSON vs `locations.allows_online_orders`) map all stores + which one runtime actually uses.
+8. Two-surfaces history: state facts only (Surface B introduced `6f34be0` 2026-03-30; Surface A + registry `ce398f4` 2026-04-01); label motive as inference (F18).
 
 ## Deliverable format (`SETTINGS-WIRING-AUDIT.md`)
-- Executive summary: counts per verdict per surface; top 10 most impactful unwired settings (compliance/money first: purchase limits, ID checks, BioTrack sync, rounding, tax-order flags).
-- Per-surface tables: `Key | Written by | Runtime consumer (file:line) | Verdict | Notes`.
-- Key-drift table mapping Surface A ↔ Surface B ↔ registry names.
-- "Why two surfaces exist" section.
-- Consolidation recommendation: single global settings surface (org-level defaults + optional per-location override), which page to keep/kill, which keys to migrate/rename.
-- Evidence appendix: grep patterns used for PLACEHOLDER verdicts.
+- Header: audited commit SHA, method statement, static-audit limitation.
+- Executive summary: verdict counts per surface; top-10 impact list ranked by rubric (F18): tier 1 compliance/legal (purchase limits, ID, BioTrack), tier 2 money (rounding, tax order, pricing, loyalty), tier 3 workflow, tier 4 cosmetic; within tier, order by blast radius (checkout > backoffice).
+- Per-surface tables with the required columns.
+- Concept-level source-of-truth matrix (F7).
+- Cross-surface clobber & error-swallowing findings (F8, F14).
+- Two-surfaces explanation (facts vs inference).
+- Consolidation recommendation (F10): evidence-based. Evaluate Kane's stated preference (one global settings surface for all locations) against the actual scope map; if some stores are legitimately org/register/device-scoped, recommend the closest sound design (e.g. one settings hub, org-level defaults + per-location overrides) and say why. Include concrete key-migration map naming which page dies, which keys rename, which stores merge.
+- Evidence appendix: command ledger, porcelain baseline, spot-check sample definition.
 
 ## Acceptance criteria
-- AC-1: Every key in Surface A sections AND LOCATION-SETTINGS-KEYS.md has a verdict row (union, no omissions).
-- AC-2: Every key in Surface B has a verdict row and appears in the drift table with its Surface A/registry counterpart (or "no counterpart").
-- AC-3: Every other `/settings/*` page + registers/configure + customers/configure is covered with at least a page-level wiring verdict; toggle-style pages get per-key rows.
-- AC-4: Every WIRED verdict cites at least one runtime consumer file:line that is not a settings UI or its own save API.
-- AC-5: Every PLACEHOLDER verdict lists the grep pattern(s) searched (evidence appendix acceptable).
-- AC-6: Doc includes the two-surfaces explanation and the consolidation recommendation with a concrete migration key map.
-- AC-7: `git status --porcelain` after Sol's run shows ONLY `SETTINGS-WIRING-AUDIT.md` beyond pre-existing `.route/` noise.
+- AC-1: Every Surface A control (46), Surface B control (13), and registry path (89) — union 96 keys — has exactly one verdict row; doc states the counts and audited SHA (F17).
+- AC-2: Every key with an equivalent concept elsewhere appears in the source-of-truth matrix with all backing stores listed (F7).
+- AC-3: Every surface in the inventory (§Surface inventory 1–7) has verdict rows per independently mutable control; entity-CRUD pages per §7 rule (F1, F2).
+- AC-4: Every WIRED verdict cites a behavioral branch file:line reachable from a production entry point, not merely a read (F16); every PLACEHOLDER verdict has ledger evidence incl. the exact command (F5).
+- AC-5: Every Surface A/B row records writer-validation status and default-mismatch status (F8, F11).
+- AC-6: Doc includes two-surfaces explanation (facts labeled vs inference), clobber/error findings, and the consolidation recommendation with key-migration map (F10, F14).
+- AC-7: Post-run `git status --porcelain` equals recorded baseline + exactly `SETTINGS-WIRING-AUDIT.md` (F19).
 
 ## Gates (`.route/gates.txt`)
-- Scope gate: Sol's run adds only `SETTINGS-WIRING-AUDIT.md`.
-- `npm run typecheck` still green (nothing compiled should change).
-- Fable spot-check: sample ≥8 verdicts (mix of WIRED and PLACEHOLDER) and verify against code.
+- Scope gate: porcelain diff vs baseline = only `SETTINGS-WIRING-AUDIT.md`.
+- `npm run typecheck` green (regression tripwire only — doc can't affect it; a failure means environment drift, not the doc) (F19).
+- Fable stratified spot-check (F18): Fable (not Sol) picks ≥10 rows — ≥2 WIRED, ≥4 PLACEHOLDER, ≥2 DRIFT, ≥1 other-surface, ≥1 registry-only — and independently verifies each against code before APPROVE.
 
-## Edge cases Sol must handle
-- Dotted keys (`receipt.show_*`) live inside `location_settings.settings` — but a separate `receipt_config` table also exists in the schema; check which one runtime printing actually uses.
-- Register-configure and customer-configure keys are stored in `location_settings` but managed by other pages — do not double-count them as "unwired" just because the location-settings page doesn't show them.
-- Substring collisions in grep (`auto_print_receipt` vs registers' `auto_print_receipts` column) — use word-boundary/exact-string matching before declaring WIRED.
-- The PWA offline terminal may cache settings in IndexedDB — check `src/lib` offline/bootstrap code paths before declaring POS keys PLACEHOLDER.
+## Round-1 findings NOT fully adopted (rationale)
+- F4 multi-axis verdict matrix: rejected as primary format — Kane needs one answer per control. Adopted instead: deterministic precedence + fixed nuance columns.
+- F5 runtime smoke tests per key: rejected for this run — static audit with stated limitation (A-3). Live verification is a follow-up.
+- F18 stratified sample: adopted with fixed strata above rather than random selection (no RNG available; strata prevent cherry-picking).
