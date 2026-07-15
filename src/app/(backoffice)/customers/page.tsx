@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import Link from 'next/link'
 import { STICKY_DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
+import { useCustomerFieldVisibility } from '@/hooks/useCustomerFieldVisibility'
+import {
+  getCustomerFieldState,
+  validateRequiredCustomerFields,
+} from '@/lib/customers/fieldVisibility'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -191,9 +196,20 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
   const [medCardExp, setMedCardExp] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const visibility = useCustomerFieldVisibility()
+  const firstNameField = getCustomerFieldState(visibility, 'backend', 'name', true)
+  const lastNameField = getCustomerFieldState(visibility, 'backend', 'last_name', true)
+  const dobField = getCustomerFieldState(visibility, 'backend', 'dob', true)
+  const phoneField = getCustomerFieldState(visibility, 'backend', 'phone')
+  const emailField = getCustomerFieldState(visibility, 'backend', 'email')
+  const medCardField = getCustomerFieldState(visibility, 'backend', 'mmj_id')
 
   async function handleSubmit() {
     if (!firstName.trim() || !lastName.trim() || !dob) { setError('First name, last name, and DOB are required'); return }
+    const missing = validateRequiredCustomerFields(visibility, 'backend', {
+      name: firstName, last_name: lastName, dob, phone, email, mmj_id: medCard,
+    })
+    if (missing.length > 0) { setError(`Required fields are missing: ${missing.join(', ')}`); return }
     setSaving(true); setError(null)
     const res = await fetch('/api/customers', {
       method: 'POST',
@@ -224,11 +240,11 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className={lCls}>First Name *</label><input value={firstName} onChange={e => setFirstName(e.target.value)} className={iCls} /></div>
-              <div><label className={lCls}>Last Name *</label><input value={lastName} onChange={e => setLastName(e.target.value)} className={iCls} /></div>
+              {firstNameField.visible && <div><label className={lCls}>First Name *</label><input value={firstName} onChange={e => setFirstName(e.target.value)} className={iCls} required /></div>}
+              {lastNameField.visible && <div><label className={lCls}>Last Name *</label><input value={lastName} onChange={e => setLastName(e.target.value)} className={iCls} required /></div>}
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className={lCls}>Date of Birth *</label><input type="date" value={dob} onChange={e => setDob(e.target.value)} className={iCls} /></div>
+              {dobField.visible && <div><label className={lCls}>Date of Birth *</label><input type="date" value={dob} onChange={e => setDob(e.target.value)} className={iCls} required /></div>}
               <div>
                 <label className={lCls}>Type</label>
                 <select value={customerType} onChange={e => setCustomerType(e.target.value)} className={iCls}>
@@ -241,12 +257,12 @@ function AddCustomerModal({ onClose, onSuccess }: { onClose: () => void; onSucce
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div><label className={lCls}>Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} className={iCls} placeholder="(505) 555-1234" /></div>
-              <div><label className={lCls}>Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className={iCls} /></div>
+              {phoneField.visible && <div><label className={lCls}>Phone{phoneField.required ? ' *' : ''}</label><input value={phone} onChange={e => setPhone(e.target.value)} className={iCls} placeholder="(505) 555-1234" required={phoneField.required} /></div>}
+              {emailField.visible && <div><label className={lCls}>Email{emailField.required ? ' *' : ''}</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className={iCls} required={emailField.required} /></div>}
             </div>
             {isMed && (
               <div className="grid grid-cols-2 gap-4">
-                <div><label className={lCls}>Medical Card #</label><input value={medCard} onChange={e => setMedCard(e.target.value)} className={iCls} /></div>
+                {medCardField.visible && <div><label className={lCls}>Medical Card #{medCardField.required ? ' *' : ''}</label><input value={medCard} onChange={e => setMedCard(e.target.value)} className={iCls} required={medCardField.required} /></div>}
                 <div><label className={lCls}>Med Card Expiration</label><input type="date" value={medCardExp} onChange={e => setMedCardExp(e.target.value)} className={iCls} /></div>
               </div>
             )}

@@ -8,6 +8,13 @@ import { checkPurchaseLimit } from '@/lib/calculations/purchaseLimitCalculator'
 import { loadTaxRatesForLocation } from '@/lib/calculations/taxRateLoader'
 import { loadActiveDiscounts } from '@/lib/calculations/discountLoader'
 import { loadPurchaseLimits } from '@/lib/calculations/purchaseLimitLoader'
+import { calculatePaymentTotal } from '@/lib/calculations/cashRounding'
+import { getEffectiveSettings } from '@/lib/settings/service'
+import {
+  loadRegisterPrintOverrides,
+  resolveEffectivePrintPreferences,
+  type EffectivePrintPreferences,
+} from '@/lib/printing/preferences'
 import type { DiscountableItem, DiscountEvaluationContext } from '@/lib/calculations/discount.types'
 import type { PurchaseLimitItem } from '@/lib/calculations/purchaseLimit.types'
 
@@ -29,9 +36,30 @@ export interface CreateTransactionInput {
   manual_discount_ids: string[]
 }
 
+export async function loadLoyaltyAccrualRate(
+  organizationId: string,
+): Promise<number | null> {
+  const sb = await createSupabaseServerClient()
+  const { data: loyaltyConfig } = await sb
+    .from('loyalty_config')
+    .select('accrual_rate, is_active')
+    .eq('organization_id', organizationId)
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle()
+
+  return loyaltyConfig?.accrual_rate ?? null
+}
+
 export async function createSaleTransaction(
   input: CreateTransactionInput,
-): Promise<{ transactionId: string; transactionNumber: number; changeDue: number }> {
+): Promise<{
+  transactionId: string
+  transactionNumber: number
+  changeDue: number
+  roundingAdjustment: number
+  printing: EffectivePrintPreferences
+}> {
   const sb = await createSupabaseServerClient()
 
   // 1. Load fresh product data
@@ -62,11 +90,14 @@ export async function createSaleTransaction(
   }
 
   // 2. Load config
-  const [taxRates, discounts, purchaseLimits] = await Promise.all([
+  const [taxRates, discounts, purchaseLimits, settings, registerPrintOverrides] = await Promise.all([
     loadTaxRatesForLocation(input.location_id),
     loadActiveDiscounts(input.organization_id),
     loadPurchaseLimits(input.organization_id, input.location_id),
+    getEffectiveSettings(input.location_id),
+    loadRegisterPrintOverrides(input.location_id, input.register_id),
   ])
+  const printing = resolveEffectivePrintPreferences(settings.printing, registerPrintOverrides)
 
   // 3. Build enriched items for calculations
    
@@ -144,7 +175,13 @@ export async function createSaleTransaction(
   const subtotal = lineData.reduce((s, l) => roundMoney(s + l.unitPrice * l.quantity), 0)
   const discountTotal = roundMoney(lineData.reduce((s, l) => s + l.perUnitDiscount * l.quantity, 0))
   const taxTotal = taxResult.summary.total_tax
-  const total = roundMoney(subtotal - discountTotal + taxTotal)
+  const unroundedTotal = roundMoney(subtotal - discountTotal + taxTotal)
+  const rounded = calculatePaymentTotal(
+    unroundedTotal,
+    input.payment_method,
+    settings.checkout.rounding_method,
+  )
+  const total = rounded.total
 
   // 8. Validate tender
   if (input.amount_tendered < total) {
@@ -229,15 +266,9 @@ export async function createSaleTransaction(
   // 11. Load loyalty config
   let loyaltyPoints = 0
   if (input.customer_id) {
-    const { data: loyaltyConfig } = await sb
-      .from('loyalty_config')
-      .select('accrual_rate, is_active')
-      .eq('is_active', true)
-      .limit(1)
-      .maybeSingle()
-
-    if (loyaltyConfig) {
-      loyaltyPoints = Math.floor(total * loyaltyConfig.accrual_rate)
+    const accrualRate = await loadLoyaltyAccrualRate(input.organization_id)
+    if (accrualRate !== null) {
+      loyaltyPoints = Math.floor(total * accrualRate)
     }
   }
 
@@ -284,6 +315,8 @@ export async function createSaleTransaction(
     transactionId: result.transaction_id,
     transactionNumber: result.transaction_number,
     changeDue,
+    roundingAdjustment: rounded.adjustment,
+    printing,
   }
 }
 

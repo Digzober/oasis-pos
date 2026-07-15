@@ -8,14 +8,7 @@ const CreateBadgeSchema = z.object({
   name: z.string().min(1).max(100),
   color: z.string().max(20).default('#10b981'),
   icon: z.string().max(50).optional(),
-  description: z.string().max(500).optional(),
-  assignment_method: z.enum(['manual', 'automatic']),
-  segment_id: z.uuid().optional(),
-  show_in_register: z.boolean().optional(),
-}).refine(
-  (data) => data.assignment_method !== 'automatic' || data.segment_id,
-  { message: 'segment_id is required when assignment_method is automatic', path: ['segment_id'] },
-)
+}).strict()
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     let query = sb
       .from('badges')
-      .select('*, segments:segment_id ( id, name )')
+      .select('*')
       .eq('organization_id', session.organizationId)
       .order('name')
 
@@ -90,10 +83,9 @@ export async function POST(request: NextRequest) {
         name: parsed.data.name,
         color: parsed.data.color,
         icon: parsed.data.icon ?? null,
-        description: parsed.data.description ?? null,
-        assignment_method: parsed.data.assignment_method,
-        segment_id: parsed.data.segment_id ?? null,
-        show_in_register: parsed.data.show_in_register ?? false,
+        assignment_method: 'manual',
+        segment_id: null,
+        show_in_register: false,
         organization_id: session.organizationId,
       })
       .select()

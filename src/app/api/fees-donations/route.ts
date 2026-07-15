@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { listFeesDonations, createFeeDonation, updateFeeDonation } from '@/lib/services/settingsService'
+import { withAccessibleLocation } from '@/lib/settings/entityScope'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(req: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(req: NextRequest) {
   catch (err) { logger.error('Fees error', { error: String(err) }); return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 export async function POST(req: NextRequest) {
-  try { await requireSession(); return NextResponse.json({ fee: await createFeeDonation(await req.json()) }, { status: 201 }) }
+  try { const session = await requireSession(); const input = await withAccessibleLocation(session, await req.json()); return NextResponse.json({ fee: await createFeeDonation(input) }, { status: 201 }) }
   catch (err) { logger.error('Fee create error', { error: String(err) }); return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 export async function PATCH(req: NextRequest) {

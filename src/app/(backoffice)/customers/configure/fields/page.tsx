@@ -4,11 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
+import {
+  buildCustomerFieldVisibilityPatch,
+  type CustomerFieldSurface,
+  type CustomerFieldVisibility,
+  type FieldVisibility,
+} from '@/lib/customers/fieldVisibility'
 
 const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
-
-type FieldVisibility = 'show' | 'hide' | 'required'
 
 interface FieldConfig {
   field_key: string
@@ -24,10 +28,7 @@ interface FieldSection {
 }
 
 const TABS = [
-  { label: 'Doctors', href: '/customers/configure/doctors' },
-  { label: 'Qualifying Conditions', href: '/customers/configure/qualifying-conditions' },
   { label: 'Fields', href: '/customers/configure/fields' },
-  { label: 'Badge Priority', href: '/customers/configure/badge-priority' },
   { label: 'Badges', href: '/customers/configure/badges' },
 ]
 
@@ -56,33 +57,14 @@ function ConfigureTabs() {
 }
 
 const POS_FIELDS: FieldConfig[] = [
-  { field_key: 'status', label: 'Status', visibility: 'required', locked: true },
-  { field_key: 'name', label: 'Name', visibility: 'show', locked: false },
-  { field_key: 'dob', label: 'Date of Birth', visibility: 'show', locked: false },
-  { field_key: 'customer_type', label: 'Customer Type', visibility: 'required', locked: true },
-  { field_key: 'referred_by', label: 'Referred By', visibility: 'show', locked: false },
   { field_key: 'phone', label: 'Phone Number', visibility: 'show', locked: false },
-  { field_key: 'mobile_phone', label: 'Mobile Phone', visibility: 'show', locked: false },
   { field_key: 'email', label: 'Email Address', visibility: 'show', locked: false },
-  { field_key: 'drivers_license', label: 'License Number', visibility: 'show', locked: false },
-  { field_key: 'drivers_license_exp', label: 'License Expiration', visibility: 'show', locked: false },
-  { field_key: 'street', label: 'Street', visibility: 'show', locked: false },
-  { field_key: 'city', label: 'City', visibility: 'show', locked: false },
-  { field_key: 'zip', label: 'Postal Code', visibility: 'show', locked: false },
-  { field_key: 'state', label: 'State', visibility: 'show', locked: false },
   { field_key: 'mmj_id', label: 'MMJ ID', visibility: 'show', locked: false },
   { field_key: 'mmj_id_exp', label: 'MMJ ID Expiration', visibility: 'show', locked: false },
-  { field_key: 'prefix', label: 'Prefix', visibility: 'hide', locked: false },
-  { field_key: 'middle_name', label: 'Middle Name', visibility: 'hide', locked: false },
-  { field_key: 'suffix', label: 'Suffix', visibility: 'hide', locked: false },
-  { field_key: 'nickname', label: 'Nickname', visibility: 'hide', locked: false },
-  { field_key: 'gender', label: 'Gender', visibility: 'hide', locked: false },
-  { field_key: 'last_name', label: 'Last Name', visibility: 'show', locked: false },
 ]
 
 const BACKEND_FIELDS: FieldConfig[] = [
   { field_key: 'name', label: 'Name', visibility: 'show', locked: false },
-  { field_key: 'type', label: 'Type', visibility: 'required', locked: true },
   { field_key: 'id_expiration', label: 'ID Expiration', visibility: 'show', locked: false },
   { field_key: 'address1', label: 'Address 1', visibility: 'show', locked: false },
   { field_key: 'address2', label: 'Address 2', visibility: 'hide', locked: false },
@@ -109,21 +91,9 @@ const BACKEND_FIELDS: FieldConfig[] = [
   { field_key: 'last_name', label: 'Last Name', visibility: 'show', locked: false },
 ]
 
-const PRESCRIPTION_FIELDS: FieldConfig[] = [
-  { field_key: 'prescription_date', label: 'Prescription Date', visibility: 'required', locked: true },
-  { field_key: 'prescription_exp', label: 'Prescription Expiration', visibility: 'required', locked: true },
-  { field_key: 'rx_number', label: 'State RX Number', visibility: 'show', locked: false },
-  { field_key: 'electronic', label: 'Electronic Prescription', visibility: 'show', locked: false },
-  { field_key: 'product', label: 'Prescription Product', visibility: 'show', locked: false },
-  { field_key: 'unit', label: 'Prescription Unit', visibility: 'show', locked: false },
-  { field_key: 'quantity', label: 'Prescription Quantity', visibility: 'show', locked: false },
-  { field_key: 'notes', label: 'Prescription Notes', visibility: 'show', locked: false },
-]
-
 const DEFAULT_SECTIONS: FieldSection[] = [
   { key: 'pos', title: 'Customer Profile (POS)', fields: POS_FIELDS },
   { key: 'backend', title: 'Customer Profile (Backend)', fields: BACKEND_FIELDS },
-  { key: 'prescription', title: 'Customer Prescription', fields: PRESCRIPTION_FIELDS },
 ]
 
 export default function FieldsPage() {
@@ -132,6 +102,8 @@ export default function FieldsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [pendingPatch, setPendingPatch] = useState<CustomerFieldVisibility>({})
+  const [error, setError] = useState('')
 
   useEffect(() => {
     async function fetchFields() {
@@ -176,24 +148,31 @@ export default function FieldsPage() {
         }
       })
     )
+    const surface = sectionKey as CustomerFieldSurface
+    const leaf = buildCustomerFieldVisibilityPatch(surface, fieldKey, visibility)
+      .customer_field_visibility
+    setPendingPatch((prev) => ({
+      ...prev,
+      [surface]: { ...prev[surface], ...leaf[surface] },
+    }))
     setSaved(false)
   }
 
   async function handleSave() {
+    if (Object.keys(pendingPatch).length === 0) return
     setSaving(true)
+    setError('')
     try {
       const res = await fetch('/api/customers/configure/fields', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.fromEntries(sections.map((section) => [
-          section.key,
-          Object.fromEntries(section.fields.map((field) => [field.field_key, field.visibility])),
-        ]))),
+        body: JSON.stringify(pendingPatch),
         cache: 'no-store',
       })
       if (res.ok) {
         setSaved(true)
-      }
+        setPendingPatch({})
+      } else setError('Unable to save field visibility. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -279,6 +258,7 @@ export default function FieldsPage() {
             {saved && (
               <span className="text-sm text-accent">Changes saved successfully.</span>
             )}
+            {error && <span className="text-sm text-danger">{error}</span>}
           </div>
         </div>
       )}

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+
+const CreateInventoryStatusSchema = z.object({ name: z.string().trim().min(1).max(100) }).strict()
 
 export async function GET() {
   try {
@@ -34,19 +37,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await requireSession()
     const sb = await createSupabaseServerClient()
-    const body = await request.json()
-
-    if (!body.name?.trim()) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-    }
+    const parsed = CreateInventoryStatusSchema.safeParse(await request.json())
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
 
     const { data, error } = await sb
       .from('inventory_statuses')
       .insert({
         organization_id: session.organizationId,
-        name: body.name.trim(),
-        description: body.description?.trim() || null,
-        color: body.color?.trim() || null,
+        name: parsed.data.name,
       })
       .select()
       .single()

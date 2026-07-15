@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getSettingsSnapshot, patchLocationSettings } from '@/lib/settings/service'
 import { logger } from '@/lib/utils/logger'
 
 export type FieldVisibility = 'required' | 'show' | 'hide'
@@ -92,19 +92,8 @@ export async function getFieldConfig(locationId: string): Promise<Record<string,
   const defaults = buildDefaults()
 
   try {
-    const sb = await createSupabaseServerClient()
-    const { data } = await sb
-      .from('location_settings')
-      .select('settings')
-      .eq('location_id', locationId)
-      .maybeSingle()
-
-    if (!data?.settings) {
-      return defaults
-    }
-
-    const settings = data.settings as Record<string, unknown>
-    const stored = settings[SETTINGS_KEY]
+    const snapshot = await getSettingsSnapshot(locationId)
+    const stored = snapshot.location[SETTINGS_KEY]
 
     if (!stored || typeof stored !== 'object') {
       return defaults
@@ -122,40 +111,7 @@ export async function saveFieldConfig(
   config: Record<string, string>,
 ): Promise<Record<string, FieldVisibility>> {
   const validated = validateConfig(config)
-  const sb = await createSupabaseServerClient()
-
-  const { data: existing } = await sb
-    .from('location_settings')
-    .select('id, settings')
-    .eq('location_id', locationId)
-    .maybeSingle()
-
-  if (existing) {
-    const merged = {
-      ...(existing.settings as Record<string, unknown> ?? {}),
-      [SETTINGS_KEY]: validated,
-    }
-    const { error } = await sb
-      .from('location_settings')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .update({ settings: merged as any })
-      .eq('id', existing.id)
-
-    if (error) {
-      logger.error('Failed to update product field config', { error: error.message, locationId })
-      throw error
-    }
-  } else {
-    const { error } = await sb
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('location_settings' as any)
-      .insert({ location_id: locationId, settings: { [SETTINGS_KEY]: validated } })
-
-    if (error) {
-      logger.error('Failed to insert product field config', { error: error.message, locationId })
-      throw error
-    }
-  }
+  await patchLocationSettings(locationId, { [SETTINGS_KEY]: validated })
 
   logger.info('Product field config saved', { locationId })
   return validated

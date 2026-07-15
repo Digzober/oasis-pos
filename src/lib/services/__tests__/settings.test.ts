@@ -2,11 +2,14 @@ import { describe, it, expect } from 'vitest'
 
 describe('settings service logic', () => {
   it('1. location settings: JSONB merge preserves existing keys', () => {
-    const existing = { require_customer: true, low_stock_threshold: 5 }
-    const update = { low_stock_threshold: 10 }
+    const existing = {
+      checkout: { require_customer: true },
+      inventory: { low_stock_threshold: 5 },
+    }
+    const update = { inventory: { low_stock_threshold: 10 } }
     const merged = { ...existing, ...update }
-    expect(merged.require_customer).toBe(true)
-    expect(merged.low_stock_threshold).toBe(10)
+    expect(merged.checkout.require_customer).toBe(true)
+    expect(merged.inventory.low_stock_threshold).toBe(10)
   })
 
   it('2. create register: record has location link', () => {

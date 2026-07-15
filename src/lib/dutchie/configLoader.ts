@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { decryptStoredSecret } from '@/lib/security/settingsSecrets.server'
 
 export interface DutchieLocationConfig {
   locationId: string
@@ -44,7 +45,7 @@ export async function loadDutchieConfig(locationId: string, organizationId?: str
   const config: DutchieLocationConfig = {
     locationId: data.location_id,
     isEnabled: data.is_enabled,
-    apiKey: data.api_key_encrypted || '',
+    apiKey: decryptStoredSecret(data.api_key_encrypted),
     dutchieLocationId: data.dutchie_location_id,
     dutchieLocationName: data.dutchie_location_name,
     syncEmployees: data.sync_employees,

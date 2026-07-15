@@ -3,6 +3,8 @@ import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { clearBioTrackConfigCache } from '@/lib/biotrack/configLoader'
+import { clearBioTrackClientCache } from '@/lib/biotrack/client'
+import { maskStoredSecret, prepareSecretForWrite } from '@/lib/security/settingsSecrets.server'
 import { logger } from '@/lib/utils/logger'
 
 /** Front-end field names → clean names the UI works with */
@@ -16,7 +18,6 @@ const UpdateBiotrackConfigSchema = z.object({
   ubi: z.string().optional(),
   biotrack_location_id: z.string().optional(),
   use_training_mode: z.boolean().optional(),
-  use_other_plant_material: z.boolean().optional(),
   use_allotment_check: z.boolean().optional(),
   report_discounted_prices: z.boolean().optional(),
   enable_deliveries: z.boolean().optional(),
@@ -24,7 +25,7 @@ const UpdateBiotrackConfigSchema = z.object({
   default_labs_in_receive: z.boolean().optional(),
   display_approval_date: z.boolean().optional(),
   schedule_returns_for_destruction: z.boolean().optional(),
-})
+}).strict()
 
 const DEFAULT_CONFIG = {
   is_enabled: true,
@@ -36,7 +37,6 @@ const DEFAULT_CONFIG = {
   ubi: '',
   biotrack_location_id: '',
   use_training_mode: false,
-  use_other_plant_material: false,
   use_allotment_check: true,
   report_discounted_prices: false,
   enable_deliveries: false,
@@ -53,12 +53,11 @@ function dbRowToFrontend(row: Record<string, unknown>) {
     state_code: row.state_code ?? DEFAULT_CONFIG.state_code,
     xml_api_url: row.xml_api_url ?? '',
     rest_api_url: row.rest_api_url ?? '',
-    username: row.username_encrypted ?? '',
-    password: row.password_encrypted ?? '',
+    username: maskStoredSecret(row.username_encrypted as string | null),
+    password: maskStoredSecret(row.password_encrypted as string | null),
     ubi: row.ubi ?? '',
     biotrack_location_id: row.biotrack_location_id ?? '',
     use_training_mode: row.use_training_mode ?? false,
-    use_other_plant_material: row.use_other_plant_material ?? false,
     use_allotment_check: row.use_allotment_check ?? true,
     report_discounted_prices: row.report_discounted_prices ?? false,
     enable_deliveries: row.enable_deliveries ?? false,
@@ -70,13 +69,17 @@ function dbRowToFrontend(row: Record<string, unknown>) {
 }
 
 /** Map clean front-end field names to DB column names for upsert */
-function frontendToDbRow(data: Record<string, unknown>, locationId: string) {
+function frontendToDbRow(
+  data: Record<string, unknown>,
+  locationId: string,
+  existing: Record<string, unknown> | null,
+) {
   const row: Record<string, unknown> = { location_id: locationId, updated_at: new Date().toISOString() }
 
   // Direct 1:1 mappings (field name = column name)
   const directFields = [
     'is_enabled', 'state_code', 'xml_api_url', 'rest_api_url', 'ubi',
-    'biotrack_location_id', 'use_training_mode', 'use_other_plant_material',
+    'biotrack_location_id', 'use_training_mode',
     'use_allotment_check', 'report_discounted_prices', 'enable_deliveries',
     'use_lab_data', 'default_labs_in_receive', 'display_approval_date',
     'schedule_returns_for_destruction',
@@ -86,8 +89,16 @@ function frontendToDbRow(data: Record<string, unknown>, locationId: string) {
   }
 
   // Renamed fields: frontend → DB column
-  if (data.username !== undefined) row.username_encrypted = data.username
-  if (data.password !== undefined) row.password_encrypted = data.password
+  const username = prepareSecretForWrite(
+    data.username as string | undefined,
+    existing?.username_encrypted as string | null,
+  )
+  const password = prepareSecretForWrite(
+    data.password as string | undefined,
+    existing?.password_encrypted as string | null,
+  )
+  if (username) row.username_encrypted = username
+  if (password) row.password_encrypted = password
 
   return row
 }
@@ -129,7 +140,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
 
-    const dbRow = frontendToDbRow(parsed.data as Record<string, unknown>, session.locationId)
+    const existingResult = await (sb.from('biotrack_config') as any)
+      .select('username_encrypted, password_encrypted')
+      .eq('location_id', session.locationId)
+      .maybeSingle()
+    if (existingResult.error) {
+      return NextResponse.json({ error: existingResult.error.message }, { status: 500 })
+    }
+
+    const dbRow = frontendToDbRow(
+      parsed.data as Record<string, unknown>,
+      session.locationId,
+      existingResult.data,
+    )
 
     const { data: config, error } = await (sb.from('biotrack_config') as any)
       .upsert(dbRow, { onConflict: 'location_id' })
@@ -140,6 +163,7 @@ export async function PATCH(request: NextRequest) {
 
     // Clear the cached config so BioTrack clients pick up changes immediately
     clearBioTrackConfigCache(session.locationId)
+    clearBioTrackClientCache(session.locationId)
 
     return NextResponse.json({ config: dbRowToFrontend(config) })
   } catch (err) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { decryptStoredSecret } from '@/lib/security/settingsSecrets.server'
 import { logger } from '@/lib/utils/logger'
 
 interface TestResult {
@@ -43,7 +44,9 @@ export async function POST() {
     }
 
     // Test v3 REST API — attempt actual authentication
-    if (row.rest_api_url && row.username_encrypted && row.password_encrypted) {
+    const username = decryptStoredSecret(row.username_encrypted)
+    const password = decryptStoredSecret(row.password_encrypted)
+    if (row.rest_api_url && username && password) {
       const v3Start = Date.now()
       try {
         // rest_api_url is already the versioned API base (for example, .../v1).
@@ -51,8 +54,8 @@ export async function POST() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            Username: row.username_encrypted,
-            Password: row.password_encrypted,
+            Username: username,
+            Password: password,
             UBI: row.ubi ?? '',
           }),
           signal: AbortSignal.timeout(15000),
@@ -91,8 +94,8 @@ export async function POST() {
     } else {
       const missing = []
       if (!row.rest_api_url) missing.push('REST API URL')
-      if (!row.username_encrypted) missing.push('Username')
-      if (!row.password_encrypted) missing.push('Password')
+      if (!username) missing.push('Username')
+      if (!password) missing.push('Password')
       result.v3 = { status: 'failed', message: `Missing: ${missing.join(', ')}` }
     }
 
@@ -107,8 +110,8 @@ export async function POST() {
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <connect_test>
-      <username>${escapeXml(row.username_encrypted ?? '')}</username>
-      <password>${escapeXml(row.password_encrypted ?? '')}</password>
+      <username>${escapeXml(username)}</username>
+      <password>${escapeXml(password)}</password>
       <UBI>${escapeXml(row.ubi ?? '')}</UBI>
     </connect_test>
   </soap:Body>

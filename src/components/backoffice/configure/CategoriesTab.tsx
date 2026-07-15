@@ -8,7 +8,6 @@ interface Category {
   slug: string
   description: string | null
   sort_order: number
-  parent_id: string | null
   master_category: string | null
   purchase_limit_category: string | null
   tax_category: string
@@ -16,7 +15,6 @@ interface Category {
   default_flower_equivalent: number | null
   available_for: string
   is_active: boolean
-  parent?: { id: string; name: string; slug: string } | null
 }
 
 const TAX_CATEGORIES = ['Cannabis', 'Non-Cannabis']
@@ -55,7 +53,7 @@ export default function CategoriesTab() {
     name: '', slug: '', description: '', master_category: '',
     tax_category: 'Cannabis', purchase_limit_category: '',
     available_for: 'all', regulatory_category: '', default_flower_equivalent: '',
-    parent_id: '', sort_order: '', is_active: true,
+    sort_order: '', is_active: true,
   })
 
   const fetchCategories = useCallback(async () => {
@@ -79,7 +77,7 @@ export default function CategoriesTab() {
       name: '', slug: '', description: '', master_category: '',
       tax_category: 'Cannabis', purchase_limit_category: '',
       available_for: 'all', regulatory_category: '', default_flower_equivalent: '',
-      parent_id: '', sort_order: '', is_active: true,
+      sort_order: '', is_active: true,
     })
     setShowForm(true)
     setError('')
@@ -93,7 +91,7 @@ export default function CategoriesTab() {
       tax_category: cat.tax_category, purchase_limit_category: cat.purchase_limit_category ?? '',
       available_for: cat.available_for, regulatory_category: cat.regulatory_category ?? '',
       default_flower_equivalent: cat.default_flower_equivalent != null ? String(cat.default_flower_equivalent) : '',
-      parent_id: cat.parent_id ?? '', sort_order: String(cat.sort_order),
+      sort_order: String(cat.sort_order),
       is_active: cat.is_active,
     })
     setShowForm(true)
@@ -124,7 +122,6 @@ export default function CategoriesTab() {
       available_for: form.available_for,
       regulatory_category: form.regulatory_category || null,
       default_flower_equivalent: form.default_flower_equivalent ? parseFloat(form.default_flower_equivalent) : null,
-      parent_id: form.parent_id || null,
       is_active: form.is_active,
     }
     if (form.sort_order) body.sort_order = parseInt(form.sort_order, 10)
@@ -244,16 +241,6 @@ export default function CategoriesTab() {
               </label>
             </div>
 
-            <label className="block">
-              <span className="text-xs text-secondary">Parent Category</span>
-              <select value={form.parent_id} onChange={e => setForm(p => ({ ...p, parent_id: e.target.value }))} className={selectCls}>
-                <option value="">None (top-level)</option>
-                {categories.filter(c => c.id !== editId).map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </label>
-
             {editId && (
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={form.is_active} onChange={e => setForm(p => ({ ...p, is_active: e.target.checked }))} className="rounded border-edge-strong text-accent focus:ring-accent" />
@@ -292,7 +279,6 @@ export default function CategoriesTab() {
               <tr key={cat.id} className="border-b border-edge/50 hover:bg-raised">
                 <td className="px-4 py-2.5">
                   <span className="text-primary">{cat.name}</span>
-                  {cat.parent && <span className="text-muted text-xs ml-2">({cat.parent.name})</span>}
                 </td>
                 <td className="px-4 py-2.5 text-secondary">{cat.master_category ?? '\u2014'}</td>
                 <td className="px-4 py-2.5 text-secondary">{cat.tax_category}</td>

@@ -17,6 +17,10 @@ export default function StorefrontEventsPage() {
         <div className="space-y-4">
           {events.map((e: E) => (
             <div key={e.id} className="border rounded-xl p-4">
+              {e.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={e.image_url} alt="" className="w-full h-44 object-cover rounded-lg mb-4" />
+              )}
               <h3 className="font-bold text-lg">{e.name}</h3>
               <p className="text-sm text-muted mt-1">
                 {e.start_date ? new Date(e.start_date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : ''}

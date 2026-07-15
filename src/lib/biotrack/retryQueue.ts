@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
-import { getBioTrackClient } from './client'
+import { getBioTrackClientForLocation } from './client'
+import { isBioTrackEnabled } from './configLoader'
 
 const MAX_RETRIES = 3
 
@@ -25,11 +26,25 @@ export async function processBioTrackRetryQueue(): Promise<{
 
   let succeeded = 0
   let failed = 0
-  const client = getBioTrackClient()
 
   for (const entry of pending) {
+    if (!entry.location_id) {
+      failed++
+      logger.warn('BioTrack retry has no location-scoped credentials', { syncLogId: entry.id })
+      continue
+    }
+    if (!(await isBioTrackEnabled(entry.location_id))) {
+      logger.info('BioTrack retry skipped because location sync is disabled', {
+        syncLogId: entry.id,
+        locationId: entry.location_id,
+      })
+      continue
+    }
+
     try {
       const payload = (entry.request_payload ?? {}) as Record<string, unknown>
+      const client = await getBioTrackClientForLocation(entry.location_id)
+      if (!client) throw new Error('BioTrack credentials are not configured')
       const response = await client.call(entry.biotrack_endpoint, payload)
 
       // Update sync log

@@ -37,8 +37,9 @@ export async function runDailyReconciliation(locationId: string, employeeId: str
   // Pull BioTrack inventory
   let btItems: Array<{ barcode: string; product_name: string; quantity: number }> = []
   try {
-    const { getBioTrackClient } = await import('@/lib/biotrack/client')
-    const client = getBioTrackClient()
+    const { getBioTrackClientForLocation } = await import('@/lib/biotrack/client')
+    const client = await getBioTrackClientForLocation(locationId)
+    if (!client) throw new Error('BioTrack credentials are not configured')
     const response = await client.call('inventory/sync', { location_id: location.biotrack_location_id ?? locationId }, {
       organizationId: location.organization_id, locationId, entityType: 'reconciliation',
     })

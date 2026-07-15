@@ -3,6 +3,12 @@ import { z } from 'zod/v4'
 import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { clearDutchieConfigCache } from '@/lib/dutchie/configLoader'
+import {
+  persistDutchieDualWrite,
+  type DutchieLoyaltyState,
+} from '@/lib/dutchie/configPersistence'
+import { maskStoredSecret, prepareSecretForWrite } from '@/lib/security/settingsSecrets.server'
+import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
 
 const UpdateDutchieConfigSchema = z.object({
@@ -42,19 +48,13 @@ const DEFAULT_CONFIG = {
   designatedLoyaltyLocationId: null as string | null,
 }
 
-/** Mask API key: show last 4 chars as ****...xxxx */
-function maskApiKey(key: string | null): string {
-  if (!key || key.length < 4) return ''
-  return '****...' + key.slice(-4)
-}
-
 /** Map DB row to frontend camelCase */
 export function dbRowToFrontend(row: Record<string, unknown>, loyaltyState?: Record<string, unknown> | null) {
-  const rawKey = (row.api_key_encrypted as string) ?? ''
+  const storedKey = (row.api_key_encrypted as string) ?? ''
   return {
     isEnabled: row.is_enabled ?? DEFAULT_CONFIG.isEnabled,
-    hasApiKey: rawKey.length > 0,
-    apiKeyTail: maskApiKey(rawKey),
+    hasApiKey: storedKey.length > 0,
+    apiKeyTail: maskStoredSecret(storedKey),
     dutchieLocationId: (row.dutchie_location_id as string) ?? '',
     dutchieLocationName: (row.dutchie_location_name as string) ?? '',
     syncEmployees: row.sync_employees ?? DEFAULT_CONFIG.syncEmployees,
@@ -77,7 +77,11 @@ export function dbRowToFrontend(row: Record<string, unknown>, loyaltyState?: Rec
 }
 
 /** Map frontend camelCase to DB snake_case for upsert */
-export function frontendToDbRow(data: Record<string, unknown>, locationId: string) {
+export function frontendToDbRow(
+  data: Record<string, unknown>,
+  locationId: string,
+  existing: Record<string, unknown> | null = null,
+) {
   const row: Record<string, unknown> = { location_id: locationId, updated_at: new Date().toISOString() }
 
   if (data.isEnabled !== undefined) row.is_enabled = data.isEnabled
@@ -89,12 +93,84 @@ export function frontendToDbRow(data: Record<string, unknown>, locationId: strin
   if (data.syncTransactions !== undefined) row.sync_transactions = data.syncTransactions
   if (data.syncLoyalty !== undefined) row.sync_loyalty = data.syncLoyalty
 
-  // Only update API key if it's a real value (not the masked version)
-  if (data.apiKey !== undefined && typeof data.apiKey === 'string' && !data.apiKey.startsWith('****')) {
-    row.api_key_encrypted = data.apiKey
-  }
+  const apiKey = prepareSecretForWrite(
+    data.apiKey as string | undefined,
+    existing?.api_key_encrypted as string | null,
+  )
+  if (apiKey) row.api_key_encrypted = apiKey
 
   return row
+}
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+type DutchieUpdate = z.infer<typeof UpdateDutchieConfigSchema>
+
+function toLoyaltyState(row: Record<string, unknown> | null): DutchieLoyaltyState {
+  return {
+    is_enabled: (row?.is_enabled as boolean | undefined) ?? true,
+    last_synced_at: (row?.last_synced_at as string | null | undefined) ?? null,
+    designated_location_id: (row?.designated_location_id as string | null | undefined) ?? null,
+  }
+}
+
+async function readOrganizationLoyaltyState(
+  sb: SupabaseServerClient,
+  organizationId: string,
+) {
+  const result = await (sb as any).from('dutchie_sync_state')
+    .select('is_enabled, last_synced_at, designated_location_id')
+    .eq('organization_id', organizationId).eq('entity_type', 'loyalty')
+    .is('location_id', null).maybeSingle()
+  if (result.error) {
+    throw new AppError('DUTCHIE_STATE_READ_FAILED', result.error.message, result.error, 500)
+  }
+  return toLoyaltyState(result.data)
+}
+
+async function writeOrganizationLoyaltyState(
+  sb: SupabaseServerClient,
+  organizationId: string,
+  input: DutchieUpdate,
+) {
+  const existing = await (sb as any).from('dutchie_sync_state')
+    .select('id').eq('organization_id', organizationId).eq('entity_type', 'loyalty')
+    .is('location_id', null).maybeSingle()
+  if (existing.error) {
+    throw new AppError('DUTCHIE_STATE_READ_FAILED', existing.error.message, existing.error, 500)
+  }
+  const patch = buildLoyaltyStatePatch(organizationId, input)
+  const result = existing.data?.id
+    ? await (sb as any).from('dutchie_sync_state').update(patch).eq('id', existing.data.id).select().single()
+    : await (sb as any).from('dutchie_sync_state').insert(patch).select().single()
+  if (result.error) {
+    throw new AppError('DUTCHIE_STATE_WRITE_FAILED', result.error.message, result.error, 500)
+  }
+  return toLoyaltyState(result.data)
+}
+
+function buildLoyaltyStatePatch(organizationId: string, input: DutchieUpdate) {
+  return {
+    organization_id: organizationId,
+    location_id: null,
+    entity_type: 'loyalty',
+    ...(input.syncLoyalty !== undefined ? { is_enabled: input.syncLoyalty } : {}),
+    ...(input.designatedLoyaltyLocationId !== undefined
+      ? { designated_location_id: input.designatedLoyaltyLocationId }
+      : {}),
+    updated_at: new Date().toISOString(),
+  }
+}
+
+async function validateDesignatedLocation(
+  sb: SupabaseServerClient,
+  organizationId: string,
+  locationId: string | null | undefined,
+) {
+  if (!locationId) return
+  const { data, error } = await sb.from('locations').select('id')
+    .eq('id', locationId).eq('organization_id', organizationId).maybeSingle()
+  if (error) throw new AppError('LOCATION_LOOKUP_FAILED', error.message, error, 500)
+  if (!data) throw new AppError('LOCATION_NOT_FOUND', 'Designated location not found', undefined, 404)
 }
 
 export async function GET() {
@@ -122,6 +198,12 @@ export async function GET() {
     const { data: config, error } = configResult
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (loyaltyResult.error) {
+      return NextResponse.json({ error: loyaltyResult.error.message }, { status: 500 })
+    }
+    if (locationsResult.error) {
+      return NextResponse.json({ error: locationsResult.error.message }, { status: 500 })
+    }
 
     return NextResponse.json({
       config: config ? dbRowToFrontend(config, loyaltyResult.data) : {
@@ -163,63 +245,54 @@ export async function PATCH(request: NextRequest) {
     if (locationError) return NextResponse.json({ error: locationError.message }, { status: 500 })
     if (!location) return NextResponse.json({ error: 'Location not found' }, { status: 404 })
 
-    const dbRow = frontendToDbRow(parsed.data as Record<string, unknown>, session.locationId)
-
-    const { data: config, error } = await (sb as any).from('dutchie_config')
-      .upsert(dbRow, { onConflict: 'location_id' })
-      .select()
-      .single()
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    let loyaltyState: Record<string, unknown> | null = null
-    if (parsed.data.syncLoyalty !== undefined || parsed.data.designatedLoyaltyLocationId !== undefined) {
-      if (parsed.data.designatedLoyaltyLocationId) {
-        const { data: designated } = await sb.from('locations')
-          .select('id')
-          .eq('id', parsed.data.designatedLoyaltyLocationId)
-          .eq('organization_id', session.organizationId)
-          .maybeSingle()
-        if (!designated) return NextResponse.json({ error: 'Designated location not found' }, { status: 404 })
-      }
-
-      const existing = await (sb as any).from('dutchie_sync_state')
-        .select('id')
-        .eq('organization_id', session.organizationId)
-        .eq('entity_type', 'loyalty')
-        .is('location_id', null)
-        .maybeSingle()
-      const statePatch = {
-        organization_id: session.organizationId,
-        location_id: null,
-        entity_type: 'loyalty',
-        ...(parsed.data.syncLoyalty !== undefined ? { is_enabled: parsed.data.syncLoyalty } : {}),
-        ...(parsed.data.designatedLoyaltyLocationId !== undefined
-          ? { designated_location_id: parsed.data.designatedLoyaltyLocationId }
-          : {}),
-        updated_at: new Date().toISOString(),
-      }
-      const stateResult = existing.data?.id
-        ? await (sb as any).from('dutchie_sync_state').update(statePatch).eq('id', existing.data.id).select().single()
-        : await (sb as any).from('dutchie_sync_state').insert(statePatch).select().single()
-      if (stateResult.error) return NextResponse.json({ error: stateResult.error.message }, { status: 500 })
-      loyaltyState = stateResult.data
+    const existingResult = await (sb as any).from('dutchie_config')
+      .select('api_key_encrypted')
+      .eq('location_id', session.locationId)
+      .maybeSingle()
+    if (existingResult.error) {
+      return NextResponse.json({ error: existingResult.error.message }, { status: 500 })
     }
-
-    if (!loyaltyState) {
-      const stateResult = await (sb as any).from('dutchie_sync_state')
-        .select('is_enabled, last_synced_at, designated_location_id')
-        .eq('organization_id', session.organizationId)
-        .eq('entity_type', 'loyalty')
-        .is('location_id', null)
-        .maybeSingle()
-      if (stateResult.error) return NextResponse.json({ error: stateResult.error.message }, { status: 500 })
-      loyaltyState = stateResult.data
-    }
+    await validateDesignatedLocation(
+      sb,
+      session.organizationId,
+      parsed.data.designatedLoyaltyLocationId,
+    )
+    const hasLoyaltyPatch = parsed.data.syncLoyalty !== undefined
+      || parsed.data.designatedLoyaltyLocationId !== undefined
+    const baseRow = frontendToDbRow(
+      parsed.data as Record<string, unknown>,
+      session.locationId,
+      existingResult.data,
+    )
+    const { config, loyaltyState } = await persistDutchieDualWrite({
+      readOrganizationState: () => readOrganizationLoyaltyState(sb, session.organizationId),
+      writeOrganizationState: hasLoyaltyPatch
+        ? () => writeOrganizationLoyaltyState(sb, session.organizationId, parsed.data)
+        : undefined,
+      writeLocationConfig: async (loyaltyEnabled) => {
+        const dbRow = { ...baseRow, sync_loyalty: loyaltyEnabled }
+        const result = await (sb as any).from('dutchie_config')
+          .upsert(dbRow, { onConflict: 'location_id' }).select().single()
+        if (result.error) {
+          throw new AppError('DUTCHIE_CONFIG_WRITE_FAILED', result.error.message, result.error, 500)
+        }
+        return result.data as Record<string, unknown>
+      },
+      reconcileLocationLoyalty: async (loyaltyEnabled) => {
+        const result = await (sb as any).from('dutchie_config')
+          .update({ sync_loyalty: loyaltyEnabled, updated_at: new Date().toISOString() })
+          .eq('location_id', session.locationId)
+        if (result.error) {
+          throw new AppError('DUTCHIE_RECONCILE_FAILED', result.error.message, result.error, 500)
+        }
+      },
+    })
 
     clearDutchieConfigCache(session.locationId)
 
-    return NextResponse.json({ config: dbRowToFrontend(config, loyaltyState) })
+    return NextResponse.json({
+      config: dbRowToFrontend(config, loyaltyState as unknown as Record<string, unknown>),
+    })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) {
       const appErr = err as { code: string; message: string; statusCode?: number }

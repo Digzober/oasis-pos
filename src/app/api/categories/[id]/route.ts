@@ -13,7 +13,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     const { data, error } = await sb
       .from('product_categories')
-      .select('*, parent:product_categories!parent_id ( id, name, slug )')
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -37,12 +37,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params
     if (!await assertOrgOwnership('product_categories', id, session.organizationId)) return NextResponse.json({ error: 'Category not found' }, { status: 404 })
     const body = await req.json()
-    if (body.parent_id && !await assertOrgOwnership('product_categories', body.parent_id, session.organizationId)) return NextResponse.json({ error: 'Parent category not found' }, { status: 404 })
     const sb = await createSupabaseServerClient()
 
     const updates: Record<string, unknown> = {}
     const allowedFields = [
-      'name', 'slug', 'description', 'sort_order', 'parent_id',
+      'name', 'slug', 'description', 'sort_order',
       'master_category', 'purchase_limit_category', 'tax_category',
       'regulatory_category', 'available_for', 'icon_url', 'is_active',
     ]

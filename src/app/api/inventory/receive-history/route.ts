@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import { decryptStoredSecret } from '@/lib/security/settingsSecrets.server'
 
 function getJsonApiUrl(xmlUrl: string): string {
   return xmlUrl.replace('serverxml.asp', 'serverjson.asp')
@@ -36,8 +37,8 @@ export async function GET(request: NextRequest) {
       body: JSON.stringify({
         API: '4.0',
         action: 'login',
-        username: btConfig.username_encrypted,
-        password: btConfig.password_encrypted,
+        username: decryptStoredSecret(btConfig.username_encrypted),
+        password: decryptStoredSecret(btConfig.password_encrypted),
         license_number: btConfig.ubi,
         training: '0',
       }),

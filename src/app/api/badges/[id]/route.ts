@@ -8,12 +8,8 @@ const UpdateBadgeSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   color: z.string().max(20).optional(),
   icon: z.string().max(50).nullable().optional(),
-  description: z.string().max(500).nullable().optional(),
-  assignment_method: z.enum(['manual', 'automatic']).optional(),
-  segment_id: z.uuid().nullable().optional(),
-  show_in_register: z.boolean().optional(),
   is_active: z.boolean().optional(),
-})
+}).strict()
 
 export async function GET(
   _request: NextRequest,
@@ -26,7 +22,7 @@ export async function GET(
 
     const { data: badge, error: badgeError } = await sb
       .from('badges')
-      .select('*, segments:segment_id ( id, name )')
+      .select('*')
       .eq('id', id)
       .eq('organization_id', session.organizationId)
       .single()

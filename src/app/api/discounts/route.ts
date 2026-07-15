@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { listDiscounts, createDiscount } from '@/lib/services/discountManagementService'
+import { clearDiscountCache } from '@/lib/calculations/discountLoader'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(req: NextRequest) {
@@ -14,6 +15,7 @@ export async function POST(req: NextRequest) {
   try {
     const s = await requireSession(); const body = await req.json()
     const disc = await createDiscount(s.organizationId, body)
+    clearDiscountCache()
     return NextResponse.json({ discount: disc }, { status: 201 })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) { const a = err as { code: string; message: string; statusCode?: number }; return NextResponse.json({ error: a.message }, { status: a.statusCode ?? 500 }) }

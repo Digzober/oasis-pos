@@ -34,3 +34,9 @@ Build: 1 round, no gate failures. Sol tokens ~683k. Fable review: APPROVE, 11-ro
 
 === NEW RUN: route/settings-fix ===
 Kane directive: fix everything from SETTINGS-WIRING-AUDIT.md, skip plan review (binding override). Class HIGH-RISK. Spec = approved audit doc. Phases A/B/C, gates between, cap 8.
+
+Phase A: gates verified by Fable (typecheck clean, 417/417). Committed.
+
+Phase B: gates verified by Fable (typecheck clean, 480/480). Committed. Build gate deferred to final (sandbox blocks font fetch).
+
+HOTFIX (Fable, mid-Phase-C): /api/auth/locations regression — Phase A put requireSession() on the endpoint the pre-auth PIN login screen uses, so login showed no locations. Restored contextual behavior: no session -> public id/name/city/state list; session -> accessible locations. Logged as review finding F1 (fixed). Kane unblocked.

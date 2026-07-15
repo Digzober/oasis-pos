@@ -4,6 +4,17 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import EntityFilterBuilder, { EMPTY_FILTERS, type EntityFilters } from './EntityFilterBuilder'
 import DiscountPreview from './DiscountPreview'
+import {
+  deserializeEntityFilters,
+  fromConstraintThreshold,
+  fromRewardPersistence,
+  serializeEntityFilters,
+  toConstraintThreshold,
+  toRewardPersistence,
+  type ConstraintBuilderType,
+  type RewardApplyTo,
+  type RewardBuilderType,
+} from '@/lib/discounts/persistence'
 
 const REWARD_TYPES = [
   { value: 'percentage', label: 'Percentage Off' }, { value: 'fixed_amount', label: 'Dollar Amount Off' },
@@ -11,6 +22,7 @@ const REWARD_TYPES = [
 ]
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+type CustomerType = 'all' | 'recreational' | 'medical'
 
 export default function DiscountBuilder({ discountId }: { discountId?: string }) {
   const router = useRouter()
@@ -22,7 +34,6 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
   // Form state
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [code, setCode] = useState('')
   const [appMethod, setAppMethod] = useState('automatic')
   const [isStackable, setIsStackable] = useState(false)
 
@@ -35,18 +46,18 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
   const [recEndTime, setRecEndTime] = useState('')
 
   // Constraint
-  const [constraintType, setConstraintType] = useState('min_quantity')
+  const [constraintType, setConstraintType] = useState<ConstraintBuilderType>('min_quantity')
   const [constraintValue, setConstraintValue] = useState('')
   const [constraintFilters, setConstraintFilters] = useState<EntityFilters>(EMPTY_FILTERS)
 
   // Reward
-  const [rewardType, setRewardType] = useState('percentage')
+  const [rewardType, setRewardType] = useState<RewardBuilderType>('percentage')
   const [rewardValue, setRewardValue] = useState('')
-  const [rewardApplyTo, setRewardApplyTo] = useState('each_item')
+  const [rewardApplyTo, setRewardApplyTo] = useState<RewardApplyTo>('each_item')
   const [rewardFilters, setRewardFilters] = useState<EntityFilters>(EMPTY_FILTERS)
 
   // Targeting
-  const [customerTypes, setCustomerTypes] = useState<string[]>(['all'])
+  const [customerTypes, setCustomerTypes] = useState<CustomerType[]>(['all'])
   const [locationIds, setLocationIds] = useState<string[]>([])
   const [firstTimeOnly, setFirstTimeOnly] = useState(false)
   const [requiresApproval, setRequiresApproval] = useState(false)
@@ -56,7 +67,7 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
     fetch(`/api/discounts/${discountId}`).then(r => r.json()).then(d => {
       const disc = d.discount
       if (!disc) return
-      setName(disc.name ?? ''); setDescription(disc.description ?? ''); setCode(disc.code ?? '')
+      setName(disc.name ?? ''); setDescription(disc.description ?? '')
       setAppMethod(disc.application_method ?? 'automatic')
       setIsStackable(disc.discount_stacking ?? false)
       setStartDate(disc.start_date?.slice(0, 16) ?? ''); setEndDate(disc.end_date?.slice(0, 16) ?? '')
@@ -64,14 +75,40 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
       setRecDays(disc.weekly_recurrence ?? [])
       setRecStartTime(disc.recurrence_start_time ?? '')
       setRecEndTime(disc.recurrence_end_time ?? '')
-      setCustomerTypes(disc.customer_types ?? ['all'])
+      const storedCustomerTypes = (disc.customer_types ?? []).filter(
+        (value: string): value is CustomerType =>
+          value === 'all' || value === 'recreational' || value === 'medical',
+      )
+      setCustomerTypes(storedCustomerTypes.length > 0 ? storedCustomerTypes : ['all'])
       setLocationIds(disc.location_ids ?? [])
       setFirstTimeOnly(disc.first_time_customer_only ?? false)
       setRequiresApproval(disc.requires_manager_approval ?? false)
+      const constraint = d.constraints?.[0]
+      if (constraint) {
+        setConstraintType(fromConstraintThreshold(constraint.threshold_type))
+        setConstraintValue(String(constraint.min_value ?? ''))
+        setConstraintFilters(deserializeEntityFilters(constraint.discount_constraint_filters ?? []))
+      }
+      const reward = d.rewards?.[0]
+      if (reward) {
+        setRewardType(fromRewardPersistence(reward.discount_method))
+        setRewardValue(String(reward.discount_value ?? ''))
+        setRewardApplyTo(reward.apply_to ?? 'each_item')
+        setRewardFilters(deserializeEntityFilters(reward.discount_reward_filters ?? []))
+      }
     })
   }, [discountId])
 
   const toggleDay = (d: number) => setRecDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])
+  const toggleCustomerType = (type: Exclude<CustomerType, 'all'>) => {
+    setCustomerTypes((current) => {
+      const selected = current.filter((value) => value !== 'all')
+      const next = selected.includes(type)
+        ? selected.filter((value) => value !== type)
+        : [...selected, type]
+      return next.length > 0 ? next : ['all']
+    })
+  }
 
   const handleSave = async (status: string) => {
     if (!name) { setError('Name is required'); return }
@@ -79,8 +116,9 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
 
     const body = {
       discount: {
-        name, description: description || null, code: code || null,
-        application_method: appMethod, discount_stacking: isStackable,
+        name, description: description || null,
+        application_method: appMethod,
+        discount_stacking: isStackable,
         start_date: startDate || null, end_date: endDate || null,
         weekly_recurrence: recurring ? recDays : null,
         recurrence_start_time: recurring && recStartTime ? recStartTime : null,
@@ -90,12 +128,12 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
         requires_manager_approval: requiresApproval, status,
       },
       constraints: constraintValue ? [{
-        threshold: { [constraintType === 'min_quantity' ? 'min_value' : 'min_value']: parseFloat(constraintValue), group_by_sku: false },
-        filters: hasFilters(constraintFilters) ? [mapFilters(constraintFilters)] : [],
+        threshold: toConstraintThreshold(constraintType, parseFloat(constraintValue)),
+        filters: serializeEntityFilters(constraintFilters),
       }] : [],
       rewards: [{
-        reward: { discount_method: rewardType, discount_value: parseFloat(rewardValue) || 0 },
-        filters: hasFilters(rewardFilters) ? [mapFilters(rewardFilters)] : [],
+        reward: toRewardPersistence(rewardType, parseFloat(rewardValue) || 0, rewardApplyTo),
+        filters: serializeEntityFilters(rewardFilters),
       }],
     }
 
@@ -145,8 +183,7 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
           <label className="block"><span className="text-xs text-secondary">Description</span><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + ' h-16'} /></label>
           <div className="grid grid-cols-2 gap-4">
             <label className="block"><span className="text-xs text-secondary">Application Method</span>
-              <select value={appMethod} onChange={e => setAppMethod(e.target.value)} className={inputCls}><option value="automatic">Automatic</option><option value="manual">Manual</option><option value="coupon">Coupon</option></select></label>
-            {appMethod === 'coupon' && <label className="block"><span className="text-xs text-secondary">Code</span><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} /></label>}
+              <select value={appMethod} onChange={e => setAppMethod(e.target.value)} className={inputCls}><option value="automatic">Automatic</option><option value="manual">Manual</option></select></label>
           </div>
           <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={isStackable} onChange={e => setIsStackable(e.target.checked)} className="rounded" /> Can stack with other discounts</label>
         </>}
@@ -174,7 +211,7 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
           <p className="text-xs text-secondary">What must be true in the cart for this discount to activate?</p>
           <div className="grid grid-cols-2 gap-4">
             <label className="block"><span className="text-xs text-secondary">Threshold Type</span>
-              <select value={constraintType} onChange={e => setConstraintType(e.target.value)} className={inputCls}>
+              <select value={constraintType} onChange={e => setConstraintType(e.target.value as ConstraintBuilderType)} className={inputCls}>
                 <option value="min_quantity">Minimum Items</option><option value="min_spend">Minimum Spend ($)</option><option value="min_weight">Minimum Weight (g)</option>
               </select></label>
             <label className="block"><span className="text-xs text-secondary">Minimum Value</span>
@@ -187,7 +224,7 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
         {tab === 'rewards' && <>
           <div className="grid grid-cols-2 gap-4">
             <label className="block"><span className="text-xs text-secondary">Reward Type</span>
-              <select value={rewardType} onChange={e => setRewardType(e.target.value)} className={inputCls}>
+              <select value={rewardType} onChange={e => setRewardType(e.target.value as RewardBuilderType)} className={inputCls}>
                 {REWARD_TYPES.map(rt => <option key={rt.value} value={rt.value}>{rt.label}</option>)}
               </select></label>
             <label className="block"><span className="text-xs text-secondary">Value</span>
@@ -195,7 +232,7 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
                 placeholder={rewardType === 'percentage' ? 'e.g. 10 for 10%' : 'e.g. 5.00'} /></label>
           </div>
           <label className="block"><span className="text-xs text-secondary">Apply To</span>
-            <select value={rewardApplyTo} onChange={e => setRewardApplyTo(e.target.value)} className={inputCls}>
+            <select value={rewardApplyTo} onChange={e => setRewardApplyTo(e.target.value as RewardApplyTo)} className={inputCls}>
               <option value="each_item">Each Matching Item</option><option value="cheapest">Cheapest Item</option><option value="most_expensive">Most Expensive</option><option value="cart_total">Cart Total</option>
             </select></label>
           <div><p className="text-xs text-secondary mb-2">Filter which products get the reward (empty = same as constraint)</p>
@@ -203,27 +240,16 @@ export default function DiscountBuilder({ discountId }: { discountId?: string })
         </>}
 
         {tab === 'targeting' && <>
-          <label className="block"><span className="text-xs text-secondary">Customer Type</span>
-            <select value={customerTypes[0] ?? 'all'} onChange={e => setCustomerTypes([e.target.value])} className={inputCls}>
-              <option value="all">All Customers</option><option value="recreational">Recreational Only</option><option value="medical">Medical Only</option>
-            </select></label>
+          <div><span className="text-xs text-secondary">Customer Types</span>
+            <div className="mt-2 flex gap-4">
+              <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={customerTypes.includes('all')} onChange={() => setCustomerTypes(['all'])} className="rounded" /> All customers</label>
+              <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={customerTypes.includes('recreational')} onChange={() => toggleCustomerType('recreational')} className="rounded" /> Recreational</label>
+              <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={customerTypes.includes('medical')} onChange={() => toggleCustomerType('medical')} className="rounded" /> Medical</label>
+            </div></div>
           <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={firstTimeOnly} onChange={e => setFirstTimeOnly(e.target.checked)} className="rounded" /> First-time customers only</label>
           <label className="flex items-center gap-2 text-sm text-secondary"><input type="checkbox" checked={requiresApproval} onChange={e => setRequiresApproval(e.target.checked)} className="rounded" /> Requires manager approval</label>
         </>}
       </div>
     </div>
   )
-}
-
-function hasFilters(f: EntityFilters) {
-  return Object.values(f).some(arr => arr.length > 0)
-}
-
-function mapFilters(f: EntityFilters) {
-  // Map to the constraint/reward filter format
-  const result: Record<string, unknown> = {}
-  if (f.category_ids.length) result.filter_type = 'category', result.filter_value_ids = f.category_ids
-  if (f.brand_ids.length) result.filter_type = 'brand', result.filter_value_ids = f.brand_ids
-  if (f.strain_ids.length) result.filter_type = 'strain', result.filter_value_ids = f.strain_ids
-  return result
 }

@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/utils/logger'
+import {
+  buildReceiptBodyHtml,
+  buildReceiptDocumentHtml,
+  type ReceiptData,
+} from '@/lib/receipts/render'
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -18,35 +23,6 @@ function relativeTime(dateStr: string): string {
   if (diffHr < 24) return `${diffHr}h ago`
   const diffDay = Math.floor(diffHr / 24)
   return `${diffDay}d ago`
-}
-
-interface ReceiptLine {
-  product_name: string
-  quantity: number
-  unit_price: number
-  line_total: number
-  discount_amount: number
-}
-
-interface ReceiptDiscount { name: string; amount: number }
-interface ReceiptTax { name: string; rate: number; amount: number }
-interface ReceiptPayment { method: string; amount: number; change: number }
-
-interface ReceiptData {
-  transaction_id: string
-  receipt_number: string
-  date: string
-  location_name: string
-  employee_name: string
-  customer_name: string | null
-  lines: ReceiptLine[]
-  discounts: ReceiptDiscount[]
-  taxes: ReceiptTax[]
-  payments: ReceiptPayment[]
-  subtotal: number
-  discount_total: number
-  tax_total: number
-  total: number
 }
 
 interface RecentTransaction {
@@ -120,23 +96,10 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
   }
 
   const handlePrint = () => {
-    const printArea = document.getElementById('receipt-print-area')
-    if (!printArea) return
+    if (!receipt) return
     const printWindow = window.open('', '_blank', 'width=400,height=600')
     if (!printWindow) return
-    printWindow.document.write(`
-      <html><head><title>Receipt</title>
-      <style>
-        body { font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; margin: 0; color: #000; background: #fff; }
-        .center { text-align: center; }
-        .bold { font-weight: bold; }
-        .divider { border-top: 1px dashed #000; margin: 6px 0; }
-        .row { display: flex; justify-content: space-between; }
-        .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; }
-      </style></head><body>
-      ${printArea.innerHTML}
-      </body></html>
-    `)
+    printWindow.document.write(buildReceiptDocumentHtml(receipt, true))
     printWindow.document.close()
     printWindow.focus()
     printWindow.print()
@@ -236,120 +199,9 @@ export default function ReceiptReprint({ registerId, isOpen, onClose }: Props) {
             {!loading && view === 'preview' && receipt && (
               <>
                 <div
-                  id="receipt-print-area"
-                  className="bg-surface border border-edge rounded-xl p-5 font-mono text-xs text-primary leading-relaxed"
-                >
-                  {/* Store Header */}
-                  <div className="center text-center mb-3">
-                    <p className="bold font-bold text-sm text-primary">
-                      OASIS CANNABIS CO.
-                    </p>
-                    <p className="text-secondary">{receipt.location_name}</p>
-                    <div className="divider border-t border-dashed border-edge-strong my-2" />
-                    <p className="text-secondary">
-                      {new Date(receipt.date).toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true,
-                      })}
-                    </p>
-                    <p className="text-secondary">Receipt #{receipt.receipt_number}</p>
-                    <p className="text-secondary">Served by: {receipt.employee_name}</p>
-                    {receipt.customer_name && (
-                      <p className="text-secondary">Customer: {receipt.customer_name}</p>
-                    )}
-                  </div>
-
-                  <div className="border-t border-dashed border-edge-strong my-2" />
-
-                  {/* Line Items */}
-                  <div className="space-y-1.5">
-                    {receipt.lines.map((line, i) => (
-                      <div key={i}>
-                        <div className="row flex justify-between">
-                          <span className="text-primary flex-1 pr-2 truncate">
-                            {line.product_name}
-                          </span>
-                          <span className="text-primary tabular-nums">
-                            {fmt(line.line_total)}
-                          </span>
-                        </div>
-                        <div className="text-muted pl-2">
-                          {line.quantity} x {fmt(line.unit_price)}
-                          {line.discount_amount > 0 && (
-                            <span className="text-accent ml-2">
-                              -{fmt(line.discount_amount)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-dashed border-edge-strong my-2" />
-
-                  {/* Totals */}
-                  <div className="space-y-1">
-                    <div className="row flex justify-between text-secondary">
-                      <span>Subtotal</span>
-                      <span className="tabular-nums">{fmt(receipt.subtotal)}</span>
-                    </div>
-                    {receipt.discounts.map((d, i) => (
-                      <div key={i} className="row flex justify-between text-accent">
-                        <span>{d.name}</span>
-                        <span className="tabular-nums">-{fmt(d.amount)}</span>
-                      </div>
-                    ))}
-                    {receipt.discount_total > 0 && (
-                      <div className="row flex justify-between text-accent">
-                        <span>Discount Total</span>
-                        <span className="tabular-nums">-{fmt(receipt.discount_total)}</span>
-                      </div>
-                    )}
-                    {receipt.taxes.map((t, i) => (
-                      <div key={i} className="row flex justify-between text-secondary">
-                        <span>{t.name} ({(t.rate * 100).toFixed(2)}%)</span>
-                        <span className="tabular-nums">{fmt(t.amount)}</span>
-                      </div>
-                    ))}
-                    <div className="border-t border-dashed border-edge-strong my-1" />
-                    <div className="total-row flex justify-between font-bold text-base text-primary">
-                      <span>TOTAL</span>
-                      <span className="tabular-nums">{fmt(receipt.total)}</span>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-dashed border-edge-strong my-2" />
-
-                  {/* Payments */}
-                  <div className="space-y-1">
-                    {receipt.payments.map((p, i) => (
-                      <div key={i}>
-                        <div className="row flex justify-between text-secondary">
-                          <span className="capitalize">{p.method.replace(/_/g, ' ')}</span>
-                          <span className="tabular-nums">{fmt(p.amount)}</span>
-                        </div>
-                        {p.change > 0 && (
-                          <div className="row flex justify-between text-muted">
-                            <span>Change</span>
-                            <span className="tabular-nums">{fmt(p.change)}</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-dashed border-edge-strong my-3" />
-                  <p className="center text-center text-muted">
-                    ** REPRINT **
-                  </p>
-                  <p className="center text-center text-muted mt-1">
-                    Thank you for choosing Oasis!
-                  </p>
-                </div>
+                  className="bg-surface border border-edge rounded-xl p-5 font-mono text-xs text-primary leading-relaxed [&_.center]:text-center [&_.bold]:font-bold [&_.divider]:border-t [&_.divider]:border-dashed [&_.divider]:border-edge-strong [&_.divider]:my-2 [&_.row]:flex [&_.row]:justify-between [&_.total-row]:flex [&_.total-row]:justify-between [&_.total-row]:font-bold [&_.detail]:pl-2 [&_.detail]:text-muted"
+                  dangerouslySetInnerHTML={{ __html: buildReceiptBodyHtml(receipt, true) }}
+                />
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-4">

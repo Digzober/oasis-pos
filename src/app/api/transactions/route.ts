@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import { enforceCheckoutRequirements } from '@/lib/services/checkoutGateService'
 import { createSaleTransaction } from '@/lib/services/transactionService'
 import { logger } from '@/lib/utils/logger'
 
@@ -32,6 +33,12 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
+
+    await enforceCheckoutRequirements({
+      locationId: parsed.data.location_id,
+      organizationId: session.organizationId,
+      customerId: parsed.data.customer_id,
+    })
 
     const result = await createSaleTransaction({
       ...parsed.data,

@@ -10,8 +10,6 @@ const FieldsTab = dynamic(() => import('@/components/backoffice/configure/Fields
 const InventoryStatusesTab = dynamic(() => import('@/components/backoffice/configure/InventoryStatusesTab'), { ssr: false })
 const AdjustmentReasonsTab = dynamic(() => import('@/components/backoffice/configure/AdjustmentReasonsTab'), { ssr: false })
 const DosagesTab = dynamic(() => import('@/components/backoffice/configure/DosagesTab'), { ssr: false })
-const PackingListsTab = dynamic(() => import('@/components/backoffice/configure/PackingListsTab'), { ssr: false })
-const FormatsTab = dynamic(() => import('@/components/backoffice/configure/FormatsTab'), { ssr: false })
 
 interface TabDef {
   key: string
@@ -23,10 +21,8 @@ const TABS: TabDef[] = [
   { key: 'pricing', label: 'Pricing' },
   { key: 'fields', label: 'Fields' },
   { key: 'inventory-statuses', label: 'Inventory Statuses' },
-  { key: 'inventory-adjustments', label: 'Inventory Adjustments' },
+  { key: 'adjustment-reasons', label: 'Adjustment Reasons' },
   { key: 'dosages', label: 'Dosages' },
-  { key: 'packing-lists', label: 'Packing Lists' },
-  { key: 'formats', label: 'Formats' },
 ]
 
 function TabContent({ tab }: { tab: string }) {
@@ -39,14 +35,10 @@ function TabContent({ tab }: { tab: string }) {
       return <FieldsTab />
     case 'inventory-statuses':
       return <InventoryStatusesTab />
-    case 'inventory-adjustments':
+    case 'adjustment-reasons':
       return <AdjustmentReasonsTab />
     case 'dosages':
       return <DosagesTab />
-    case 'packing-lists':
-      return <PackingListsTab />
-    case 'formats':
-      return <FormatsTab />
     default:
       return <CategoriesTab />
   }

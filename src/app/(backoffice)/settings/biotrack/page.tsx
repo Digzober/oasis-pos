@@ -15,7 +15,6 @@ interface BiotrackConfig {
   ubi: string
   biotrack_location_id: string
   use_training_mode: boolean
-  use_other_plant_material: boolean
   use_allotment_check: boolean
   report_discounted_prices: boolean
   enable_deliveries: boolean
@@ -37,7 +36,6 @@ interface DestructionItem {
 
 const OPTION_TOGGLES: { key: keyof BiotrackConfig; label: string; description: string }[] = [
   { key: 'use_training_mode', label: 'Training Mode', description: 'Send data to BioTrack training environment instead of production' },
-  { key: 'use_other_plant_material', label: 'Use Other Plant Material', description: 'Track other plant material in BioTrack reporting' },
   { key: 'use_allotment_check', label: 'Allotment Check', description: 'Verify patient allotment with BioTrack before completing sale' },
   { key: 'report_discounted_prices', label: 'Report Discounted Prices', description: 'Send discounted prices to BioTrack instead of original prices' },
   { key: 'enable_deliveries', label: 'Enable Deliveries', description: 'Report delivery transactions to BioTrack' },
@@ -65,7 +63,6 @@ const DEFAULT_CONFIG: BiotrackConfig = {
   ubi: '',
   biotrack_location_id: '',
   use_training_mode: false,
-  use_other_plant_material: false,
   use_allotment_check: false,
   report_discounted_prices: false,
   enable_deliveries: false,

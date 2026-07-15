@@ -48,6 +48,7 @@
 
 ### discount_rewards
 - `discount_method`: `'percent_off'`, `'dollar_off'`, `'price_to_amount'`, `'bogo'`, `'free_item'`
+- `apply_to`: `'each_item'`, `'cheapest'`, `'most_expensive'`, `'cart_total'`
 
 ### discounts
 - `application_method`: `'automatic'`, `'manual'`
@@ -65,6 +66,9 @@
 ### guestlist_entries
 - `source`: `'walk_in'`, `'online_pickup'`, `'online_delivery'`, `'curbside'`, `'drive_thru'`, `'phone'`, `'kiosk'`
 - `customer_type`: `'recreational'`, `'medical'`
+
+### guestlist_workflow_mappings
+- `workflow_event`: `'default'`, `'preorder_notify'`, `'online_pickup'`, `'online_delivery'`, `'in_store_order'`, `'curbside'`, `'drive_thru'`, `'skipped_delivery'`, `'ready_for_delivery'`, `'start_delivery_route'`
 
 ### inventory_audits
 - `status`: `'draft'`, `'in_progress'`, `'review'`, `'completed'`, `'cancelled'`

@@ -7,6 +7,7 @@ import { checkPurchaseLimit } from '@/lib/calculations/purchaseLimitCalculator'
 import type { TaxRateConfig, TaxCalculationResult } from '@/lib/calculations/tax.types'
 import type { DiscountWithRules, DiscountApplicationResult, DiscountableItem, DiscountEvaluationContext } from '@/lib/calculations/discount.types'
 import type { PurchaseLimitConfig, PurchaseLimitResult, PurchaseLimitItem } from '@/lib/calculations/purchaseLimit.types'
+import type { RoundingMethod } from '@/lib/calculations/cashRounding'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -80,6 +81,7 @@ interface CartState {
   taxRates: TaxRateConfig[]
   activeDiscounts: DiscountWithRules[]
   purchaseLimits: PurchaseLimitConfig[]
+  roundingMethod: RoundingMethod
   configLoaded: boolean
   manualDiscountIds: string[]
   heldCarts: HeldCart[]
@@ -251,6 +253,7 @@ export const useCart = create<CartState>((set, get) => ({
   taxRates: [],
   activeDiscounts: [],
   purchaseLimits: [],
+  roundingMethod: 'none',
   configLoaded: false,
   manualDiscountIds: [],
   heldCarts: [],
@@ -271,6 +274,7 @@ export const useCart = create<CartState>((set, get) => ({
           taxRates: data.taxRates ?? [],
           activeDiscounts: data.discounts ?? [],
           purchaseLimits: data.purchaseLimits ?? [],
+          roundingMethod: data.roundingMethod ?? 'none',
           configLoaded: true,
         })
         set((state) => recalculate(state))
@@ -381,6 +385,7 @@ export const useCart = create<CartState>((set, get) => ({
       taxRates: state.taxRates,
       activeDiscounts: state.activeDiscounts,
       purchaseLimits: state.purchaseLimits,
+      roundingMethod: state.roundingMethod,
       configLoaded: state.configLoaded,
       locationId: state.locationId,
       organizationId: state.organizationId,
@@ -441,6 +446,7 @@ export const useCart = create<CartState>((set, get) => ({
           taxRates: data.taxRates ?? s.taxRates,
           activeDiscounts: data.discounts ?? s.activeDiscounts,
           purchaseLimits: data.purchaseLimits ?? s.purchaseLimits,
+          roundingMethod: data.roundingMethod ?? s.roundingMethod,
         }))
       }
     } catch {

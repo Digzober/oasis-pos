@@ -22,7 +22,7 @@ export async function GET(
 
     const { data, error } = await sb
       .from('customer_badges')
-      .select('badge_id, assigned_by, assigned_at, notes, badges ( id, name, color, icon, description, assignment_method )')
+      .select('badge_id, assigned_by, assigned_at, notes, badges ( id, name, color, icon )')
       .eq('customer_id', id)
       .order('assigned_at', { ascending: false })
 

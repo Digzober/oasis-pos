@@ -53,7 +53,7 @@ export interface DiscountWithRules {
   is_stackable: boolean
   priority: number
   location_ids: string[]
-  customer_type: 'all' | 'recreational' | 'medical'
+  customer_types: Array<'all' | 'recreational' | 'medical'>
   customer_group_ids: string[]
   segment_ids: string[]
   first_time_only: boolean

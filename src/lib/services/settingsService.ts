@@ -1,24 +1,15 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getSettingsSnapshot, patchLocationSettings } from '@/lib/settings/service'
 import { AppError } from '@/lib/utils/errors'
+import { normalizeRegisterPrintOverrides } from '@/lib/printing/registerOverrides'
 
 export async function getLocationSettings(locationId: string) {
-  const sb = await createSupabaseServerClient()
-  const { data } = await sb.from('location_settings').select('*').eq('location_id', locationId).maybeSingle()
-  return data?.settings ?? {}
+  const snapshot = await getSettingsSnapshot(locationId)
+  return snapshot.location
 }
 
 export async function updateLocationSettings(locationId: string, settings: Record<string, unknown>) {
-  const sb = await createSupabaseServerClient()
-  const { data: existing } = await sb.from('location_settings').select('id, settings').eq('location_id', locationId).maybeSingle()
-
-  if (existing) {
-    const merged = { ...(existing.settings as Record<string, unknown> ?? {}), ...settings }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await sb.from('location_settings').update({ settings: merged as any }).eq('id', existing.id)
-  } else {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (sb.from('location_settings') as any).insert({ location_id: locationId, settings })
-  }
+  return patchLocationSettings(locationId, settings)
 }
 
 export async function getLocation(locationId: string) {
@@ -41,16 +32,28 @@ export async function listRegisters(locationId: string) {
   return data ?? []
 }
 
-export async function createRegister(input: { location_id: string; name: string; auto_print_receipts?: boolean }) {
+export async function createRegister(input: {
+  location_id: string
+  name: string
+  auto_print_receipts?: unknown
+  auto_print_labels?: unknown
+}) {
   const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.from('registers').insert(input).select().single()
+  const normalized = normalizeRegisterPrintOverrides(input) as {
+    location_id: string
+    name: string
+    auto_print_receipts?: boolean | null
+    auto_print_labels?: boolean | null
+  }
+  const { data, error } = await sb.from('registers').insert(normalized).select().single()
   if (error) throw new AppError('CREATE_FAILED', error.message, error, 500)
   return data
 }
 
 export async function updateRegister(id: string, input: Record<string, unknown>) {
   const sb = await createSupabaseServerClient()
-  const { data, error } = await sb.from('registers').update(input).eq('id', id).select().single()
+  const normalized = normalizeRegisterPrintOverrides(input)
+  const { data, error } = await sb.from('registers').update(normalized).eq('id', id).select().single()
   if (error) throw new AppError('UPDATE_FAILED', error.message, error, 500)
   return data
 }

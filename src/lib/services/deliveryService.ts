@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { applyOrderStatusToGuestlist } from '@/lib/guestlist/workflowMappings'
 import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
 
@@ -21,6 +22,11 @@ export interface DeliveryEligibilityResult {
   message: string
 }
 
+export interface DeliveryConfigPatch {
+  max_total_value?: number | null
+  max_total_weight_grams?: number | null
+}
+
 // Ray-casting point-in-polygon
 function pointInPolygon(lat: number, lng: number, polygon: number[][]): boolean {
   let inside = false
@@ -36,11 +42,17 @@ function pointInPolygon(lat: number, lng: number, polygon: number[][]): boolean 
 
 export async function checkDeliveryEligibility(address: DeliveryAddress, locationId: string): Promise<DeliveryEligibilityResult> {
   const sb = await createSupabaseServerClient()
+  const { data: location, error: locationError } = await sb.from('locations')
+    .select('organization_id').eq('id', locationId).maybeSingle()
+  if (locationError) throw new AppError('DELIVERY_LOOKUP_FAILED', locationError.message, locationError, 500)
+  if (!location) return unavailableDeliveryResult()
 
-  const { data: zones } = await (sb.from('delivery_zones') as any).select('*').eq('location_id', locationId).eq('is_active', true)
+  const { data: zones, error: zonesError } = await sb.from('delivery_zones').select('*')
+    .eq('organization_id', location.organization_id).eq('is_active', true)
+  if (zonesError) throw new AppError('DELIVERY_LOOKUP_FAILED', zonesError.message, zonesError, 500)
 
   if (!zones || zones.length === 0) {
-    return { eligible: false, zone_id: null, zone_name: null, delivery_fee: 0, estimated_minutes: 0, minimum_order: 0, message: 'Delivery is not available at this location' }
+    return unavailableDeliveryResult()
   }
 
   // If coordinates provided, use point-in-polygon
@@ -58,7 +70,7 @@ export async function checkDeliveryEligibility(address: DeliveryAddress, locatio
           zone_id: zone.id,
           zone_name: zone.name,
           delivery_fee: zone.delivery_fee ?? 0,
-          estimated_minutes: zone.estimated_delivery_minutes ?? 45,
+          estimated_minutes: 45,
           minimum_order: zone.min_order ?? 0,
           message: `Delivery available via ${zone.name}`,
         }
@@ -67,8 +79,7 @@ export async function checkDeliveryEligibility(address: DeliveryAddress, locatio
   }
 
   // Fallback: zip code matching (if no coordinates)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const matchByZip = zones.find((z: any) => {
+  const matchByZip = zones.find((z) => {
     const boundary = z.boundaries as { zip_codes?: string[] } | null
     return boundary?.zip_codes?.includes(address.zip)
   })
@@ -79,7 +90,7 @@ export async function checkDeliveryEligibility(address: DeliveryAddress, locatio
       zone_id: matchByZip.id,
       zone_name: matchByZip.name,
       delivery_fee: matchByZip.delivery_fee ?? 0,
-      estimated_minutes: matchByZip.estimated_delivery_minutes ?? 45,
+      estimated_minutes: 45,
       minimum_order: matchByZip.min_order ?? 0,
       message: `Delivery available via ${matchByZip.name}`,
     }
@@ -93,7 +104,7 @@ export async function checkDeliveryEligibility(address: DeliveryAddress, locatio
       zone_id: z.id,
       zone_name: z.name,
       delivery_fee: z.delivery_fee ?? 0,
-      estimated_minutes: z.estimated_delivery_minutes ?? 45,
+      estimated_minutes: 45,
       minimum_order: z.min_order ?? 0,
       message: `Delivery available via ${z.name}`,
     }
@@ -102,10 +113,26 @@ export async function checkDeliveryEligibility(address: DeliveryAddress, locatio
   return { eligible: false, zone_id: null, zone_name: null, delivery_fee: 0, estimated_minutes: 0, minimum_order: 0, message: 'Address is outside our delivery area' }
 }
 
+function unavailableDeliveryResult(): DeliveryEligibilityResult {
+  return {
+    eligible: false,
+    zone_id: null,
+    zone_name: null,
+    delivery_fee: 0,
+    estimated_minutes: 0,
+    minimum_order: 0,
+    message: 'Delivery is not available at this location',
+  }
+}
+
 export async function assignDriverToOrder(orderId: string, driverId: string) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (sb.from('online_orders') as any).update({ driver_id: driverId, status: 'out_for_delivery' }).eq('id', orderId)
+  const { data: order, error } = await (sb.from('online_orders') as any)
+    .update({ driver_id: driverId, status: 'out_for_delivery' })
+    .eq('id', orderId).select('location_id').single()
+  if (error) throw new AppError('ORDER_UPDATE_FAILED', error.message, error, 500)
+  await applyOrderStatusToGuestlist(orderId, order.location_id, 'out_for_delivery', sb)
   logger.info('Driver assigned to order', { orderId, driverId })
 }
 
@@ -117,14 +144,26 @@ export async function listAvailableDrivers(orgId: string) {
 
 export async function getDeliveryConfig(orgId: string) {
   const sb = await createSupabaseServerClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (sb.from('delivery_config') as any).select('*').eq('organization_id', orgId).eq('is_active', true).maybeSingle()
+  const { data, error } = await sb.from('delivery_config').select('*')
+    .eq('organization_id', orgId).maybeSingle()
+  if (error) throw new AppError('READ_FAILED', error.message, error, 500)
   return data
 }
 
-export async function listZones(locationId: string) {
+export async function saveDeliveryConfig(orgId: string, input: DeliveryConfigPatch) {
   const sb = await createSupabaseServerClient()
-  const { data } = await (sb.from('delivery_zones') as any).select('*').eq('location_id', locationId).eq('is_active', true).order('name')
+  const { data, error } = await sb.from('delivery_config')
+    .upsert({ organization_id: orgId, ...input }, { onConflict: 'organization_id' })
+    .select().single()
+  if (error) throw new AppError('UPDATE_FAILED', error.message, error, 500)
+  return data
+}
+
+export async function listZones(orgId: string) {
+  const sb = await createSupabaseServerClient()
+  const { data, error } = await sb.from('delivery_zones').select('*')
+    .eq('organization_id', orgId).eq('is_active', true).order('name')
+  if (error) throw new AppError('READ_FAILED', error.message, error, 500)
   return data ?? []
 }
 

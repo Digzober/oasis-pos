@@ -3,6 +3,7 @@ import { requireSession } from '@/lib/auth/session'
 import { loadTaxRatesForLocation } from '@/lib/calculations/taxRateLoader'
 import { loadActiveDiscounts } from '@/lib/calculations/discountLoader'
 import { loadPurchaseLimits } from '@/lib/calculations/purchaseLimitLoader'
+import { getEffectiveSettings } from '@/lib/settings/service'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
@@ -10,13 +11,19 @@ export async function GET(request: NextRequest) {
     const session = await requireSession()
     const locationId = request.nextUrl.searchParams.get('location_id') ?? session.locationId
 
-    const [taxRates, discounts, purchaseLimits] = await Promise.all([
+    const [taxRates, discounts, purchaseLimits, settings] = await Promise.all([
       loadTaxRatesForLocation(locationId),
       loadActiveDiscounts(session.organizationId),
       loadPurchaseLimits(session.organizationId, locationId),
+      getEffectiveSettings(locationId),
     ])
 
-    return NextResponse.json({ taxRates, discounts, purchaseLimits })
+    return NextResponse.json({
+      taxRates,
+      discounts,
+      purchaseLimits,
+      roundingMethod: settings.checkout.rounding_method,
+    })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

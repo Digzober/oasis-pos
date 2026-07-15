@@ -39,16 +39,11 @@ const navigation: NavItem[] = [
     { label: 'Workflows', href: '/marketing/workflows' },
     { label: 'Events', href: '/marketing/events' },
     { label: 'Templates', href: '/marketing/templates' },
-    { label: 'Configure', href: '/marketing/configure' },
   ]},
   { label: 'Registers', icon: Settings, children: [
     { label: 'All Registers', href: '/settings/registers' },
     { label: 'Guestlist', href: '/registers/configure/guestlist' },
-    { label: 'Order Workflow', href: '/registers/configure/workflow' },
-    { label: 'Returns', href: '/registers/configure/returns' },
-    { label: 'Cancellations', href: '/registers/configure/cancellations' },
-    { label: 'Voids', href: '/registers/configure/voids' },
-    { label: 'Settings', href: '/registers/configure/settings' },
+    { label: 'Cards', href: '/registers/configure/cards' },
   ]},
   { label: 'Delivery', href: '/delivery', icon: Truck },
   { label: 'Reports', icon: BarChart3, children: [

@@ -2,6 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useCart } from '@/hooks/useCart'
+import { calculatePaymentTotal } from '@/lib/calculations/cashRounding'
+import { runAutoPrintJobs } from '@/lib/printing/browserPrint'
+import { logger } from '@/lib/utils/logger'
 
 function fmt(n: number) {
   return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
@@ -17,7 +20,7 @@ interface CheckoutPanelProps {
 export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelProps) {
   const {
     items, customerId, customerType, subtotal, discountTotal, taxTotal, total, locationId, registerId,
-    manualDiscountIds, clearCart,
+    manualDiscountIds, roundingMethod, clearCart,
   } = useCart()
 
   const [tendered, setTendered] = useState('')
@@ -25,11 +28,13 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
   const [result, setResult] = useState<{ transactionNumber: number; changeDue: number } | null>(null)
   const [error, setError] = useState('')
 
+  const rounded = calculatePaymentTotal(total, 'cash', roundingMethod ?? 'none')
+  const cashTotal = rounded.total
   const tenderedAmount = parseFloat(tendered) || 0
-  const changeDue = Math.max(0, Math.round((tenderedAmount - total) * 100) / 100)
-  const canComplete = tenderedAmount >= total && !isProcessing
+  const changeDue = Math.max(0, Math.round((tenderedAmount - cashTotal) * 100) / 100)
+  const canComplete = tenderedAmount >= cashTotal && !isProcessing
 
-  const handleExact = () => setTendered(total.toFixed(2))
+  const handleExact = () => setTendered(cashTotal.toFixed(2))
 
   const handleQuick = (amount: number) => {
     const current = parseFloat(tendered) || 0
@@ -69,6 +74,17 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
         return
       }
 
+      if (data.printing) {
+        void runAutoPrintJobs({
+          transactionId: data.transactionId,
+          inventoryItems: items.flatMap((item) => item.inventoryItemId
+            ? [{ id: item.inventoryItemId, quantity: item.quantity }] : []),
+          preferences: data.printing,
+        }).catch((printError) => logger.warn('Automatic sale print failed', {
+          transactionId: data.transactionId,
+          error: String(printError),
+        }))
+      }
       setResult({ transactionNumber: data.transactionNumber, changeDue: data.changeDue })
     } catch {
       setError('Connection error')
@@ -107,8 +123,13 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
       <div className="mx-6 mt-4 bg-bg rounded-xl p-6 text-center">
           <p className="text-xs text-muted uppercase tracking-widest font-mono">Total Due</p>
           <p className="text-5xl font-bold text-primary tabular-nums font-mono tracking-tight mt-1">
-            {fmt(total)}
+            {fmt(cashTotal)}
           </p>
+          {rounded.adjustment !== 0 && (
+            <p className="text-xs text-muted mt-2">
+              Cash rounding {rounded.adjustment > 0 ? '+' : ''}{fmt(rounded.adjustment)}
+            </p>
+          )}
         </div>
 
         {/* Cash Tendered */}
@@ -145,7 +166,7 @@ export default function CheckoutPanel({ onClose, cashDrawerId }: CheckoutPanelPr
         </div>
 
         {/* Change Due */}
-        {tenderedAmount > 0 && tenderedAmount >= total && (
+        {tenderedAmount > 0 && tenderedAmount >= cashTotal && (
           <div className="mx-6 mt-4 text-center">
             <p className="text-xs text-muted">Change Due</p>
             <p className="text-3xl font-bold text-accent font-mono tabular-nums mt-0.5">

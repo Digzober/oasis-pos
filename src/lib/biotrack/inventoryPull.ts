@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { getBioTrackClient } from './client'
+import { getBioTrackClientForLocation } from './client'
 import { logger } from '@/lib/utils/logger'
 
 export async function pullBioTrackInventory(locationId: string): Promise<void> {
@@ -12,7 +12,8 @@ export async function pullBioTrackInventory(locationId: string): Promise<void> {
   }
 
   try {
-    const client = getBioTrackClient()
+    const client = await getBioTrackClientForLocation(locationId)
+    if (!client) throw new Error('BioTrack credentials are not configured')
     const response = await client.call('inventory/sync', {
       location_id: location.biotrack_location_id,
     }, {

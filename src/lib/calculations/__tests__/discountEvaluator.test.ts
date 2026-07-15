@@ -35,7 +35,7 @@ function makeDiscount(overrides: Partial<DiscountWithRules> = {}): DiscountWithR
     is_stackable: false,
     priority: 10,
     location_ids: [],
-    customer_type: 'all',
+    customer_types: ['all'],
     customer_group_ids: [],
     segment_ids: [],
     first_time_only: false,
@@ -207,7 +207,7 @@ describe('evaluateDiscounts', () => {
 
   it('10. customer type: rec-only discount, medical customer', () => {
     const item = makeItem()
-    const discount = makeDiscount({ customer_type: 'recreational' })
+    const discount = makeDiscount({ customer_types: ['recreational'] })
     const medCtx: DiscountEvaluationContext = { ...defaultCtx, customer_type: 'medical' }
 
     const result = evaluateDiscounts([item], [discount], medCtx)

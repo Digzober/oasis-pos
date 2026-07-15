@@ -1,77 +1,85 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listAccessibleLocations, requireAccessibleLocation } from '@/lib/settings/access'
+import { CanonicalSettingPathSchema, DEFAULT_SETTINGS } from '@/lib/settings/schema'
+import {
+  getEffectiveSettings,
+  getSettingsSnapshot,
+  patchLocationSettings,
+  patchOrganizationSettings,
+  removeLocationSetting,
+  removeOrganizationSetting,
+} from '@/lib/settings/service'
 import { logger } from '@/lib/utils/logger'
-import type { Json } from '@/types/database'
 
-const UpdateLocationSettingsSchema = z.record(z.string(), z.unknown())
+const PatchRequestSchema = z.object({
+  scope: z.enum(['organization', 'location']),
+  location_id: z.uuid().optional(),
+  patch: z.unknown().optional(),
+  remove: CanonicalSettingPathSchema.optional(),
+}).strict().refine((value) => (value.patch === undefined) !== (value.remove === undefined), {
+  message: 'Provide exactly one of patch or remove',
+})
 
-export async function GET() {
+function errorResponse(err: unknown, operation: string) {
+  if (err && typeof err === 'object' && 'code' in err) {
+    const appErr = err as { code: string; message: string; statusCode?: number }
+    const message = appErr.code === 'UNAUTHORIZED' ? 'Authentication required' : appErr.message
+    return NextResponse.json({ error: message }, { status: appErr.statusCode ?? 500 })
+  }
+  logger.error(`Settings ${operation} error`, { error: String(err) })
+  return NextResponse.json({ error: 'Server error' }, { status: 500 })
+}
+
+export async function GET(request: NextRequest) {
   try {
     const session = await requireSession()
-    const sb = await createSupabaseServerClient()
-
-    const { data: locationSettings, error } = await sb
-      .from('location_settings')
-      .select('settings')
-      .eq('location_id', session.locationId)
-      .maybeSingle()
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    return NextResponse.json({ settings: (locationSettings?.settings ?? {}) as Record<string, unknown> })
-  } catch (err) {
-    if (err && typeof err === 'object' && 'code' in err) {
-      const appErr = err as { code: string; message: string; statusCode?: number }
-      if (appErr.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-      return NextResponse.json({ error: appErr.message }, { status: appErr.statusCode ?? 500 })
+    const locations = await listAccessibleLocations(session)
+    const requestedId = request.nextUrl.searchParams.get('location_id') ?? session.locationId
+    const selected = locations.find(({ id }) => id === requestedId) ?? locations[0]
+    if (!selected) return NextResponse.json({ error: 'No accessible locations' }, { status: 404 })
+    if (request.nextUrl.searchParams.has('location_id') && selected.id !== requestedId) {
+      return NextResponse.json({ error: 'Location not found' }, { status: 404 })
     }
-    logger.error('Location settings get error', { error: String(err) })
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    const [snapshot, effective] = await Promise.all([
+      getSettingsSnapshot(selected.id),
+      getEffectiveSettings(selected.id),
+    ])
+    return NextResponse.json({
+      defaults: DEFAULT_SETTINGS,
+      effective,
+      organization: snapshot.organization,
+      location: snapshot.location,
+      locations,
+      selected_location_id: selected.id,
+    })
+  } catch (err) {
+    return errorResponse(err, 'get')
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
     const session = await requireSession()
-    const sb = await createSupabaseServerClient()
-    const body = await request.json()
-    const parsed = UpdateLocationSettingsSchema.safeParse(body)
-
+    const parsed = PatchRequestSchema.safeParse(await request.json())
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
-
-    // Fetch current settings to merge
-    const { data: existing, error: fetchError } = await sb
-      .from('location_settings')
-      .select('settings')
-      .eq('location_id', session.locationId)
-      .maybeSingle()
-
-    if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 })
-
-    const currentSettings = (existing?.settings ?? {}) as Record<string, unknown>
-    const mergedSettings = { ...currentSettings, ...parsed.data }
-
-    const { error: updateError } = await sb
-      .from('location_settings')
-      .upsert(
-        { location_id: session.locationId, settings: mergedSettings as Json, updated_at: new Date().toISOString() },
-        { onConflict: 'location_id' }
-      )
-
-    if (updateError) return NextResponse.json({ error: updateError.message }, { status: 500 })
-
-    return NextResponse.json({ success: true })
-  } catch (err) {
-    if (err && typeof err === 'object' && 'code' in err) {
-      const appErr = err as { code: string; message: string; statusCode?: number }
-      if (appErr.code === 'UNAUTHORIZED') return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-      return NextResponse.json({ error: appErr.message }, { status: appErr.statusCode ?? 500 })
+    const { scope, patch, remove } = parsed.data
+    if (scope === 'organization') {
+      const settings = remove
+        ? await removeOrganizationSetting(session.organizationId, remove)
+        : await patchOrganizationSettings(session.organizationId, patch)
+      return NextResponse.json({ settings })
     }
-    logger.error('Location settings update error', { error: String(err) })
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    const locationId = parsed.data.location_id ?? session.locationId
+    await requireAccessibleLocation(session, locationId)
+    const settings = remove
+      ? await removeLocationSetting(locationId, remove)
+      : await patchLocationSettings(locationId, patch)
+    return NextResponse.json({ settings })
+  } catch (err) {
+    return errorResponse(err, 'update')
   }
 }

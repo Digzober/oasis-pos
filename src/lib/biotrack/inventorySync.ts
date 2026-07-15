@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+import { decryptStoredSecret } from '@/lib/security/settingsSecrets.server'
 import type { BioTrackManifest, BioTrackManifestItem } from './inventoryTypes'
 
 /**
@@ -35,8 +36,8 @@ export async function fetchPendingManifests(
       body: JSON.stringify({
         API: '4.0',
         action: 'login',
-        username: btConfig.username_encrypted,
-        password: btConfig.password_encrypted,
+        username: decryptStoredSecret(btConfig.username_encrypted),
+        password: decryptStoredSecret(btConfig.password_encrypted),
         license_number: btConfig.ubi,
         training: '0',
       }),

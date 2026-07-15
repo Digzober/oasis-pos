@@ -58,13 +58,13 @@ export async function getTemplate(id: string) {
   return mapTemplate(data)
 }
 
-export async function createTemplate(input: { organization_id: string; name: string; label_type: string; width_mm: number; height_mm: number; dpi?: number; fields: LabelField[] }) {
+export async function createTemplate(input: { organization_id: string; name: string; width_mm: number; height_mm: number; dpi?: number; fields: LabelField[] }) {
   const sb = await createSupabaseServerClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (sb.from('label_templates') as any).insert({
     organization_id: input.organization_id,
     name: input.name,
-    label_type: input.label_type,
+    label_type: 'product',
     width_mm: input.width_mm,
     height_mm: input.height_mm,
     dpi: input.dpi ?? 203,
@@ -76,8 +76,10 @@ export async function createTemplate(input: { organization_id: string; name: str
 
 export async function updateTemplate(id: string, input: Record<string, unknown>) {
   const sb = await createSupabaseServerClient()
+  const allowed = ['name', 'width_mm', 'height_mm', 'dpi', 'fields', 'is_default', 'is_active']
+  const patch = Object.fromEntries(Object.entries(input).filter(([key]) => allowed.includes(key)))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (sb.from('label_templates') as any).update(input).eq('id', id).select().single()
+  const { data, error } = await (sb.from('label_templates') as any).update(patch).eq('id', id).select().single()
   if (error) throw new AppError('UPDATE_FAILED', error.message, error, 500)
   return mapTemplate(data)
 }

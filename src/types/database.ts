@@ -1675,6 +1675,7 @@ export type Database = {
       }
       discount_rewards: {
         Row: {
+          apply_to: string
           created_at: string
           discount_id: string
           discount_method: string
@@ -1686,6 +1687,7 @@ export type Database = {
           threshold_value: number | null
         }
         Insert: {
+          apply_to?: string
           created_at?: string
           discount_id: string
           discount_method: string
@@ -1697,6 +1699,7 @@ export type Database = {
           threshold_value?: number | null
         }
         Update: {
+          apply_to?: string
           created_at?: string
           discount_id?: string
           discount_method?: string
@@ -2529,6 +2532,48 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guestlist_workflow_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          status_id: string
+          updated_at: string
+          workflow_event: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          status_id: string
+          updated_at?: string
+          workflow_event: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          status_id?: string
+          updated_at?: string
+          workflow_event?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guestlist_workflow_mappings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guestlist_workflow_mappings_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "guestlist_statuses"
             referencedColumns: ["id"]
           },
         ]
@@ -3998,6 +4043,38 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_settings: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_definitions: {
         Row: {
           category: string
@@ -5393,8 +5470,8 @@ export type Database = {
       }
       registers: {
         Row: {
-          auto_print_labels: boolean
-          auto_print_receipts: boolean
+          auto_print_labels: boolean | null
+          auto_print_receipts: boolean | null
           created_at: string
           external_id: string | null
           hide_from_pos: boolean
@@ -5407,8 +5484,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          auto_print_labels?: boolean
-          auto_print_receipts?: boolean
+          auto_print_labels?: boolean | null
+          auto_print_receipts?: boolean | null
           created_at?: string
           external_id?: string | null
           hide_from_pos?: boolean
@@ -5421,8 +5498,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          auto_print_labels?: boolean
-          auto_print_receipts?: boolean
+          auto_print_labels?: boolean | null
+          auto_print_receipts?: boolean | null
           created_at?: string
           external_id?: string | null
           hide_from_pos?: boolean
@@ -6619,6 +6696,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      patch_guestlist_workflow_mappings: {
+        Args: { p_location_id: string; p_patch: Json }
+        Returns: Json
+      }
+      patch_location_settings: {
+        Args: { p_location_id: string; p_patch: Json }
+        Returns: Json
+      }
+      patch_organization_settings: {
+        Args: { p_organization_id: string; p_patch: Json }
+        Returns: Json
+      }
+      patch_receipt_config: {
+        Args: { p_location_id: string; p_patch: Json }
+        Returns: Json
+      }
       create_return_transaction: {
         Args: {
           p_cash_drawer_id: string

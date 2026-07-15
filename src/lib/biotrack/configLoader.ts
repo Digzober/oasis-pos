@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { decryptStoredSecret, encryptSecret } from '@/lib/security/settingsSecrets.server'
 import { logger } from '@/lib/utils/logger'
 import type { BioTrackConfig } from './types'
 
@@ -14,7 +15,6 @@ interface BioTrackConfigRow {
   ubi: string | null
   biotrack_location_id: string | null
   use_training_mode: boolean
-  use_other_plant_material: boolean
   use_allotment_check: boolean
   report_discounted_prices: boolean
   enable_deliveries: boolean
@@ -46,7 +46,45 @@ export interface BioTrackLocationConfig extends BioTrackConfig {
 }
 
 const configCache = new Map<string, { config: BioTrackLocationConfig; expiresAt: number }>()
+const enablementCache = new Map<string, { enabled: boolean; expiresAt: number }>()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
+/**
+ * BioTrack sync is enabled by default and skipped only for an explicit false flag.
+ */
+export async function isBioTrackEnabled(locationId: string | null | undefined): Promise<boolean> {
+  if (!locationId) return true
+
+  const cached = enablementCache.get(locationId)
+  if (cached && Date.now() < cached.expiresAt) return cached.enabled
+
+  try {
+    const sb = await createSupabaseServerClient()
+    const { data, error } = await sb
+      .from('biotrack_config')
+      .select('is_enabled')
+      .eq('location_id', locationId)
+      .maybeSingle()
+
+    if (error) {
+      logger.error('Failed to load BioTrack enablement; defaulting on', {
+        locationId,
+        error: error.message,
+      })
+      return true
+    }
+
+    const enabled = data?.is_enabled !== false
+    enablementCache.set(locationId, { enabled, expiresAt: Date.now() + CACHE_TTL_MS })
+    return enabled
+  } catch (err) {
+    logger.error('Failed to load BioTrack enablement; defaulting on', {
+      locationId,
+      error: String(err),
+    })
+    return true
+  }
+}
 
 /**
  * Loads BioTrack config for a specific location from the biotrack_config table.
@@ -92,8 +130,8 @@ export async function loadBioTrackConfig(locationId: string): Promise<BioTrackLo
     const config: BioTrackLocationConfig = {
       v1Url: row.xml_api_url ?? '',
       v3Url: row.rest_api_url,
-      username: row.username_encrypted,
-      password: row.password_encrypted,
+      username: decryptStoredSecret(row.username_encrypted),
+      password: decryptStoredSecret(row.password_encrypted),
       licenseNumber: row.ubi ?? '',
       locationId,
       isEnabled: row.is_enabled,
@@ -160,8 +198,10 @@ function buildConfigFromEnv(locationId: string): BioTrackLocationConfig | null {
 export function clearBioTrackConfigCache(locationId?: string): void {
   if (locationId) {
     configCache.delete(locationId)
+    enablementCache.delete(locationId)
   } else {
     configCache.clear()
+    enablementCache.clear()
   }
 }
 
@@ -190,8 +230,8 @@ export async function seedBioTrackConfig(params: {
     state_code: 'NM',
     xml_api_url: params.xmlApiUrl,
     rest_api_url: params.restApiUrl,
-    username_encrypted: params.username,
-    password_encrypted: params.password,
+    username_encrypted: encryptSecret(params.username),
+    password_encrypted: encryptSecret(params.password),
     ubi: params.ubi,
     biotrack_location_id: params.biotrackLocationId,
     use_training_mode: params.useTrainingMode ?? false,

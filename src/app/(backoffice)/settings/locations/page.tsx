@@ -4,8 +4,12 @@ import Link from 'next/link'
 import { DENSE_BESPOKE_TABLE_CLASS } from '@/lib/constants/tableDensity'
 
 export default function LocationsSettingsPage() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [locations, setLocations] = useState<any[]>([])
+  const [locations, setLocations] = useState<Array<{
+    id: string
+    name: string
+    city: string
+    state: string
+  }>>([])
   useEffect(() => { fetch('/api/auth/locations').then(r => r.json()).then(d => setLocations(d.locations ?? [])) }, [])
 
   return (
@@ -21,7 +25,7 @@ export default function LocationsSettingsPage() {
               <td className="px-4 py-2.5 text-primary">{l.name}</td>
               <td className="px-4 py-2.5 text-secondary">{l.city}, {l.state}</td>
               <td className="px-4 py-2.5">
-                <Link href={`/settings/locations/${l.id}/settings`} className="text-xs text-accent hover:text-accent">Settings</Link>
+                <Link href={`/settings/location-settings?location_id=${l.id}`} className="text-xs text-accent hover:text-accent">Settings</Link>
               </td>
             </tr>
           ))}</tbody>

@@ -14,17 +14,7 @@ interface Badge {
   name: string
   color: string
   icon: string | null
-  description: string | null
-  assignment_method: 'manual' | 'automatic'
-  segment_id: string | null
-  segment_name: string | null
-  show_in_register: boolean
   member_count: number
-}
-
-interface Segment {
-  id: string
-  name: string
 }
 
 interface CustomerResult {
@@ -45,10 +35,7 @@ interface BadgeMember {
 /* ---------- Tabs ---------- */
 
 const TABS = [
-  { label: 'Doctors', href: '/customers/configure/doctors' },
-  { label: 'Qualifying Conditions', href: '/customers/configure/qualifying-conditions' },
   { label: 'Fields', href: '/customers/configure/fields' },
-  { label: 'Badge Priority', href: '/customers/configure/badge-priority' },
   { label: 'Badges', href: '/customers/configure/badges' },
 ]
 
@@ -82,20 +69,12 @@ interface BadgeForm {
   name: string
   color: string
   icon: string
-  description: string
-  assignment_method: 'manual' | 'automatic'
-  segment_id: string
-  show_in_register: boolean
 }
 
 const EMPTY_FORM: BadgeForm = {
   name: '',
   color: '#10b981',
   icon: '',
-  description: '',
-  assignment_method: 'manual',
-  segment_id: '',
-  show_in_register: true,
 }
 
 /* ---------- Page ---------- */
@@ -103,7 +82,6 @@ const EMPTY_FORM: BadgeForm = {
 export default function BadgesPage() {
   const [badges, setBadges] = useState<Badge[]>([])
   const [loading, setLoading] = useState(true)
-  const [segments, setSegments] = useState<Segment[]>([])
 
   /* Create modal */
   const [showCreate, setShowCreate] = useState(false)
@@ -145,23 +123,6 @@ export default function BadgesPage() {
 
   useEffect(() => { fetchBadges() }, [fetchBadges])
 
-  /* ---------- Fetch segments (for dropdowns) ---------- */
-
-  useEffect(() => {
-    async function loadSegments() {
-      try {
-        const res = await fetch('/api/segments', { cache: 'no-store' })
-        if (res.ok) {
-          const json = await res.json()
-          setSegments(json.segments ?? [])
-        }
-      } catch {
-        /* segments not available */
-      }
-    }
-    loadSegments()
-  }, [])
-
   /* ---------- Fetch members for edit modal ---------- */
 
   const fetchMembers = useCallback(async (badgeId: string) => {
@@ -199,22 +160,6 @@ export default function BadgesPage() {
     return () => clearTimeout(timeout)
   }, [customerSearch])
 
-  /* ---------- Toggle show_in_register ---------- */
-
-  async function toggleRegister(badge: Badge) {
-    const res = await fetch(`/api/badges/${badge.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ show_in_register: !badge.show_in_register }),
-      cache: 'no-store',
-    })
-    if (res.ok) {
-      setBadges((prev) =>
-        prev.map((b) => (b.id === badge.id ? { ...b, show_in_register: !b.show_in_register } : b)),
-      )
-    }
-  }
-
   /* ---------- Create ---------- */
 
   function openCreate() {
@@ -229,10 +174,6 @@ export default function BadgesPage() {
         name: createForm.name,
         color: createForm.color,
         icon: createForm.icon || null,
-        description: createForm.description || null,
-        assignment_method: createForm.assignment_method,
-        segment_id: createForm.assignment_method === 'automatic' ? createForm.segment_id || null : null,
-        show_in_register: createForm.show_in_register,
       }
       const res = await fetch('/api/badges', {
         method: 'POST',
@@ -257,17 +198,11 @@ export default function BadgesPage() {
       name: badge.name,
       color: badge.color,
       icon: badge.icon ?? '',
-      description: badge.description ?? '',
-      assignment_method: badge.assignment_method,
-      segment_id: badge.segment_id ?? '',
-      show_in_register: badge.show_in_register,
     })
     setMembers([])
     setCustomerSearch('')
     setCustomerResults([])
-    if (badge.assignment_method === 'manual') {
-      fetchMembers(badge.id)
-    }
+    fetchMembers(badge.id)
   }
 
   async function handleSaveEdit() {
@@ -278,10 +213,6 @@ export default function BadgesPage() {
         name: editForm.name,
         color: editForm.color,
         icon: editForm.icon || null,
-        description: editForm.description || null,
-        assignment_method: editForm.assignment_method,
-        segment_id: editForm.assignment_method === 'automatic' ? editForm.segment_id || null : null,
-        show_in_register: editForm.show_in_register,
       }
       const res = await fetch(`/api/badges/${editingBadge.id}`, {
         method: 'PATCH',
@@ -403,77 +334,6 @@ export default function BadgesPage() {
           />
         </div>
 
-        {/* Description */}
-        <div>
-          <label className={labelCls}>Description (optional)</label>
-          <textarea
-            className={`${inputCls} h-20 py-2 resize-none`}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Brief description of this badge"
-          />
-        </div>
-
-        {/* Assignment Method */}
-        <div>
-          <label className={labelCls}>Assignment Method</label>
-          <div className="flex items-center gap-6 mt-1">
-            <label className="flex items-center gap-2 text-sm text-primary cursor-pointer">
-              <input
-                type="radio"
-                name="assignment_method"
-                value="manual"
-                checked={form.assignment_method === 'manual'}
-                onChange={() => setForm({ ...form, assignment_method: 'manual', segment_id: '' })}
-                className="accent-emerald-500"
-              />
-              Manual
-            </label>
-            <label className="flex items-center gap-2 text-sm text-primary cursor-pointer">
-              <input
-                type="radio"
-                name="assignment_method"
-                value="automatic"
-                checked={form.assignment_method === 'automatic'}
-                onChange={() => setForm({ ...form, assignment_method: 'automatic' })}
-                className="accent-emerald-500"
-              />
-              Automatic
-            </label>
-          </div>
-        </div>
-
-        {/* Segment dropdown (automatic only) */}
-        {form.assignment_method === 'automatic' && (
-          <div>
-            <label className={labelCls}>Linked Segment</label>
-            <select
-              className={inputCls}
-              value={form.segment_id}
-              onChange={(e) => setForm({ ...form, segment_id: e.target.value })}
-            >
-              <option value="">Select a segment...</option>
-              {segments.map((seg) => (
-                <option key={seg.id} value={seg.id}>
-                  {seg.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Show in Register */}
-        <div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.show_in_register}
-              onChange={(e) => setForm({ ...form, show_in_register: e.target.checked })}
-              className="w-4 h-4 rounded border-edge-strong bg-bg accent-emerald-500"
-            />
-            <span className="text-sm text-primary">Show in Register</span>
-          </label>
-        </div>
       </div>
     )
   }
@@ -521,56 +381,12 @@ export default function BadgesPage() {
                 </span>
               </div>
 
-              {/* Description */}
-              {badge.description && (
-                <p className="text-xs text-secondary line-clamp-2">{badge.description}</p>
-              )}
-
-              {/* Assignment method pill + segment */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    badge.assignment_method === 'automatic'
-                      ? 'bg-info/50 text-info'
-                      : 'bg-raised text-secondary'
-                  }`}
-                >
-                  {badge.assignment_method === 'automatic' ? 'Automatic' : 'Manual'}
-                </span>
-                {badge.assignment_method === 'automatic' && badge.segment_name && (
-                  <span className="text-xs text-secondary truncate">
-                    {badge.segment_name}
-                  </span>
-                )}
-              </div>
-
               {/* Member count */}
               <p className="text-xs text-secondary">
                 {badge.member_count} {badge.member_count === 1 ? 'member' : 'members'}
               </p>
 
-              {/* Show in register toggle */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={badge.show_in_register}
-                    onClick={() => toggleRegister(badge)}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                      badge.show_in_register ? 'bg-accent' : 'bg-raised'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-3.5 w-3.5 rounded-full bg-surface transition-transform ${
-                        badge.show_in_register ? 'translate-x-4' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <span className="text-xs text-secondary">Register</span>
-                </label>
-
-                {/* Actions */}
+              <div className="flex items-center justify-end">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => openEdit(badge)}
@@ -623,8 +439,8 @@ export default function BadgesPage() {
             <h2 className="text-lg font-semibold text-primary mb-4">Edit Badge</h2>
             {renderFormFields(editForm, setEditForm)}
 
-            {/* Members section (manual badges only) */}
-            {editForm.assignment_method === 'manual' && (
+            {/* Members section */}
+            {(
               <div className="mt-6 border-t border-edge pt-4">
                 <h3 className="text-sm font-semibold text-primary mb-3">Members</h3>
 

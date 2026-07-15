@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { listTaxRates, createTaxRate } from '@/lib/services/settingsService'
+import { clearTaxRateCache } from '@/lib/calculations/taxRateLoader'
+import { withAccessibleLocation } from '@/lib/settings/entityScope'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(req: NextRequest) {
@@ -8,6 +10,6 @@ export async function GET(req: NextRequest) {
   catch (err) { logger.error('Tax rates error', { error: String(err) }); return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }
 export async function POST(req: NextRequest) {
-  try { await requireSession(); return NextResponse.json({ tax_rate: await createTaxRate(await req.json()) }, { status: 201 }) }
+  try { const session = await requireSession(); const body = await req.json() as Omit<Parameters<typeof createTaxRate>[0], 'location_id'> & { location_id?: string }; const input = await withAccessibleLocation(session, body); const taxRate = await createTaxRate(input); clearTaxRateCache(); return NextResponse.json({ tax_rate: taxRate }, { status: 201 }) }
   catch (err) { logger.error('Tax rate create error', { error: String(err) }); return NextResponse.json({ error: 'Server error' }, { status: 500 }) }
 }

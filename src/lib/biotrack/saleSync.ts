@@ -1,7 +1,20 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
-import { getBioTrackClient } from './client'
+import { getBioTrackClientForLocation } from './client'
+import { isBioTrackEnabled, loadBioTrackConfig } from './configLoader'
 import type { SaleDispensePayload, SaleVoidPayload, SaleRefundPayload } from './types'
+
+async function getSyncContext(locationId: string) {
+  const [config, client] = await Promise.all([
+    loadBioTrackConfig(locationId),
+    getBioTrackClientForLocation(locationId),
+  ])
+  if (!config || !client) {
+    logger.error('BioTrack credentials are not configured', { locationId })
+    return null
+  }
+  return { client, licenseNumber: config.licenseNumber }
+}
 
 export async function syncSaleToBioTrack(transactionId: string): Promise<void> {
   const sb = await createSupabaseServerClient()
@@ -14,6 +27,14 @@ export async function syncSaleToBioTrack(transactionId: string): Promise<void> {
 
   if (txErr || !tx) {
     logger.error('Sale sync: transaction not found', { transactionId })
+    return
+  }
+
+  if (!(await isBioTrackEnabled(tx.location_id))) {
+    logger.info('Sale sync: BioTrack disabled for location, skipping', {
+      transactionId,
+      locationId: tx.location_id,
+    })
     return
   }
 
@@ -39,8 +60,11 @@ export async function syncSaleToBioTrack(transactionId: string): Promise<void> {
     })
   }
 
+  const syncContext = await getSyncContext(tx.location_id)
+  if (!syncContext) return
+
   const payload: SaleDispensePayload = {
-    license_number: process.env.BIOTRACK_LICENSE_NUMBER ?? '',
+    license_number: syncContext.licenseNumber,
     sale_date: tx.created_at,
     patient_type: tx.is_medical ? 'medical' : 'recreational',
     patient_id: null,
@@ -57,8 +81,7 @@ export async function syncSaleToBioTrack(transactionId: string): Promise<void> {
   }
 
   try {
-    const client = getBioTrackClient()
-    const response = await client.call('sales/dispense', payload as unknown as Record<string, unknown>, {
+    const response = await syncContext.client.call('sales/dispense', payload as unknown as Record<string, unknown>, {
       organizationId: '',
       locationId: tx.location_id,
       entityType: 'transaction',
@@ -120,15 +143,25 @@ export async function syncVoidToBioTrack(transactionId: string): Promise<void> {
     return
   }
 
+  if (!(await isBioTrackEnabled(tx.location_id))) {
+    logger.info('Void sync: BioTrack disabled for location, skipping', {
+      transactionId,
+      locationId: tx.location_id,
+    })
+    return
+  }
+
+  const syncContext = await getSyncContext(tx.location_id)
+  if (!syncContext) return
+
   const payload: SaleVoidPayload = {
-    license_number: process.env.BIOTRACK_LICENSE_NUMBER ?? '',
+    license_number: syncContext.licenseNumber,
     original_sale_id: tx.biotrack_transaction_id,
     void_reason: tx.void_reason ?? 'Voided',
   }
 
   try {
-    const client = getBioTrackClient()
-    await client.call('sales/void', payload as unknown as Record<string, unknown>, {
+    await syncContext.client.call('sales/void', payload as unknown as Record<string, unknown>, {
       organizationId: '',
       locationId: tx.location_id,
       entityType: 'transaction_void',
@@ -158,6 +191,15 @@ export async function syncRefundToBioTrack(
     return
   }
 
+  if (!(await isBioTrackEnabled(originalTx.location_id))) {
+    logger.info('Refund sync: BioTrack disabled for location, skipping', {
+      originalTransactionId,
+      returnTransactionId,
+      locationId: originalTx.location_id,
+    })
+    return
+  }
+
   const { data: returnTx } = await sb
     .from('transactions')
     .select('*, transaction_lines ( * )')
@@ -169,6 +211,9 @@ export async function syncRefundToBioTrack(
     return
   }
 
+  const syncContext = await getSyncContext(originalTx.location_id)
+  if (!syncContext) return
+
   const lines = (returnTx.transaction_lines ?? []) as Array<{
     biotrack_barcode: string | null
     quantity: number
@@ -176,7 +221,7 @@ export async function syncRefundToBioTrack(
   }>
 
   const payload: SaleRefundPayload = {
-    license_number: process.env.BIOTRACK_LICENSE_NUMBER ?? '',
+    license_number: syncContext.licenseNumber,
     original_sale_id: originalTx.biotrack_transaction_id,
     refund_items: lines
       .filter((l) => l.biotrack_barcode)
@@ -189,8 +234,7 @@ export async function syncRefundToBioTrack(
   }
 
   try {
-    const client = getBioTrackClient()
-    await client.call('sales/refund', payload as unknown as Record<string, unknown>, {
+    await syncContext.client.call('sales/refund', payload as unknown as Record<string, unknown>, {
       organizationId: '',
       locationId: originalTx.location_id,
       entityType: 'transaction_refund',

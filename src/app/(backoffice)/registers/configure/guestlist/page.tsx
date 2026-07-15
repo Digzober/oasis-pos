@@ -6,19 +6,14 @@ import { usePathname } from 'next/navigation'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import type { GuestlistWorkflowEvent } from '@/lib/guestlist/workflowMappings'
 
 const inputCls = 'w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent'
 const labelCls = 'block text-xs font-medium text-secondary uppercase mb-1'
 
 const TABS = [
   { label: 'Guestlist Status', href: '/registers/configure/guestlist' },
-  { label: 'Order Workflow', href: '/registers/configure/workflow' },
   { label: 'Cards', href: '/registers/configure/cards' },
-  { label: 'Adjustments', href: '/registers/configure/adjustments' },
-  { label: 'Returns', href: '/registers/configure/returns' },
-  { label: 'Cancellations', href: '/registers/configure/cancellations' },
-  { label: 'Voids', href: '/registers/configure/voids' },
-  { label: 'Settings', href: '/registers/configure/settings' },
 ]
 
 const PRESET_COLORS = [
@@ -34,17 +29,21 @@ interface GuestlistStatus {
 }
 
 const STATUS_MAPPINGS = [
-  { key: 'default_status_id', label: 'Default Status' },
-  { key: 'preorder_notify_status_id', label: 'Pre-order Notify' },
-  { key: 'online_pickup_status_id', label: 'Online Pickup' },
-  { key: 'online_delivery_status_id', label: 'Online Delivery' },
-  { key: 'in_store_order_status_id', label: 'In-store Order' },
-  { key: 'curbside_status_id', label: 'Curbside' },
-  { key: 'drive_thru_status_id', label: 'Drive-thru' },
-  { key: 'skipped_delivery_status_id', label: 'Skipped Delivery' },
-  { key: 'ready_for_delivery_status_id', label: 'Ready for Delivery' },
-  { key: 'start_delivery_route_status_id', label: 'Start Delivery Route' },
-]
+  { event: 'default', label: 'Default Status' },
+  { event: 'preorder_notify', label: 'Pre-order Notify' },
+  { event: 'online_pickup', label: 'Online Pickup' },
+  { event: 'online_delivery', label: 'Online Delivery' },
+  { event: 'in_store_order', label: 'In-store Order' },
+  { event: 'curbside', label: 'Curbside' },
+  { event: 'drive_thru', label: 'Drive-thru' },
+  { event: 'skipped_delivery', label: 'Skipped Delivery' },
+  { event: 'ready_for_delivery', label: 'Ready for Delivery' },
+  { event: 'start_delivery_route', label: 'Start Delivery Route' },
+] satisfies Array<{ event: GuestlistWorkflowEvent; label: string }>
+
+const EMPTY_MAPPINGS = Object.fromEntries(
+  STATUS_MAPPINGS.map(({ event }) => [event, '']),
+) as Record<GuestlistWorkflowEvent, string>
 
 function SortableStatusCard({ status, onEdit, onDelete }: { status: GuestlistStatus; onEdit: () => void; onDelete: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: status.id })
@@ -72,26 +71,35 @@ function SortableStatusCard({ status, onEdit, onDelete }: { status: GuestlistSta
 export default function GuestlistStatusPage() {
   const pathname = usePathname()
   const [statuses, setStatuses] = useState<GuestlistStatus[]>([])
-  const [settings, setSettings] = useState<Record<string, string>>({})
+  const [mappings, setMappings] = useState(EMPTY_MAPPINGS)
+  const [savedMappings, setSavedMappings] = useState(EMPTY_MAPPINGS)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingStatus, setEditingStatus] = useState<GuestlistStatus | null>(null)
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(PRESET_COLORS[0])
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    const [statusRes, settingsRes] = await Promise.all([
+    const [statusRes, mappingsRes] = await Promise.all([
       fetch('/api/registers/configure/guestlist-statuses', { cache: 'no-store' }),
-      fetch('/api/registers/configure/settings', { cache: 'no-store' }),
+      fetch('/api/registers/configure/guestlist-workflow-mappings', { cache: 'no-store' }),
     ])
     if (statusRes.ok) {
       const data = await statusRes.json()
       setStatuses(data.statuses ?? [])
     }
-    if (settingsRes.ok) {
-      const data = await settingsRes.json()
-      setSettings(data.settings ?? {})
+    if (mappingsRes.ok) {
+      const data = await mappingsRes.json()
+      const next = Object.fromEntries(STATUS_MAPPINGS.map(({ event }) => [
+        event,
+        typeof data.mappings?.[event] === 'string' ? data.mappings[event] : '',
+      ])) as Record<GuestlistWorkflowEvent, string>
+      setMappings(next)
+      setSavedMappings(next)
+    } else {
+      setError('Unable to load workflow mappings')
     }
     setLoading(false)
   }, [])
@@ -161,11 +169,21 @@ export default function GuestlistStatusPage() {
 
   const saveMappings = async () => {
     setSaving(true)
-    await fetch('/api/registers/configure/settings', {
+    setError(null)
+    const patch = Object.fromEntries(STATUS_MAPPINGS
+      .filter(({ event }) => mappings[event] !== savedMappings[event])
+      .map(({ event }) => [event, mappings[event] || null]))
+    const res = await fetch('/api/registers/configure/guestlist-workflow-mappings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings),
+      body: JSON.stringify(patch),
     })
+    if (res.ok) {
+      setSavedMappings(mappings)
+    } else {
+      const data = await res.json().catch(() => ({}))
+      setError(typeof data.error === 'string' ? data.error : 'Unable to save workflow mappings')
+    }
     setSaving(false)
   }
 
@@ -223,13 +241,19 @@ export default function GuestlistStatusPage() {
 
           {/* Status Mappings */}
           <h2 className="text-lg font-semibold text-primary mb-4">Event Status Mappings</h2>
+          {error && (
+            <p role="alert" className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {STATUS_MAPPINGS.map(mapping => (
-              <div key={mapping.key}>
-                <label className={labelCls}>{mapping.label}</label>
+              <div key={mapping.event}>
+                <label htmlFor={`workflow-${mapping.event}`} className={labelCls}>{mapping.label}</label>
                 <select
-                  value={settings[mapping.key] ?? ''}
-                  onChange={e => setSettings(prev => ({ ...prev, [mapping.key]: e.target.value }))}
+                  id={`workflow-${mapping.event}`}
+                  value={mappings[mapping.event]}
+                  onChange={e => setMappings(prev => ({ ...prev, [mapping.event]: e.target.value }))}
                   className={inputCls}
                 >
                   <option value="">-- Select --</option>

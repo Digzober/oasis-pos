@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { flattenReceiptConfig, getReceiptConfig } from '@/lib/receipts/config'
+import { roundMoney } from '@/lib/utils/money'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(
@@ -14,7 +16,7 @@ export async function GET(
 
     const { data: txn, error: txnErr } = await (sb as any)
       .from('transactions')
-      .select('id, receipt_number, created_at, subtotal, discount_total, tax_total, total, customer_id, employee_id, location_id')
+      .select('id, transaction_number, created_at, subtotal, discount_amount, tax_amount, total, customer_id, employee_id, location_id, biotrack_transaction_id')
       .eq('id', transactionId)
       .single()
 
@@ -25,12 +27,12 @@ export async function GET(
     const [linesRes, paymentsRes, taxesRes, discountsRes, locationRes, employeeRes] = await Promise.all([
       (sb as any)
         .from('transaction_lines')
-        .select('product_name, quantity, unit_price, line_total, discount_amount')
+        .select('product_name, quantity, unit_price, line_total, discount_amount, biotrack_barcode, products ( sku, thc_percentage )')
         .eq('transaction_id', transactionId)
         .order('created_at', { ascending: true }),
       (sb as any)
         .from('transaction_payments')
-        .select('payment_method, amount, change_amount')
+        .select('payment_method, amount, change_given')
         .eq('transaction_id', transactionId),
       (sb as any)
         .from('transaction_taxes')
@@ -42,7 +44,7 @@ export async function GET(
         .eq('transaction_id', transactionId),
       (sb as any)
         .from('locations')
-        .select('name')
+        .select('name, address_line1, address_line2, city, state, zip, phone, license_number')
         .eq('id', txn.location_id)
         .single(),
       (sb as any)
@@ -67,12 +69,23 @@ export async function GET(
     const employeeName = employeeRes.data
       ? `${employeeRes.data.first_name ?? ''} ${employeeRes.data.last_name ?? ''}`.trim()
       : 'Unknown'
+    const receiptConfig = flattenReceiptConfig(await getReceiptConfig(txn.location_id))
+    const location = locationRes.data
+    const addressParts = location
+      ? [location.address_line1, location.address_line2, `${location.city}, ${location.state} ${location.zip}`]
+      : []
+    const unroundedTotal = roundMoney(
+      Number(txn.subtotal) - Number(txn.discount_amount ?? 0) + Number(txn.tax_amount),
+    )
 
     const receipt = {
       transaction_id: txn.id,
-      receipt_number: txn.receipt_number,
+      receipt_number: String(txn.transaction_number),
       date: txn.created_at,
-      location_name: locationRes.data?.name ?? 'Unknown',
+      location_name: location?.name ?? 'Unknown',
+      location_address: addressParts.filter(Boolean).join(', '),
+      location_phone: location?.phone ?? null,
+      license_number: location?.license_number ?? '',
       employee_name: employeeName,
       customer_name: customerName,
       lines: (linesRes.data ?? []).map((l: any) => ({
@@ -81,6 +94,9 @@ export async function GET(
         unit_price: Number(l.unit_price),
         line_total: Number(l.line_total),
         discount_amount: Number(l.discount_amount ?? 0),
+        sku: l.products?.sku ?? null,
+        thc_percentage: l.products?.thc_percentage == null ? null : Number(l.products.thc_percentage),
+        biotrack_barcode: l.biotrack_barcode ?? null,
       })),
       discounts: (discountsRes.data ?? []).map((d: any) => ({
         name: d.discount_name,
@@ -94,12 +110,16 @@ export async function GET(
       payments: (paymentsRes.data ?? []).map((p: any) => ({
         method: p.payment_method,
         amount: Number(p.amount),
-        change: Number(p.change_amount ?? 0),
+        change: Number(p.change_given ?? 0),
       })),
       subtotal: Number(txn.subtotal),
-      discount_total: Number(txn.discount_total ?? 0),
-      tax_total: Number(txn.tax_total),
+      discount_total: Number(txn.discount_amount ?? 0),
+      tax_total: Number(txn.tax_amount),
+      rounding_adjustment: roundMoney(Number(txn.total) - unroundedTotal),
       total: Number(txn.total),
+      loyalty_points_earned: null,
+      biotrack_transaction_id: txn.biotrack_transaction_id,
+      config: receiptConfig,
     }
 
     return NextResponse.json({ receipt })

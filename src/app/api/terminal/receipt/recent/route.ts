@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
 
     const { data: transactions, error } = await (sb as any)
       .from('transactions')
-      .select('id, receipt_number, created_at, total, customer_id')
+      .select('id, transaction_number, created_at, total, customer_id')
       .eq('register_id', registerId)
-      .in('status', ['completed', 'closed'])
+      .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(10)
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const result = (transactions ?? []).map((t: any) => ({
       id: t.id,
-      receipt_number: t.receipt_number,
+      receipt_number: String(t.transaction_number),
       created_at: t.created_at,
       total: Number(t.total),
       customer_name: t.customer_id ? (customerMap[t.customer_id] ?? 'Walk-in') : 'Walk-in',

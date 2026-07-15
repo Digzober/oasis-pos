@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
+
+const UpdateDosageSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+}).strict()
 
 export async function PATCH(
   request: NextRequest,
@@ -11,21 +16,12 @@ export async function PATCH(
     const session = await requireSession()
     const sb = await createSupabaseServerClient()
     const { id } = await params
-    const body = await request.json()
-
-    if (body.name !== undefined && !body.name?.trim()) {
-      return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 })
-    }
-
-    const updates: Record<string, unknown> = {}
-    if (body.name !== undefined) updates.name = body.name.trim()
-    if (body.thc_mg !== undefined) updates.thc_mg = body.thc_mg ? Number(body.thc_mg) : null
-    if (body.cbd_mg !== undefined) updates.cbd_mg = body.cbd_mg ? Number(body.cbd_mg) : null
-    if (body.serving_size !== undefined) updates.serving_size = body.serving_size?.trim() || null
+    const parsed = UpdateDosageSchema.safeParse(await request.json())
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
 
     const { data, error } = await sb
       .from('dosage_presets')
-      .update(updates)
+      .update(parsed.data)
       .eq('id', id)
       .eq('organization_id', session.organizationId)
       .select()

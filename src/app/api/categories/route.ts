@@ -10,7 +10,7 @@ export async function GET() {
 
     const { data: categories, error } = await sb
       .from('product_categories')
-      .select('*, parent:product_categories!parent_id ( id, name, slug )')
+      .select('*')
       .eq('is_active', true)
       .order('sort_order')
       .order('name')
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
         slug,
         description: body.description?.trim() || null,
         sort_order: sortOrder,
-        parent_id: body.parent_id || null,
         master_category: body.master_category?.trim() || null,
         purchase_limit_category: body.purchase_limit_category || null,
         tax_category: body.tax_category.trim(),

@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 import { useCart } from '@/hooks/useCart'
+import { useCustomerFieldVisibility } from '@/hooks/useCustomerFieldVisibility'
+import {
+  getCustomerFieldState,
+  validateRequiredCustomerFields,
+} from '@/lib/customers/fieldVisibility'
 
 interface QuickCustomerFormProps {
   onClose: () => void
@@ -18,13 +23,28 @@ export default function QuickCustomerForm({ onClose }: QuickCustomerFormProps) {
   const [error, setError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const setCustomer = useCart((s) => s.setCustomer)
+  const visibility = useCustomerFieldVisibility()
+  const phoneField = getCustomerFieldState(visibility, 'pos', 'phone')
+  const emailField = getCustomerFieldState(visibility, 'pos', 'email')
+  const medCardField = getCustomerFieldState(visibility, 'pos', 'mmj_id')
+  const medExpirationField = getCustomerFieldState(visibility, 'pos', 'mmj_id_exp')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    const missing = validateRequiredCustomerFields(visibility, 'pos', {
+      phone,
+      email,
+      mmj_id: medCard,
+      mmj_id_exp: medExpiration,
+    })
     if (!firstName.trim() || !lastName.trim() || !dob) {
       setError('First name, last name, and date of birth are required')
+      return
+    }
+    if (missing.length > 0) {
+      setError(`Required customer fields are missing: ${missing.join(', ')}`)
       return
     }
 
@@ -71,20 +91,20 @@ export default function QuickCustomerForm({ onClose }: QuickCustomerFormProps) {
 
         <form onSubmit={handleSubmit} className="px-4 py-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="First Name *" value={firstName} onChange={setFirstName} />
-            <Field label="Last Name *" value={lastName} onChange={setLastName} />
+            <Field label="First Name" value={firstName} onChange={setFirstName} required />
+            <Field label="Last Name" value={lastName} onChange={setLastName} required />
           </div>
-          <Field label="Date of Birth *" value={dob} onChange={setDob} type="date" />
-          <Field label="Phone" value={phone} onChange={setPhone} type="tel" />
-          <Field label="Email" value={email} onChange={setEmail} type="email" />
+          <Field label="Date of Birth" value={dob} onChange={setDob} type="date" required />
+          {phoneField.visible && <Field label="Phone" value={phone} onChange={setPhone} type="tel" required={phoneField.required} />}
+          {emailField.visible && <Field label="Email" value={email} onChange={setEmail} type="email" required={emailField.required} />}
 
-          <div className="pt-2 border-t border-edge">
+          {(medCardField.visible || medExpirationField.visible) && <div className="pt-2 border-t border-edge">
             <p className="text-xs text-secondary mb-2">Medical Card (optional)</p>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Card Number" value={medCard} onChange={setMedCard} />
-              <Field label="Expiration" value={medExpiration} onChange={setMedExpiration} type="date" />
+              {medCardField.visible && <Field label="Card Number" value={medCard} onChange={setMedCard} required={medCardField.required} />}
+              {medExpirationField.visible && <Field label="Expiration" value={medExpiration} onChange={setMedExpiration} type="date" required={medExpirationField.required} />}
             </div>
-          </div>
+          </div>}
 
           {error && <p className="text-danger text-sm">{error}</p>}
 
@@ -106,19 +126,22 @@ function Field({
   value,
   onChange,
   type = 'text',
+  required = false,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
   type?: string
+  required?: boolean
 }) {
   return (
     <label className="block">
-      <span className="text-xs text-secondary">{label}</span>
+      <span className="text-xs text-secondary">{label}{required ? ' *' : ''}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        required={required}
         className="mt-0.5 w-full h-10 px-3 bg-bg border border-edge-strong rounded-lg text-primary text-sm focus:outline-none focus:ring-2 focus:ring-accent"
       />
     </label>

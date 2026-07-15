@@ -2,6 +2,12 @@ const CACHE_NAME = 'oasis-pos-v3'
 const STATIC_ASSETS = ['/', '/login', '/checkout', '/manifest.json']
 const API_CACHE = 'oasis-api-v1'
 
+async function invalidateApiCache() {
+  await caches.delete(API_CACHE)
+  const clients = await self.clients.matchAll()
+  clients.forEach((client) => client.postMessage({ type: 'SETTINGS_CACHE_INVALIDATED' }))
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting())
@@ -16,6 +22,12 @@ self.addEventListener('activate', (event) => {
   )
 })
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'INVALIDATE_SETTINGS_CACHE') {
+    event.waitUntil(invalidateApiCache())
+  }
+})
+
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -25,10 +37,20 @@ self.addEventListener('fetch', (event) => {
     if (request.method === 'GET') {
       event.respondWith(
         fetch(request).then((response) => {
-          const clone = response.clone()
-          caches.open(API_CACHE).then((cache) => cache.put(request, clone))
+          if (response.ok) {
+            const clone = response.clone()
+            caches.open(API_CACHE).then((cache) => cache.put(request, clone))
+          }
           return response
         }).catch(() => caches.match(request))
+      )
+    }
+    if (request.method !== 'GET') {
+      event.respondWith(
+        fetch(request).then(async (response) => {
+          if (response.ok) await invalidateApiCache()
+          return response
+        })
       )
     }
     return

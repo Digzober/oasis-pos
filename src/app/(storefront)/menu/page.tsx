@@ -32,16 +32,30 @@ export default function MenuPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState<string | null>(null)
-  const { addItem, items } = useOnlineCart()
+  const [onlineOrderingAvailable, setOnlineOrderingAvailable] = useState<boolean | null>(null)
+  const { addItem, items, setLocation } = useOnlineCart()
 
   useEffect(() => {
+    fetch('/api/orders?availability=true')
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((data) => {
+        const available = data?.allows_online_orders === true
+        setOnlineOrderingAvailable(available)
+        if (available && data.location_id) setLocation(data.location_id)
+      })
+      .catch(() => setOnlineOrderingAvailable(false))
+  }, [setLocation])
+
+  useEffect(() => {
+    if (onlineOrderingAvailable !== true) return
     fetch('/api/categories')
       .then(r => r.json())
       .then(d => setCategories(d.categories ?? []))
       .catch(() => {})
-  }, [])
+  }, [onlineOrderingAvailable])
 
   useEffect(() => {
+    if (onlineOrderingAvailable !== true) return
     void Promise.resolve().then(async () => {
       setLoading(true)
       const params = new URLSearchParams()
@@ -57,7 +71,7 @@ export default function MenuPage() {
         setLoading(false)
       }
     })
-  }, [search, selectedCategory])
+  }, [onlineOrderingAvailable, search, selectedCategory])
 
   const handleAddToCart = (p: Product) => {
     addItem({ product_id: p.id, name: p.name, price: p.rec_price, image_url: null })
@@ -66,6 +80,19 @@ export default function MenuPage() {
   }
 
   const cartCount = items.reduce((s, i) => s + i.quantity, 0)
+
+  if (onlineOrderingAvailable === null) {
+    return <p className="text-center text-muted py-12">Checking online ordering availability...</p>
+  }
+
+  if (!onlineOrderingAvailable) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center">
+        <h1 className="text-2xl font-bold mb-3">Online ordering unavailable</h1>
+        <p className="text-muted">This location is not accepting online orders right now.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">

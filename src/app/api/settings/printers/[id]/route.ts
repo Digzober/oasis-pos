@@ -5,6 +5,15 @@ import { assertOrgOwnership } from '@/lib/auth/ownership'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/utils/logger'
 
+const nullableText = z.preprocess(
+  (value) => value === '' ? null : value,
+  z.string().nullable().optional(),
+)
+const nullablePort = z.preprocess(
+  (value) => value === '' ? null : value,
+  z.number().int().min(1).max(65535).nullable().optional(),
+)
+
 const UpdatePrinterSchema = z.object({
   name: z.string().min(1).optional(),
   printer_id: z.string().optional(),
@@ -13,8 +22,8 @@ const UpdatePrinterSchema = z.object({
   supports_labels: z.boolean().optional(),
   supports_receipts: z.boolean().optional(),
   connection_type: z.string().optional(),
-  ip_address: z.string().optional(),
-  port: z.number().int().optional(),
+  ip_address: nullableText,
+  port: nullablePort,
 })
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

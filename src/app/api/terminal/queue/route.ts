@@ -1,8 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
+import {
+  getGuestlistWorkflowEventsByStatusId,
+  resolveGuestlistCheckInStatusId,
+  type GuestlistWorkflowEventsByStatusId,
+} from '@/lib/guestlist/workflowMappings'
+import { requireAccessibleLocation } from '@/lib/settings/access'
+import { getSettingsSnapshot } from '@/lib/settings/service'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { AppError } from '@/lib/utils/errors'
 import { logger } from '@/lib/utils/logger'
+
+const QUEUE_CARD_SELECT = `
+  *,
+  customers (
+    id, first_name, last_name, nickname, date_of_birth, address_line1, address_line2,
+    city, state, zip, customer_type, drivers_license, drivers_license_expiration,
+    medical_card_number, medical_card_expiration, pronoun, last_visit_at, visit_count,
+    opted_into_loyalty, customer_group_members ( customer_groups ( name ) )
+  ),
+  guestlist_statuses ( id, name, color ),
+  employees ( id, first_name, last_name ),
+  registers ( name ),
+  online_orders (
+    status, total, order_number, order_type, scheduled_time, notes, delivery_address,
+    online_order_lines ( id ),
+    delivery_vehicles ( name, inventory_room:rooms ( name ) )
+  )
+`
+const COMPLETED_CARD_WINDOW_MS = 30 * 60 * 1000
 
 const CheckInSchema = z.object({
   location_id: z.uuid(),
@@ -20,21 +47,51 @@ const ClaimSchema = z.object({
   status: z.string().max(100).optional(),
 })
 
+type QueueStatusEntry = {
+  guestlist_statuses: { id: string } | null
+}
+
+function attachWorkflowEvents(
+  entries: QueueStatusEntry[],
+  eventsByStatusId: GuestlistWorkflowEventsByStatusId,
+) {
+  return entries.map((entry) => ({
+    ...entry,
+    workflow_event: entry.guestlist_statuses?.id
+      ? eventsByStatusId[entry.guestlist_statuses.id] ?? null
+      : null,
+  }))
+}
+
+async function requireAccessibleEntryLocation(
+  sb: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  session: Awaited<ReturnType<typeof requireSession>>,
+  entryId: string,
+) {
+  const { data, error } = await sb.from('guestlist_entries')
+    .select('location_id').eq('id', entryId).maybeSingle()
+  if (error) throw new AppError('QUEUE_LOOKUP_FAILED', error.message, error, 500)
+  if (!data) throw new AppError('QUEUE_ENTRY_NOT_FOUND', 'Queue entry not found', undefined, 404)
+  await requireAccessibleLocation(session, data.location_id)
+  return data.location_id
+}
+
 export async function GET(request: NextRequest) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const sb = await createSupabaseServerClient()
 
     const locationId = request.nextUrl.searchParams.get('location_id')
     if (!locationId) {
       return NextResponse.json({ error: 'location_id is required' }, { status: 400 })
     }
+    await requireAccessibleLocation(session, locationId)
 
     const { data: entries, error } = await (sb as unknown as { from: (table: string) => ReturnType<typeof sb.from> })
       .from('guestlist_entries')
-      .select('*, customers ( id, first_name, last_name, customer_type ), guestlist_statuses ( id, name, color ), employees ( id, first_name, last_name )')
+      .select(QUEUE_CARD_SELECT)
       .eq('location_id', locationId)
-      .is('completed_at', null)
+      .or(`completed_at.is.null,completed_at.gte.${new Date(Date.now() - COMPLETED_CARD_WINDOW_MS).toISOString()}`)
       .is('cancelled_at', null)
       .order('checked_in_at', { ascending: true })
 
@@ -43,7 +100,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ entries: entries ?? [] })
+    const [snapshot, eventsByStatusId] = await Promise.all([
+      getSettingsSnapshot(locationId),
+      getGuestlistWorkflowEventsByStatusId(locationId, sb),
+    ])
+    return NextResponse.json({
+      entries: attachWorkflowEvents((entries ?? []) as QueueStatusEntry[], eventsByStatusId),
+      card_fields: snapshot.location.customer_card_fields ?? {},
+    })
   } catch (err) {
     if (err && typeof err === 'object' && 'code' in err) {
       const appErr = err as { code: string; message: string; statusCode?: number }
@@ -57,7 +121,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const sb = await createSupabaseServerClient()
     const body = await request.json()
     const parsed = CheckInSchema.safeParse(body)
@@ -67,31 +131,9 @@ export async function POST(request: NextRequest) {
     }
 
     const { location_id, customer_id, customer_name, customer_type, source, notes, party_size } = parsed.data
+    await requireAccessibleLocation(session, location_id)
 
-    // Get default status for location
-    const { data: defaultStatus } = await sb
-      .from('guestlist_statuses')
-      .select('id')
-      .eq('location_id', location_id)
-      .eq('is_active', true)
-      .eq('is_default', true)
-      .limit(1)
-      .maybeSingle()
-
-    let statusId = defaultStatus?.id ?? null
-
-    if (!statusId) {
-      const { data: firstStatus } = await sb
-        .from('guestlist_statuses')
-        .select('id')
-        .eq('location_id', location_id)
-        .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-
-      statusId = firstStatus?.id ?? null
-    }
+    const statusId = await resolveGuestlistCheckInStatusId(location_id, source, sb)
 
     if (!statusId) {
       return NextResponse.json({ error: 'No guestlist statuses configured for this location' }, { status: 422 })
@@ -156,6 +198,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { id, claimed_by_employee_id, status } = parsed.data
+    const locationId = await requireAccessibleEntryLocation(sb, session, id)
 
     const updatePayload: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -187,7 +230,7 @@ export async function PATCH(request: NextRequest) {
       const { data: statusRow } = await sb
         .from('guestlist_statuses')
         .select('id')
-        .eq('location_id', session.locationId)
+        .eq('location_id', locationId)
         .eq('name', status)
         .eq('is_active', true)
         .limit(1)
@@ -224,13 +267,14 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    await requireSession()
+    const session = await requireSession()
     const sb = await createSupabaseServerClient()
 
     const id = request.nextUrl.searchParams.get('id')
     if (!id) {
       return NextResponse.json({ error: 'id is required' }, { status: 400 })
     }
+    await requireAccessibleEntryLocation(sb, session, id)
 
     // Soft delete: set cancelled_at
     const { error } = await (sb as unknown as { from: (table: string) => ReturnType<typeof sb.from> })

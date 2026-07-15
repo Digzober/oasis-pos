@@ -29,7 +29,7 @@ export default function LabelsPage() {
   const { locationId, hydrated } = useSelectedLocation()
   const [templates, setTemplates] = useState<Template[]>([])
   const [editId, setEditId] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', label_type: 'product', width_mm: '50', height_mm: '25' })
+  const [form, setForm] = useState({ name: '', width_mm: '50', height_mm: '25' })
   const [saving, setSaving] = useState(false)
 
   const fetch_ = useCallback(() => { fetch(`/api/labels/templates${locationId ? `?location_id=${locationId}` : ''}`).then(r => r.json()).then(d => setTemplates(d.templates ?? [])) }, [locationId])
@@ -37,13 +37,13 @@ export default function LabelsPage() {
 
   const save = async () => {
     setSaving(true)
-    const body = { name: form.name, label_type: form.label_type, width_mm: parseFloat(form.width_mm), height_mm: parseFloat(form.height_mm), fields: DEFAULT_FIELDS }
+    const body = { name: form.name, width_mm: parseFloat(form.width_mm), height_mm: parseFloat(form.height_mm), fields: DEFAULT_FIELDS }
     if (editId) {
       await fetch(`/api/labels/templates/${editId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     } else {
       await fetch('/api/labels/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     }
-    setSaving(false); setEditId(null); setForm({ name: '', label_type: 'product', width_mm: '50', height_mm: '25' }); fetch_()
+    setSaving(false); setEditId(null); setForm({ name: '', width_mm: '50', height_mm: '25' }); fetch_()
   }
 
   const mmToPx = (mm: number) => Math.round(mm * 3.78)
@@ -58,7 +58,7 @@ export default function LabelsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-bold text-primary">Label Templates</h1>
-        <button onClick={() => { setEditId(null); setForm({ name: '', label_type: 'product', width_mm: '50', height_mm: '25' }) }}
+        <button onClick={() => { setEditId(null); setForm({ name: '', width_mm: '50', height_mm: '25' }) }}
           className="text-sm px-3 py-1.5 bg-accent text-primary rounded-lg hover:bg-accent">+ New Template</button>
       </div>
 
@@ -68,12 +68,11 @@ export default function LabelsPage() {
           <div className="bg-surface rounded-xl border border-edge overflow-hidden mb-4">
         <table data-density="compact" className={`${DENSE_BESPOKE_TABLE_CLASS} w-full`}>
               <thead><tr className="border-b border-edge text-secondary text-xs uppercase">
-                <th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Type</th><th className="text-left px-4 py-3">Size</th><th className="text-center px-4 py-3">Default</th>
+                <th className="text-left px-4 py-3">Name</th><th className="text-left px-4 py-3">Size</th><th className="text-center px-4 py-3">Default</th>
               </tr></thead>
               <tbody>{templates.map((t: Template) => (
-                <tr key={t.id} className="border-b border-edge/50 hover:bg-raised/30 cursor-pointer" onClick={() => { setEditId(t.id); setForm({ name: t.name, label_type: t.label_type, width_mm: String(t.width_mm), height_mm: String(t.height_mm) }) }}>
+                <tr key={t.id} className="border-b border-edge/50 hover:bg-raised/30 cursor-pointer" onClick={() => { setEditId(t.id); setForm({ name: t.name, width_mm: String(t.width_mm), height_mm: String(t.height_mm) }) }}>
                   <td className="px-4 py-2.5 text-primary">{t.name}</td>
-                  <td className="px-4 py-2.5 text-secondary capitalize">{t.label_type}</td>
                   <td className="px-4 py-2.5 text-secondary text-xs">{t.width_mm}×{t.height_mm}mm</td>
                   <td className="px-4 py-2.5 text-center">{t.is_default ? <span className="text-accent text-xs">Default</span> : ''}</td>
                 </tr>
@@ -85,10 +84,7 @@ export default function LabelsPage() {
           <div className="bg-surface rounded-xl border border-edge p-4 space-y-3">
             <h3 className="text-sm font-semibold text-secondary">{editId ? 'Edit' : 'New'} Template</h3>
             <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Template name" className={inputCls} />
-            <div className="grid grid-cols-3 gap-3">
-              <select value={form.label_type} onChange={e => setForm(p => ({ ...p, label_type: e.target.value }))} className={inputCls}>
-                <option value="product">Product</option><option value="shelf">Shelf</option><option value="bag">Bag</option><option value="custom">Custom</option>
-              </select>
+            <div className="grid grid-cols-2 gap-3">
               <input value={form.width_mm} onChange={e => setForm(p => ({ ...p, width_mm: e.target.value }))} placeholder="Width mm" className={inputCls} />
               <input value={form.height_mm} onChange={e => setForm(p => ({ ...p, height_mm: e.target.value }))} placeholder="Height mm" className={inputCls} />
             </div>

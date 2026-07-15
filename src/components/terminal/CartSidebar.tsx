@@ -32,6 +32,8 @@ export default function CartSidebar() {
   const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [showHeldCarts, setShowHeldCarts] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState('')
+  const [isCheckingCheckout, setIsCheckingCheckout] = useState(false)
   const [now] = useState(() => Date.now())
 
   const canPay = items.length > 0 && (purchaseLimit?.allowed ?? true) && !!drawer
@@ -52,6 +54,29 @@ export default function CartSidebar() {
     holdCart(session?.employeeName ?? 'Unknown')
     setToast('Sale held')
     setTimeout(() => setToast(null), 2000)
+  }
+
+  const handlePayClick = async () => {
+    if (!canPay || isCheckingCheckout) return
+    setCheckoutError('')
+    setIsCheckingCheckout(true)
+    try {
+      const response = await fetch('/api/terminal/checkout-gate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customer_id: customerId }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setCheckoutError(data.error ?? 'Checkout requirements not met')
+        return
+      }
+      setShowCheckout(true)
+    } catch {
+      setCheckoutError('Unable to verify checkout requirements')
+    } finally {
+      setIsCheckingCheckout(false)
+    }
   }
 
   const handleResume = (id: string) => {
@@ -338,6 +363,11 @@ export default function CartSidebar() {
       </div>
 
       {/* ── G. Action Buttons ── */}
+      {checkoutError && (
+        <p role="alert" className="shrink-0 px-4 pb-1 text-xs text-danger text-center">
+          {checkoutError}
+        </p>
+      )}
       <div className="shrink-0 px-4 py-3 flex gap-2.5">
         <button
           disabled={items.length === 0}
@@ -355,11 +385,11 @@ export default function CartSidebar() {
         </button>
         {drawer ? (
           <button
-            disabled={!canPay}
-            onClick={() => setShowCheckout(true)}
+            disabled={!canPay || isCheckingCheckout}
+            onClick={handlePayClick}
             className="flex-1 h-12 rounded-xl text-sm font-semibold transition-all duration-150 active:scale-[0.97] disabled:opacity-30 disabled:cursor-not-allowed bg-accent text-primary hover:bg-accent shadow-lg shadow-accent/30"
           >
-            PAY
+            {isCheckingCheckout ? 'Checking...' : 'PAY'}
           </button>
         ) : (
           <button

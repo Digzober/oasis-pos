@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod/v4'
 import { requireSession } from '@/lib/auth/session'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { maskStoredSecret, prepareSecretForWrite } from '@/lib/security/settingsSecrets.server'
 import { logger } from '@/lib/utils/logger'
 
 const UpdatePrintServiceSchema = z.object({
   service_type: z.string().optional(),
-  apiKey: z.string().min(1).optional(),
-  account_email: z.string().email().optional(),
+  apiKey: z.string().optional(),
+  account_email: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
   is_active: z.boolean().optional(),
   config: z.record(z.string(), z.unknown()).optional(),
 })
@@ -21,7 +22,7 @@ function safeConfig(config: Record<string, unknown> | null) {
   return {
     ...safe,
     hasApiKey: Boolean(storedKey),
-    apiKeyTail: storedKey ? `••••${storedKey.slice(-4)}` : null,
+    apiKeyTail: storedKey ? maskStoredSecret(storedKey) : null,
   }
 }
 
@@ -60,13 +61,23 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid input', details: parsed.error.issues }, { status: 400 })
     }
 
+    const existingResult = await (sb.from('print_service_config') as any)
+      .select('api_key_encrypted')
+      .eq('location_id', session.locationId)
+      .maybeSingle()
+    if (existingResult.error) {
+      return NextResponse.json({ error: existingResult.error.message }, { status: 500 })
+    }
+
     const { apiKey, ...safeInput } = parsed.data
     const updates: Record<string, unknown> = {
       ...safeInput,
+      ...(safeInput.account_email === '' ? { account_email: null } : {}),
       location_id: session.locationId,
       updated_at: new Date().toISOString(),
     }
-    if (apiKey) updates.api_key_encrypted = apiKey
+    const encryptedKey = prepareSecretForWrite(apiKey, existingResult.data?.api_key_encrypted)
+    if (encryptedKey) updates.api_key_encrypted = encryptedKey
 
     const { data: config, error } = await (sb.from('print_service_config') as any)
       .upsert(

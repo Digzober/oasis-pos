@@ -24,7 +24,7 @@ interface LookupCrudPageProps {
   title: string
   apiPath: string
   entityKey: string
-  extraFields?: Array<{ key: string; label: string; type?: string }>
+  extraFields?: Array<{ key: string; label: string; type?: string; options?: FilterOption[] }>
   filters?: FilterConfig[]
 }
 
@@ -190,12 +190,10 @@ export default function LookupCrudPage({
                     onChange={e => setFormData(p => ({ ...p, [f.key]: e.target.value }))}
                     className={inputCls}
                   >
-                    <option value="">-- Select --</option>
-                    {filters
-                      .find(fl => fl.key === f.key)
-                      ?.options.map(opt => (
+                    <option value="">{f.options ? 'Inherit location default' : '-- Select --'}</option>
+                    {(f.options ?? filters.find(fl => fl.key === f.key)?.options ?? []).map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
+                    ))}
                   </select>
                 ) : f.type === 'textarea' ? (
                   <textarea
@@ -242,7 +240,13 @@ export default function LookupCrudPage({
             ) : items.map(item => (
               <tr key={item.id} className={`border-b border-edge/50 ${!item.is_active ? 'opacity-50' : ''}`}>
                 <td className="px-4 py-2.5 text-primary">{item.name}</td>
-                {extraFields.map(f => <td key={f.key} className="px-4 py-2.5 text-secondary">{String(item[f.key] ?? '')}</td>)}
+                {extraFields.map(f => {
+                  const value = String(item[f.key] ?? '')
+                  const label = value === '' && f.options
+                    ? 'Inherit location default'
+                    : f.options?.find(option => option.value === value)?.label ?? value
+                  return <td key={f.key} className="px-4 py-2.5 text-secondary">{label}</td>
+                })}
                 {includeInactive && (
                   <td className="px-4 py-2.5">
                     {item.is_active ? (

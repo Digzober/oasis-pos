@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { roundMoney } from '@/lib/utils/money'
+import { getEffectiveSettings } from '@/lib/settings/service'
 
 export async function getCOGSReport(filters: { date_from: string; date_to: string; location_id?: string; group_by?: string }) {
   const sb = await createSupabaseServerClient()
@@ -109,15 +110,41 @@ export async function getExpiringInventoryReport(locationId: string | null, wind
 export async function getLowStockReport(locationId: string | null) {
   const sb = await createSupabaseServerClient()
 
-  let query = sb.from('inventory_items').select('id, product_id, quantity, quantity_reserved, products ( name, sku )').eq('is_active', true)
+  let query = sb.from('inventory_items')
+    .select('id, product_id, location_id, quantity, quantity_reserved, products ( name, sku )')
+    .eq('is_active', true)
   if (locationId) query = query.eq('location_id', locationId)
 
   const { data } = await query
+  if (!data || data.length === 0) return []
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data ?? []).filter((i: any) => (i.quantity - (i.quantity_reserved ?? 0)) <= 5).map((i: any) => ({
-    id: i.id, product_name: i.products?.name ?? '', sku: i.products?.sku ?? '',
-    quantity: i.quantity, reserved: i.quantity_reserved ?? 0, available: i.quantity - (i.quantity_reserved ?? 0),
+  const productIds = [...new Set(data.map((item) => item.product_id))]
+  let thresholdQuery = sb.from('location_product_prices')
+    .select('product_id, location_id, low_inventory_threshold')
+    .in('product_id', productIds)
+  if (locationId) thresholdQuery = thresholdQuery.eq('location_id', locationId)
+  const { data: productThresholds } = await thresholdQuery
+
+  const thresholdByProductLocation = new Map(
+    (productThresholds ?? [])
+      .filter((row) => row.low_inventory_threshold != null)
+      .map((row) => [`${row.location_id}:${row.product_id}`, row.low_inventory_threshold!]),
+  )
+  const locationIds = [...new Set(data.map((item) => item.location_id))]
+  const effectiveThresholds = new Map(await Promise.all(locationIds.map(async (id) => {
+    const settings = await getEffectiveSettings(id)
+    return [id, settings.inventory?.low_stock_threshold ?? 5] as const
+  })))
+
+  return data.filter((item) => {
+    const threshold = thresholdByProductLocation.get(`${item.location_id}:${item.product_id}`)
+      ?? effectiveThresholds.get(item.location_id)
+      ?? 5
+    return item.quantity - (item.quantity_reserved ?? 0) <= threshold
+  }).map((item) => ({
+    id: item.id, product_name: item.products?.name ?? '', sku: item.products?.sku ?? '',
+    quantity: item.quantity, reserved: item.quantity_reserved ?? 0,
+    available: item.quantity - (item.quantity_reserved ?? 0),
   }))
 }
 

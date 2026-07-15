@@ -37,9 +37,26 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireSession()
     const p = request.nextUrl.searchParams
     const sb = await createSupabaseServerClient()
+    if (p.get('availability') === 'true') {
+      let query = sb.from('locations')
+        .select('id, allows_online_orders')
+        .eq('is_active', true)
+      const requestedLocationId = p.get('location_id')
+      if (requestedLocationId) query = query.eq('id', requestedLocationId)
+      const { data: location, error } = await query
+        .order('name', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (error) throw error
+      if (!location) return NextResponse.json({ error: 'Location not found' }, { status: 404 })
+      return NextResponse.json({
+        location_id: location.id,
+        allows_online_orders: location.allows_online_orders,
+      })
+    }
+    const session = await requireSession()
     const locationId = p.get('location_id')
     const status = p.get('status')
 
@@ -52,7 +69,10 @@ export async function GET(request: NextRequest) {
     if (status) query = query.eq('status', status)
 
     const { data, count } = await query
-    const orders = (data ?? []).map(({ locations: _locations, ...order }) => order)
+    const orders = (data ?? []).map(({ locations, ...order }) => {
+      void locations
+      return order
+    })
     return NextResponse.json({ orders, total: count ?? 0 })
   } catch (err) {
     logger.error('Orders list error', { error: String(err) })

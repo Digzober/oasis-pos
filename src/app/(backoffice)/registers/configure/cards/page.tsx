@@ -3,19 +3,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import {
+  buildCustomerCardPatch,
+  type CustomerCardFieldKey,
+  type CustomerCardFields,
+  type CustomerCardStatusKey,
+} from '@/lib/customers/cardFields'
 
 const TABS = [
   { label: 'Guestlist Status', href: '/registers/configure/guestlist' },
-  { label: 'Order Workflow', href: '/registers/configure/workflow' },
   { label: 'Cards', href: '/registers/configure/cards' },
-  { label: 'Adjustments', href: '/registers/configure/adjustments' },
-  { label: 'Returns', href: '/registers/configure/returns' },
-  { label: 'Cancellations', href: '/registers/configure/cancellations' },
-  { label: 'Voids', href: '/registers/configure/voids' },
-  { label: 'Settings', href: '/registers/configure/settings' },
 ]
 
-const CARD_FIELDS: Array<{ key: string; label: string; defaultOn: boolean }> = [
+const CARD_FIELDS: Array<{ key: CustomerCardFieldKey; label: string; defaultOn: boolean }> = [
   { key: 'address', label: 'Address', defaultOn: true },
   { key: 'customer_name', label: 'Customer name', defaultOn: true },
   { key: 'date_received', label: 'Date received', defaultOn: true },
@@ -79,18 +79,21 @@ const PREVIEW = {
 
 export default function CardsConfigPage() {
   const pathname = usePathname()
-  const [cardStatus, setCardStatus] = useState('online_order_placed')
-  const [fieldConfig, setFieldConfig] = useState<Record<string, Record<string, boolean>>>({})
+  const [cardStatus, setCardStatus] = useState<CustomerCardStatusKey>('online_order_placed')
+  const [fieldConfig, setFieldConfig] = useState<CustomerCardFields>({})
+  const [pendingPatch, setPendingPatch] = useState<CustomerCardFields>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
-  const currentFields = fieldConfig[cardStatus] ?? Object.fromEntries(CARD_FIELDS.map(f => [f.key, f.defaultOn]))
+  const defaultFields = Object.fromEntries(CARD_FIELDS.map(f => [f.key, f.defaultOn]))
+  const currentFields = { ...defaultFields, ...fieldConfig[cardStatus] }
 
   const fetchData = useCallback(async () => {
     const res = await fetch('/api/registers/configure/settings', { cache: 'no-store' })
     if (res.ok) {
       const data = await res.json()
-      const saved = data.settings?.customer_card_fields as Record<string, Record<string, boolean>> | undefined
+      const saved = data.settings?.customer_card_fields as CustomerCardFields | undefined
       if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
         setFieldConfig(saved)
       }
@@ -100,25 +103,35 @@ export default function CardsConfigPage() {
 
   useEffect(() => { void Promise.resolve().then(fetchData) }, [fetchData])
 
-  const toggleField = (key: string) => {
+  const toggleField = (key: CustomerCardFieldKey) => {
+    const nextValue = !currentFields[key]
+    const leaf = buildCustomerCardPatch(cardStatus, key, nextValue).customer_card_fields
     setFieldConfig(prev => ({
       ...prev,
-      [cardStatus]: { ...currentFields, [key]: !currentFields[key] },
+      [cardStatus]: { ...currentFields, [key]: nextValue },
+    }))
+    setPendingPatch(prev => ({
+      ...prev,
+      [cardStatus]: { ...prev[cardStatus], ...leaf[cardStatus] },
     }))
   }
 
   const save = async () => {
+    if (Object.keys(pendingPatch).length === 0) return
     setSaving(true)
-    await fetch('/api/registers/configure/settings', {
+    setError('')
+    const response = await fetch('/api/registers/configure/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customer_card_fields: fieldConfig }),
+      body: JSON.stringify({ customer_card_fields: pendingPatch }),
     })
+    if (response.ok) setPendingPatch({})
+    else setError('Unable to save card fields. Please try again.')
     setSaving(false)
   }
 
   /* Which preview fields to show based on current checkboxes */
-  const show = (key: string) => currentFields[key] !== false
+  const show = (key: CustomerCardFieldKey) => currentFields[key] !== false
 
   /* Split fields into two columns */
   const half = Math.ceil(CARD_FIELDS.length / 2)
@@ -146,7 +159,7 @@ export default function CardsConfigPage() {
           {/* Card Status Selector */}
           <div className="mb-6">
             <label className="block text-xs font-medium text-secondary uppercase mb-1">Card status:</label>
-            <select value={cardStatus} onChange={e => setCardStatus(e.target.value)}
+            <select value={cardStatus} onChange={e => setCardStatus(e.target.value as CustomerCardStatusKey)}
               className="w-full max-w-xs h-10 px-3 bg-bg border border-edge-strong rounded-lg text-sm text-primary focus:outline-none focus:ring-2 focus:ring-accent">
               {CARD_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
@@ -179,6 +192,7 @@ export default function CardsConfigPage() {
               <button onClick={save} disabled={saving} className="px-6 py-2.5 text-sm font-medium bg-accent text-primary rounded-lg hover:bg-accent disabled:opacity-50">
                 {saving ? 'Saving...' : 'Save'}
               </button>
+              {error && <p className="mt-2 text-sm text-danger">{error}</p>}
             </>
           )}
         </div>

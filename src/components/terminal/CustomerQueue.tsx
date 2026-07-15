@@ -2,23 +2,22 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { CustomerCardDetails } from './CustomerCardDetails'
+import {
+  getCardStatusKey,
+  isCustomerCardFieldVisible,
+  type CustomerCardEntry,
+  type CustomerCardFieldKey,
+  type CustomerCardFields,
+} from '@/lib/customers/cardFields'
 
-interface QueueEntry {
+interface QueueEntry extends CustomerCardEntry {
   id: string
-  customer_name: string | null
-  customer_type: string | null
-  source: string
-  notes: string | null
   party_size: number
   position: number
-  checked_in_at: string
   called_at: string | null
-  started_at: string | null
-  completed_at: string | null
   cancelled_at: string | null
   employee_id: string | null
-  customers: { id: string; first_name: string; last_name: string; customer_type: string } | null
-  guestlist_statuses: { id: string; name: string; color: string } | null
   employees: { id: string; first_name: string; last_name: string } | null
 }
 
@@ -67,6 +66,14 @@ function getCustomerType(entry: QueueEntry): string {
   return entry.customer_type ?? entry.customers?.customer_type ?? 'recreational'
 }
 
+function showCardField(
+  entry: QueueEntry,
+  config: CustomerCardFields,
+  field: CustomerCardFieldKey,
+): boolean {
+  return isCustomerCardFieldVisible(config, getCardStatusKey(entry), field)
+}
+
 export default function CustomerQueue({
   locationId,
   employeeId,
@@ -77,6 +84,7 @@ export default function CustomerQueue({
   employeeName: string
 }) {
   const [entries, setEntries] = useState<QueueEntry[]>([])
+  const [cardFields, setCardFields] = useState<CustomerCardFields>({})
   const [loading, setLoading] = useState(true)
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [showServing, setShowServing] = useState(false)
@@ -89,6 +97,7 @@ export default function CustomerQueue({
       const data = await res.json()
       if (res.ok) {
         setEntries(data.entries ?? [])
+        setCardFields(data.card_fields ?? {})
       }
     } finally {
       setLoading(false)
@@ -176,8 +185,9 @@ export default function CustomerQueue({
   }
 
   // Split entries into waiting (unclaimed + claimed but not serving) and serving
-  const waiting = entries.filter(e => !e.started_at)
+  const waiting = entries.filter(e => !e.started_at && !e.completed_at)
   const serving = entries.filter(e => e.started_at && !e.completed_at)
+  const completed = entries.filter(e => e.completed_at)
   const oldestUnclaimed = waiting.find(e => !e.employee_id)
 
   if (loading) {
@@ -239,26 +249,37 @@ export default function CustomerQueue({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5 min-w-0">
+                    {entry.guestlist_statuses?.color && (
+                      <span
+                        aria-label={`Status: ${entry.guestlist_statuses.name}`}
+                        className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: entry.guestlist_statuses.color }}
+                      />
+                    )}
                     {/* Position */}
                     <span className="text-xs font-mono text-muted w-5 text-right flex-shrink-0">
                       #{index + 1}
                     </span>
 
                     {/* Name */}
-                    <span className="text-sm font-medium text-primary truncate">
-                      {getDisplayName(entry)}
-                    </span>
+                    {showCardField(entry, cardFields, 'customer_name') && (
+                      <span className="text-sm font-medium text-primary truncate">
+                        {getDisplayName(entry)}
+                      </span>
+                    )}
 
                     {/* Type Badge */}
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        type === 'medical'
-                          ? 'bg-info/50 text-info border border-info/50'
-                          : 'bg-accent/50 text-accent border border-accent/50'
-                      }`}
-                    >
-                      {type === 'medical' ? 'MED' : 'REC'}
-                    </span>
+                    {showCardField(entry, cardFields, 'customer_type') && (
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                          type === 'medical'
+                            ? 'bg-info/50 text-info border border-info/50'
+                            : 'bg-accent/50 text-accent border border-accent/50'
+                        }`}
+                      >
+                        {type === 'medical' ? 'MED' : 'REC'}
+                      </span>
+                    )}
 
                     {/* Party size if > 1 */}
                     {entry.party_size > 1 && (
@@ -270,14 +291,18 @@ export default function CustomerQueue({
 
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Source */}
-                    <span className="text-[10px] text-muted hidden sm:inline">
-                      {SOURCE_LABELS[entry.source] ?? entry.source}
-                    </span>
+                    {showCardField(entry, cardFields, 'order_source') && (
+                      <span className="text-[10px] text-muted hidden sm:inline">
+                        {SOURCE_LABELS[entry.source] ?? entry.source}
+                      </span>
+                    )}
 
                     {/* Wait time */}
-                    <span className={`text-xs font-mono font-medium ${getWaitColor(waitMin)}`}>
-                      {formatWaitTime(waitMin)}
-                    </span>
+                    {showCardField(entry, cardFields, 'date_received') && (
+                      <span className={`text-xs font-mono font-medium ${getWaitColor(waitMin)}`}>
+                        {formatWaitTime(waitMin)}
+                      </span>
+                    )}
 
                     {/* Claim button */}
                     {!isClaimed ? (
@@ -296,10 +321,7 @@ export default function CustomerQueue({
                   </div>
                 </div>
 
-                {/* Notes */}
-                {entry.notes && (
-                  <p className="text-[10px] text-muted mt-1 ml-7 truncate">{entry.notes}</p>
-                )}
+                <CustomerCardDetails entry={entry} config={cardFields} sourceInHeader receivedInHeader />
               </div>
             )
           })
@@ -338,26 +360,38 @@ export default function CustomerQueue({
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 bg-accent/20 border border-accent/30"
+                    className="flex flex-wrap items-center justify-between rounded-lg px-3 py-2 bg-accent/20 border border-accent/30"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0" />
-                      <span className="text-sm text-primary truncate">{getDisplayName(entry)}</span>
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                          type === 'medical'
-                            ? 'bg-info/50 text-info border border-info/50'
-                            : 'bg-accent/50 text-accent border border-accent/50'
-                        }`}
-                      >
-                        {type === 'medical' ? 'MED' : 'REC'}
-                      </span>
+                      <div
+                        aria-label={`Status: ${entry.guestlist_statuses?.name ?? 'Serving'}`}
+                        className="h-2 w-2 rounded-full bg-accent animate-pulse flex-shrink-0"
+                        style={entry.guestlist_statuses?.color
+                          ? { backgroundColor: entry.guestlist_statuses.color }
+                          : undefined}
+                      />
+                      {showCardField(entry, cardFields, 'customer_name') && (
+                        <span className="text-sm text-primary truncate">{getDisplayName(entry)}</span>
+                      )}
+                      {showCardField(entry, cardFields, 'customer_type') && (
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                            type === 'medical'
+                              ? 'bg-info/50 text-info border border-info/50'
+                              : 'bg-accent/50 text-accent border border-accent/50'
+                          }`}
+                        >
+                          {type === 'medical' ? 'MED' : 'REC'}
+                        </span>
+                      )}
                       <span className="text-[10px] text-muted">
                         w/ {budtenderName}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-[10px] text-muted font-mono">{formatWaitTime(serveMin)}</span>
+                      {showCardField(entry, cardFields, 'date_received') && (
+                        <span className="text-[10px] text-muted font-mono">{formatWaitTime(serveMin)}</span>
+                      )}
                       <button
                         onClick={() => completeEntry(entry.id)}
                         className="text-[10px] font-medium px-2 py-1 bg-raised text-secondary rounded hover:bg-raised transition-colors"
@@ -371,12 +405,38 @@ export default function CustomerQueue({
                         ✕
                       </button>
                     </div>
+                    <div className="basis-full w-full">
+                      <CustomerCardDetails entry={entry} config={cardFields} receivedInHeader />
+                    </div>
                   </div>
                 )
               })}
             </div>
           )}
         </div>
+      )}
+
+      {completed.length > 0 && (
+        <details className="border-t border-edge">
+          <summary className="cursor-pointer px-4 py-2 text-xs font-semibold uppercase tracking-wide text-secondary">
+            Recently completed ({completed.length})
+          </summary>
+          <div className="space-y-1 px-2 pb-2">
+            {completed.map((entry) => (
+              <div key={entry.id} className="rounded-lg border border-edge bg-bg/30 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  {showCardField(entry, cardFields, 'customer_name') && (
+                    <span className="text-sm text-secondary">{getDisplayName(entry)}</span>
+                  )}
+                  {showCardField(entry, cardFields, 'customer_type') && (
+                    <span className="text-[10px] font-bold uppercase text-muted">{getCustomerType(entry)}</span>
+                  )}
+                </div>
+                <CustomerCardDetails entry={entry} config={cardFields} />
+              </div>
+            ))}
+          </div>
+        </details>
       )}
     </div>
   )

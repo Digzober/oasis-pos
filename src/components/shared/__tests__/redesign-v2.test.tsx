@@ -23,9 +23,7 @@ const columns: ColumnDef<Row>[] = [
 
 const denseBespokeTablePages = [
   'src/app/(backoffice)/customers/page.tsx',
-  'src/app/(backoffice)/customers/configure/doctors/page.tsx',
   'src/app/(backoffice)/customers/configure/fields/page.tsx',
-  'src/app/(backoffice)/customers/configure/qualifying-conditions/page.tsx',
   'src/app/(backoffice)/customers/groups/page.tsx',
   'src/app/(backoffice)/customers/segments/page.tsx',
   'src/app/(backoffice)/delivery/page.tsx',
@@ -51,7 +49,6 @@ const denseBespokeTablePages = [
   'src/app/(backoffice)/settings/biotrack/page.tsx',
   'src/app/(backoffice)/settings/labels/page.tsx',
   'src/app/(backoffice)/settings/locations/page.tsx',
-  'src/app/(backoffice)/settings/printers/page.tsx',
   'src/app/(backoffice)/settings/taxes/page.tsx',
 ]
 

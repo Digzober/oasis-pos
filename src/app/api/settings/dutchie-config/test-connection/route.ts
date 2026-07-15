@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireDutchieManager } from '@/lib/auth/dutchie'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { DutchieClient } from '@/lib/dutchie/client'
+import { decryptStoredSecret } from '@/lib/security/settingsSecrets.server'
 import { logger } from '@/lib/utils/logger'
 
 /**
@@ -30,7 +31,7 @@ export async function POST() {
       }, { status: 404 })
     }
 
-    const apiKey = row.api_key_encrypted as string
+    const apiKey = decryptStoredSecret(row.api_key_encrypted as string)
     if (!apiKey) {
       return NextResponse.json({
         error: 'No API key configured. Enter and save your API key first.',

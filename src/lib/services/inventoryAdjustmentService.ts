@@ -81,8 +81,9 @@ export async function adjustInventory(input: InventoryAdjustmentInput): Promise<
 
   // Fire-and-forget BioTrack sync
   if (item.biotrack_barcode) {
-    import('@/lib/biotrack/client').then(({ getBioTrackClient }) => {
-      const client = getBioTrackClient()
+    import('@/lib/biotrack/client').then(async ({ getBioTrackClientForLocation }) => {
+      const client = await getBioTrackClientForLocation(item.location_id)
+      if (!client) throw new Error('BioTrack credentials are not configured')
       client.call('inventory/adjust', {
         barcode: item.biotrack_barcode,
         quantity: input.new_quantity,

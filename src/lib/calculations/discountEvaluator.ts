@@ -135,9 +135,7 @@ function isEligible(d: DiscountWithRules, ctx: DiscountEvaluationContext): boole
   if (d.location_ids.length > 0 && !d.location_ids.includes(ctx.location_id)) return false
 
   // Customer type
-  if (d.customer_type !== 'all') {
-    if (d.customer_type !== ctx.customer_type) return false
-  }
+  if (!d.customer_types.includes('all') && !d.customer_types.includes(ctx.customer_type)) return false
 
   // Customer groups
   if (d.customer_group_ids.length > 0) {

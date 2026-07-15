@@ -200,6 +200,15 @@ export function getBioTrackClient(): BioTrackClient {
 const locationClients = new Map<string, { client: BioTrackClient; expiresAt: number }>()
 const CLIENT_CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
 
+/** Clears cached per-location clients after their backing config changes. */
+export function clearBioTrackClientCache(locationId?: string): void {
+  if (locationId) {
+    locationClients.delete(locationId)
+  } else {
+    locationClients.clear()
+  }
+}
+
 /**
  * Gets a BioTrack v3 REST client configured for a specific location.
  * Loads credentials from the biotrack_config table.

@@ -8,10 +8,6 @@ export default function InventoryStatusesTab() {
       title="Inventory Statuses"
       apiPath="/api/settings/inventory-statuses"
       entityKey="statuses"
-      extraFields={[
-        { key: 'description', label: 'Description' },
-        { key: 'color', label: 'Color (hex)' },
-      ]}
     />
   )
 }

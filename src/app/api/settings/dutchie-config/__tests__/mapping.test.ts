@@ -2,6 +2,9 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { dbRowToFrontend, frontendToDbRow } from '../route'
+import { decryptStoredSecret, isEncryptedSecret } from '@/lib/security/settingsSecrets.server'
+
+const KEY = '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f'
 
 describe('Dutchie config Phase B round-trip mapping', () => {
   it('round-trips transaction and loyalty toggles and timestamps', () => {
@@ -49,5 +52,18 @@ describe('Dutchie config Phase B round-trip mapping', () => {
     expect(source).toContain('syncLoyalty: config.syncLoyalty')
     expect(source).toContain("key: 'loyalty'")
     expect(source).toContain('designatedLoyaltyLocationId')
+  })
+
+  it('preserves masked API keys and re-encrypts legacy storage', () => {
+    process.env.SETTINGS_SECRET_KEY = KEY
+    const db = frontendToDbRow(
+      { apiKey: '••••1234' },
+      'loc-1',
+      { api_key_encrypted: 'legacy-dutchie-1234' },
+    )
+
+    expect(isEncryptedSecret(db.api_key_encrypted as string)).toBe(true)
+    expect(decryptStoredSecret(db.api_key_encrypted as string)).toBe('legacy-dutchie-1234')
+    delete process.env.SETTINGS_SECRET_KEY
   })
 })

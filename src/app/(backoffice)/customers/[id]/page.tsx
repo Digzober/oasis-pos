@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useCustomerFieldVisibility } from '@/hooks/useCustomerFieldVisibility'
+import {
+  getCustomerFieldState,
+  validateRequiredCustomerFields,
+} from '@/lib/customers/fieldVisibility'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -72,7 +77,7 @@ const CUSTOMER_TYPE_OPTIONS = ['recreational', 'medical']
 /*  Badges Section                                                     */
 /* ------------------------------------------------------------------ */
 
-interface Badge { id: string; name: string; color: string; icon: string | null; assignment_method: string }
+interface Badge { id: string; name: string; color: string; icon: string | null }
 
 function BadgesSection({ customerId }: { customerId: string }) {
   const [badges, setBadges] = useState<Badge[]>([])
@@ -155,6 +160,8 @@ export default function CustomerDetailPage() {
   const [saving, setSaving] = useState(false)
   const [tab, setTab] = useState(0)
   const [actionsOpen, setActionsOpen] = useState(false)
+  const [formError, setFormError] = useState('')
+  const visibility = useCustomerFieldVisibility()
 
   // Form state mirrors customer for editable tabs
   const [form, setForm] = useState<Record<string, unknown>>({})
@@ -198,6 +205,7 @@ export default function CustomerDetailPage() {
   /* -- Save helpers -------------------------------------------------- */
   const patchCustomer = async (body: Record<string, unknown>) => {
     setSaving(true)
+    setFormError('')
     try {
       const res = await fetch(`/api/customers/${id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -207,23 +215,54 @@ export default function CustomerDetailPage() {
     } finally { setSaving(false) }
   }
 
-  const saveDetails = () => patchCustomer({
-    customer_type: form.customer_type, prefix: form.prefix || null, first_name: form.first_name || null,
-    middle_name: form.middle_name || null, last_name: form.last_name || null, suffix: form.suffix || null,
-    gender: form.gender || null, pronoun: form.pronoun || null, date_of_birth: form.date_of_birth || null,
-    status: form.status, notes: form.notes || null,
-  })
+  const saveDetails = () => {
+    const missing = validateRequiredCustomerFields(visibility, 'backend', {
+      type: String(form.customer_type ?? ''), name: String(form.first_name ?? ''),
+      middle_name: String(form.middle_name ?? ''), last_name: String(form.last_name ?? ''),
+      prefix: String(form.prefix ?? ''), suffix: String(form.suffix ?? ''),
+      gender: String(form.gender ?? ''), dob: String(form.date_of_birth ?? ''),
+      status: String(form.status ?? ''), notes: String(form.notes ?? ''),
+    })
+    if (missing.length > 0) { setFormError(`Required fields are missing: ${missing.join(', ')}`); return }
+    void patchCustomer({
+      customer_type: form.customer_type, prefix: form.prefix || null, first_name: form.first_name || null,
+      middle_name: form.middle_name || null, last_name: form.last_name || null, suffix: form.suffix || null,
+      gender: form.gender || null, pronoun: form.pronoun || null, date_of_birth: form.date_of_birth || null,
+      status: form.status, notes: form.notes || null,
+    })
+  }
 
-  const saveIdAddress = () => patchCustomer({
-    medical_card_number: form.medical_card_number || null, id_start_date: form.id_start_date || null,
-    id_expiration: form.id_expiration || null, address_line1: form.address_line1 || null,
-    address_line2: form.address_line2 || null, city: form.city || null, state: form.state || null,
-    zip: form.zip || null, drivers_license: form.drivers_license || null,
-    drivers_license_expiration: form.drivers_license_expiration || null,
-    phone: form.phone || null, mobile_phone: form.mobile_phone || null, email: form.email || null,
-  })
+  const saveIdAddress = () => {
+    const missing = validateRequiredCustomerFields(visibility, 'backend', {
+      mmj_id: String(form.medical_card_number ?? ''), id_expiration: String(form.id_expiration ?? ''),
+      address1: String(form.address_line1 ?? ''), address2: String(form.address_line2 ?? ''),
+      city: String(form.city ?? ''), state: String(form.state ?? ''), zip: String(form.zip ?? ''),
+      drivers_license: String(form.drivers_license ?? ''),
+      drivers_license_exp: String(form.drivers_license_expiration ?? ''),
+      phone: String(form.phone ?? ''), mobile_phone: String(form.mobile_phone ?? ''),
+      email: String(form.email ?? ''),
+    })
+    if (missing.length > 0) { setFormError(`Required fields are missing: ${missing.join(', ')}`); return }
+    void patchCustomer({
+      medical_card_number: form.medical_card_number || null, id_start_date: form.id_start_date || null,
+      id_expiration: form.id_expiration || null, address_line1: form.address_line1 || null,
+      address_line2: form.address_line2 || null, city: form.city || null, state: form.state || null,
+      zip: form.zip || null, drivers_license: form.drivers_license || null,
+      drivers_license_expiration: form.drivers_license_expiration || null,
+      phone: form.phone || null, mobile_phone: form.mobile_phone || null, email: form.email || null,
+    })
+  }
 
-  const saveCaregiver = () => patchCustomer({ caregiver_info: caregiverForm })
+  const saveCaregiver = () => {
+    const missing = validateRequiredCustomerFields(visibility, 'backend', {
+      caregiver_first: caregiverForm.first_name ?? '',
+      caregiver_last: caregiverForm.last_name ?? '',
+      caregiver_phone: caregiverForm.phone ?? '',
+      caregiver_email: caregiverForm.email ?? '',
+    })
+    if (missing.length > 0) { setFormError(`Required fields are missing: ${missing.join(', ')}`); return }
+    void patchCustomer({ caregiver_info: caregiverForm })
+  }
 
   /* -- Lazy fetchers ------------------------------------------------- */
   const fetchLoyaltyHistory = useCallback(async () => {
@@ -297,29 +336,53 @@ export default function CustomerDetailPage() {
   const setCgField = (k: string, v: string) => setCaregiverForm(p => ({ ...p, [k]: v }))
 
   /* -- Render helpers ------------------------------------------------ */
-  const Field = ({ label, name, type = 'text', disabled = false }: { label: string; name: string; type?: string; disabled?: boolean }) => (
-    <div>
-      <label className={labelCls}>{label}</label>
-      <input type={type} className={inputCls} value={(form[name] as string) ?? ''} onChange={e => setField(name, e.target.value)} disabled={disabled || saving} />
-    </div>
-  )
+  const Field = ({ label, name, type = 'text', visibilityKey }: {
+    label: string; name: string; type?: string; visibilityKey?: string
+  }) => {
+    const state = visibilityKey
+      ? getCustomerFieldState(visibility, 'backend', visibilityKey)
+      : { visible: true, required: false }
+    if (!state.visible) return null
+    return (
+      <div>
+        <label className={labelCls}>{label}{state.required ? ' *' : ''}</label>
+        <input type={type} className={inputCls} value={(form[name] as string) ?? ''} onChange={e => setField(name, e.target.value)} disabled={saving} required={state.required} />
+      </div>
+    )
+  }
 
-  const Select = ({ label, name, options }: { label: string; name: string; options: string[] }) => (
-    <div>
-      <label className={labelCls}>{label}</label>
-      <select className={inputCls} value={(form[name] as string) ?? ''} onChange={e => setField(name, e.target.value)} disabled={saving}>
-        <option value="">--</option>
-        {options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
-      </select>
-    </div>
-  )
+  const Select = ({ label, name, options, visibilityKey }: {
+    label: string; name: string; options: string[]; visibilityKey?: string
+  }) => {
+    const state = visibilityKey
+      ? getCustomerFieldState(visibility, 'backend', visibilityKey)
+      : { visible: true, required: false }
+    if (!state.visible) return null
+    return (
+      <div>
+        <label className={labelCls}>{label}{state.required ? ' *' : ''}</label>
+        <select className={inputCls} value={(form[name] as string) ?? ''} onChange={e => setField(name, e.target.value)} disabled={saving} required={state.required}>
+          <option value="">--</option>
+          {options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
+        </select>
+      </div>
+    )
+  }
 
-  const CgField = ({ label, name, type = 'text' }: { label: string; name: string; type?: string }) => (
-    <div>
-      <label className={labelCls}>{label}</label>
-      <input type={type} className={inputCls} value={(caregiverForm as Record<string, string>)[name] ?? ''} onChange={e => setCgField(name, e.target.value)} disabled={saving} />
-    </div>
-  )
+  const CgField = ({ label, name, type = 'text', visibilityKey }: {
+    label: string; name: string; type?: string; visibilityKey?: string
+  }) => {
+    const state = visibilityKey
+      ? getCustomerFieldState(visibility, 'backend', visibilityKey)
+      : { visible: true, required: false }
+    if (!state.visible) return null
+    return (
+      <div>
+        <label className={labelCls}>{label}{state.required ? ' *' : ''}</label>
+        <input type={type} className={inputCls} value={(caregiverForm as Record<string, string>)[name] ?? ''} onChange={e => setCgField(name, e.target.value)} disabled={saving} required={state.required} />
+      </div>
+    )
+  }
 
   if (loading || !customer) return <div className="min-h-screen bg-bg flex items-center justify-center"><div className="text-secondary">Loading...</div></div>
 
@@ -397,26 +460,27 @@ export default function CustomerDetailPage() {
       <div className="border-b border-edge flex gap-1">
         {TAB_LABELS.map((l, i) => <button key={l} className={tabCls(tab === i)} onClick={() => setTab(i)}>{l}</button>)}
       </div>
+      {formError && <p className="text-sm text-danger">{formError}</p>}
 
       {/* Tab 0: Details */}
       {activeTabId === 0 && (
         <div className={sectionCls}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Select label="Customer Type" name="customer_type" options={CUSTOMER_TYPE_OPTIONS} />
-            <Field label="Prefix" name="prefix" />
-            <Field label="First Name" name="first_name" />
-            <Field label="Middle Name" name="middle_name" />
-            <Field label="Last Name" name="last_name" />
-            <Field label="Suffix" name="suffix" />
-            <Select label="Gender" name="gender" options={GENDER_OPTIONS} />
+            <Select label="Customer Type" name="customer_type" options={CUSTOMER_TYPE_OPTIONS} visibilityKey="type" />
+            <Field label="Prefix" name="prefix" visibilityKey="prefix" />
+            <Field label="First Name" name="first_name" visibilityKey="name" />
+            <Field label="Middle Name" name="middle_name" visibilityKey="middle_name" />
+            <Field label="Last Name" name="last_name" visibilityKey="last_name" />
+            <Field label="Suffix" name="suffix" visibilityKey="suffix" />
+            <Select label="Gender" name="gender" options={GENDER_OPTIONS} visibilityKey="gender" />
             <Field label="Pronoun" name="pronoun" />
-            <Field label="Date of Birth" name="date_of_birth" type="date" />
-            <Select label="Status" name="status" options={STATUS_OPTIONS} />
+            <Field label="Date of Birth" name="date_of_birth" type="date" visibilityKey="dob" />
+            <Select label="Status" name="status" options={STATUS_OPTIONS} visibilityKey="status" />
           </div>
-          <div className="mt-4">
-            <label className={labelCls}>Notes</label>
-            <textarea className={`${inputCls} h-24 py-2`} value={(form.notes as string) ?? ''} onChange={e => setField('notes', e.target.value)} disabled={saving} />
-          </div>
+          {getCustomerFieldState(visibility, 'backend', 'notes').visible && <div className="mt-4">
+            <label className={labelCls}>Notes{getCustomerFieldState(visibility, 'backend', 'notes').required ? ' *' : ''}</label>
+            <textarea className={`${inputCls} h-24 py-2`} value={(form.notes as string) ?? ''} onChange={e => setField('notes', e.target.value)} disabled={saving} required={getCustomerFieldState(visibility, 'backend', 'notes').required} />
+          </div>}
           <div className="mt-4 flex justify-end"><button className={btnPrimary} onClick={saveDetails} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button></div>
         </div>
       )}
@@ -425,19 +489,19 @@ export default function CustomerDetailPage() {
       {activeTabId === 1 && (
         <div className={sectionCls}>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Field label="MJ State ID" name="medical_card_number" />
+            <Field label="MJ State ID" name="medical_card_number" visibilityKey="mmj_id" />
             <Field label="ID Start Date" name="id_start_date" type="date" />
-            <Field label="ID Expiration" name="id_expiration" type="date" />
-            <Field label="Address Line 1" name="address_line1" />
-            <Field label="Address Line 2" name="address_line2" />
-            <Field label="City" name="city" />
-            <Field label="State" name="state" />
-            <Field label="ZIP" name="zip" />
-            <Field label="Driver's License" name="drivers_license" />
-            <Field label="DL Expiration" name="drivers_license_expiration" type="date" />
-            <Field label="Phone" name="phone" />
-            <Field label="Mobile Phone" name="mobile_phone" />
-            <Field label="Email" name="email" type="email" />
+            <Field label="ID Expiration" name="id_expiration" type="date" visibilityKey="id_expiration" />
+            <Field label="Address Line 1" name="address_line1" visibilityKey="address1" />
+            <Field label="Address Line 2" name="address_line2" visibilityKey="address2" />
+            <Field label="City" name="city" visibilityKey="city" />
+            <Field label="State" name="state" visibilityKey="state" />
+            <Field label="ZIP" name="zip" visibilityKey="zip" />
+            <Field label="Driver's License" name="drivers_license" visibilityKey="drivers_license" />
+            <Field label="DL Expiration" name="drivers_license_expiration" type="date" visibilityKey="drivers_license_exp" />
+            <Field label="Phone" name="phone" visibilityKey="phone" />
+            <Field label="Mobile Phone" name="mobile_phone" visibilityKey="mobile_phone" />
+            <Field label="Email" name="email" type="email" visibilityKey="email" />
           </div>
           <div className="mt-4 flex justify-end"><button className={btnPrimary} onClick={saveIdAddress} disabled={saving}>{saving ? 'Saving...' : 'Save'}</button></div>
         </div>
@@ -448,8 +512,8 @@ export default function CustomerDetailPage() {
         <div className={sectionCls}>
           <h3 className="text-lg font-semibold mb-4">Caregiver Information</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <CgField label="First Name" name="first_name" />
-            <CgField label="Last Name" name="last_name" />
+            <CgField label="First Name" name="first_name" visibilityKey="caregiver_first" />
+            <CgField label="Last Name" name="last_name" visibilityKey="caregiver_last" />
             <CgField label="State ID" name="state_id" />
             <CgField label="ID Start Date" name="id_start_date" type="date" />
             <CgField label="ID Expiration" name="id_expiration" type="date" />
@@ -458,8 +522,8 @@ export default function CustomerDetailPage() {
             <CgField label="City" name="city" />
             <CgField label="State" name="state" />
             <CgField label="ZIP" name="zip" />
-            <CgField label="Phone" name="phone" />
-            <CgField label="Email" name="email" type="email" />
+            <CgField label="Phone" name="phone" visibilityKey="caregiver_phone" />
+            <CgField label="Email" name="email" type="email" visibilityKey="caregiver_email" />
             <CgField label="Date of Birth" name="dob" type="date" />
           </div>
           <div className="mt-4">
