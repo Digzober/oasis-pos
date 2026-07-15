@@ -1,23 +1,25 @@
-# Fable Structured Review — route/full-audit-sync-theme
+VERDICT: APPROVE
+AC COVERAGE: 7/7
+RUN: settings-wiring-audit — Fable review of SETTINGS-WIRING-AUDIT.md (Sol build, session 019f634e-0a9f-7d40-a97b-255f671bad62)
 
-VERDICT: APPROVE (with 1 minor fix applied, 2 minors noted as follow-ups)
-AC COVERAGE: 30/30 met (see final report)
-Scope reviewed: git diff aba6ea6..HEAD -- src/ supabase/ (341 files). Sol's automated review pass derailed into an unrelated UI-audit skill and produced no usable findings; this is Fable's own authoritative diff review per route §6, plus the live DB verification already recorded in AUDIT.md.
+FABLE INDEPENDENT VERIFICATION (deterministic sample per PLAN v3 gate):
+- V1 WIRED Dutchie `apiKey` — confirmed: syncEngine.ts client construction + api/dutchie/sync route; consistent with live Dutchie sync feature. PASS
+- V2 WIRED Discounts `customer_types` — confirmed: discountLoader.ts:55 maps it; discountEvaluator branch cited. PASS (noted: loader takes only [0]; fidelity gap correctly captured in doc's top-10 #7)
+- V3 PLACEHOLDER A `allow_partial_payments` — grep: only Surface A page + registry. PASS
+- V4 PLACEHOLDER A `allow_offline_mode` — grep: only Surface A page + registry; offline workers unconditional. PASS
+- V5 DRIFT B `auto_apply_discounts` — grep: single src hit (B page writer); runtime authority is discounts table via loader/evaluator, verified loader loads all active org discounts unconditionally. PASS
+- V6 DRIFT A `auto_sync_biotrack` — verified transactionService.ts:278-281 fire-and-forget sync ignores the flag. PASS
+- V7 PARTIAL Loyalty `accrual_rate` — verified transactionService.ts:233-236 queries loyalty_config with .eq('is_active',true).limit(1) and NO organization_id filter. Real cross-org defect. PASS
+- V8 PARTIAL Discounts `application_method` — loader line 51 reads it only as fallback for discount_type. PASS
+- V9 BROKEN-WRITE Print service `account_email` — ledger command + schema/UI mismatch documented. PASS (doc-level)
+- V10/V11 UNEXPOSED `cfd_enabled`, `cfd_wallpaper_url` — grep: zero src hits, registry only. PASS
+- Bonus: loader hardcodes is_recurring:false (discountLoader.ts:65) — matches doc claim independently.
+- Row counts: Surface A = 46 rows, Surface B = 13 rows (counted from manifest). Matches AC-1.
+- Two-surfaces history matches Fable's own git log (B: 6f34be0 2026-03-30; A+registry: ce398f4 2026-04-01).
 
-## High-risk files reviewed in depth
-- src/lib/auth/ownership.ts — SOLID. All three modes (organization/location/parent) correctly bind resource → org; hasEveryId prevents partial-match bypass; fail-closed on error. Empty-id set returns true (safe for [id] routes, param always present).
-- src/lib/auth/session.ts — SOLID. Location override validated against org membership + employee_locations (admin/owner exempt); fails closed to signed session location.
-- src/lib/auth/orderCapability.ts — timing-safe HMAC capability for public order links.
-- src/lib/dutchie/syncLease.ts — SOLID. Stale-reap + unique-index insert = real DB single-flight; heartbeat/complete guarded on status='running'.
-- src/lib/dutchie/loyaltySync.ts — SOLID + LIVE-VERIFIED. Match-guard before apply; deadline-aware drain; checkpoint only on full drain; durable fingerprint resume without re-hitting rate-limited API.
-- src/lib/dutchie/cronRunner.ts — SOLID. One work item per org for org-wide entities; loyalty ≤once/20h; deadline threaded; skip-virgin; conflict-safe.
-- src/lib/theme/ThemeProvider.tsx + registry.ts — SOLID. useSyncExternalStore, cross-tab storage sync, cookie+localStorage, no-FOUC bootstrap.
-- Theme codemod (157 files) — CLEAN. No dynamic template-string color construction survived; status→color maps converted to semantic variants (bg-success-soft/text-success).
-- Migration 20260402160000 RPCs — LIVE-VERIFIED on 50 real Dutchie customers (decimals exact, delta journaling, idempotency, atomic adjust).
+GATES:
+- Scope: porcelain = baseline + SETTINGS-WIRING-AUDIT.md only (+ .route artifacts written by Fable/output redirects, disclosed). PASS
+- typecheck: PASS (Sol ran tsc --noEmit exit 0).
+- AC-7 caveat disclosed in doc (build-audit.txt output redirect postdates baseline — Fable's artifact, accepted).
 
-## Findings
-- F1 [minor→FIXED] loyaltySync.ts:142 — resume lookup picks ANY complete-unapplied staging run (no freshness bound), so a run that left stale staging (guard-fail or crash) could later apply day-old balances instead of fetching fresh. Rare on a healthy system (85% customer match), but a real edge. Fix: bound resume to recent staging + purge stale complete-unapplied rows.
-- F2 [minor, noted] cronRunner.ts:203 — a non-conflict throw from syncEntity aborts the whole cron run. syncEntity catches its own errors internally, so this only fires on infra failure (DB down) that would affect all items anyway; rotation recovers next run. By-design, no change.
-- F3 [minor, noted] loyaltySync.ts:242 — secondary last_synced_loyalty_at write filters by location_id only; harmless redundancy since dutchie_sync_state is authoritative.
-
-No blocker or major findings. Security surface (the round-1/round-2 blocker concerns) verified closed in code.
+FINDINGS: none blocking. No fix round required.

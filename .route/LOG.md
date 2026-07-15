@@ -29,3 +29,5 @@ Preflight: codex READY (gpt-5.6-sol, xhigh). Tree had .route-only noise from pri
 Class STANDARD: 1 plan-review round, doc-only build.
 
 Plan review R1: 19 findings (5 blockers) -> v2. R2: 2 blockers + 1 major, all bookkeeping -> v3 applied. No R3: fixes are mechanical, STANDARD budget, escalate-never-pad. Build launched.
+
+Build: 1 round, no gate failures. Sol tokens ~683k. Fable review: APPROVE, 11-row deterministic sample all verified, 0 findings. Run complete.
